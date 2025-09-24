@@ -1,6 +1,7 @@
 import express from "express";
 import createError from "http-errors";
 import logger from "morgan";
+import mongoose from 'mongoose';
 
 import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
@@ -30,4 +31,7 @@ app.use(function (err, req, res, next) {
   res.send(err.message);
 });
 
+
 export default app;
+
+mongoose.connect(process.env.DATABASE_URL || 'mongodb://localhost/your-app-name');
