@@ -34,4 +34,8 @@ app.use(function (err, req, res, next) {
 
 export default app;
 
-mongoose.connect(process.env.DATABASE_URL || 'mongodb://localhost/your-app-name');
+const uri = process.env.DATABASE_URL || "mongodb://localhost/humap";
+
+mongoose.connect(uri)
+  .then(() => console.log("✅ MongoDB connecté"))
+  .catch(err => console.error("❌ Erreur de connexion MongoDB :", err));

@@ -5,7 +5,7 @@ import http from "node:http";
 
 import app from "../app.js";
 
-const debug = createDebugger('projects-5:server')
+const debug = createDebugger('humap:server')
 
 // Get port from environment and store in Express
 const port = normalizePort(process.env.PORT || "3000");
