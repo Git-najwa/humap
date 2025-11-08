@@ -1,4 +1,4 @@
-# 🗺️ HUMAP — API RESTful d'activités locales selon l’humeur
+# HUMAP — API RESTful d'activités locales selon l’humeur
 
 **HUMAP** est une application mobile connectée à une API RESTful qui recommande des **activités locales personnalisées** en fonction de :
 
@@ -11,7 +11,7 @@ Cette API permet de gérer les utilisateurs, les activités (créées ou import�
 
 ---
 
-## 🔧 Technologies
+## Technologies
 
 - Node.js & Express  
 - MongoDB & Mongoose  
