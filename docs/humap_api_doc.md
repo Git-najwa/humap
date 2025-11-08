@@ -894,12 +894,3 @@ Toutes les listes utilisent le même format de pagination:
 **OpenWeatherMap / WeatherAPI:**
 - Pour les recommandations basées sur la météo
 - Quota: 1000-1M requêtes/mois gratuit
-
----
-
-## Support
-
-Pour toute question ou problème:
-- GitHub: https://github.com/humap/api
-- Documentation Swagger: https://api.humap.com/docs
-- Email: support@humap.com
