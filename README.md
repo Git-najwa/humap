@@ -7,6 +7,25 @@
 - sa **géolocalisation**,
 - et ses **préférences passées**.
 
+Afin d’illustrer de manière concrète le concept, voici un exemple représentatif d’une activité telle qu’elle apparaîtrait dans l’application :  
+
+### 🌅 Exemple d’activité : “Pique-nique sunset à Sauvabelin”
+
+**Localisation :** Parc de Sauvabelin, Lausanne  
+**Mood :** Calme / Détente / Nature  
+**Type :** Outdoor  
+**Durée :** 1h30 – 2h  
+**Prix :** Gratuit (hors repas)  
+**Idéal pour :** 2 à 4 personnes  
+**Âge recommandé :** 16+  
+**Source :** Utilisateur  
+
+#### Description
+"Profite du coucher de soleil sur le lac depuis la tour de Sauvabelin.  
+Apporte ton pique-nique ou un café à emporter, installe-toi sur la pelouse et profite du calme du soir.  
+Parfait après une journée de cours ou de travail."
+
+
 Cette API permet de gérer les utilisateurs, les activités (créées ou importées via l'API Google), les avis (reviews) et des listes personnalisées (favoris, historiques, etc.).
 
 ---
