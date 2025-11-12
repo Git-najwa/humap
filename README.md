@@ -9,7 +9,7 @@
 
 Afin d’illustrer de manière concrète le concept, voici un exemple représentatif d’une activité telle qu’elle apparaîtrait dans l’application :  
 
-### 🌅 Exemple d’activité : “Pique-nique sunset à Sauvabelin”
+### Exemple d’activité : “Pique-nique sunset à Sauvabelin”
 
 **Localisation :** Parc de Sauvabelin, Lausanne  
 **Mood :** Calme / Détente / Nature  
