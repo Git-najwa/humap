@@ -1,2 +1,57 @@
-# projects5
-Project for ArchiOWeb and DevMobil courses
+# HUMAP — API RESTful d'activités locales selon l’humeur
+
+**HUMAP** est une application mobile connectée à une API RESTful qui recommande des **activités locales personnalisées** en fonction de :
+
+- l’**humeur** de l’utilisateur (ex. : calme, sociable…),
+- son **contexte** (budget, durée, nombre de personnes, etc.),
+- sa **géolocalisation**,
+- et ses **préférences passées**.
+
+Afin d’illustrer de manière concrète le concept, voici un exemple représentatif d’une activité telle qu’elle apparaîtrait dans l’application :  
+
+### Exemple d’activité : “Pique-nique sunset à Sauvabelin”
+
+**Localisation :** Parc de Sauvabelin, Lausanne  
+**Mood :** Calme / Détente / Nature  
+**Type :** Outdoor  
+**Durée :** 1h30 – 2h  
+**Prix :** Gratuit (hors repas)  
+**Idéal pour :** 2 à 4 personnes  
+**Âge recommandé :** 16+  
+**Source :** Utilisateur  
+
+#### Description
+"Profite du coucher de soleil sur le lac depuis la tour de Sauvabelin.  
+Apporte ton pique-nique ou un café à emporter, installe-toi sur la pelouse et profite du calme du soir.  
+Parfait après une journée de cours ou de travail."
+
+
+Cette API permet de gérer les utilisateurs, les activités (créées ou importées via l'API Google), les avis (reviews) et des listes personnalisées (favoris, historiques, etc.).
+
+---
+
+## Technologies
+
+- Node.js & Express  
+- MongoDB & Mongoose  
+- JWT (authentification)  
+- Swagger (documentation)  
+- Render (déploiement)
+
+## Fonctionnalités principales de l’API
+
+- Authentification sécurisée (JWT)
+- Création, modification et suppression d’activités
+- Filtres avancés (humeur, budget, âge, etc.)
+- Gestion des avis utilisateurs
+- Listes personnalisées : favoris, historiques, etc.
+- Pagination & agrégation
+- Rôles utilisateur : `user` et `admin`
+
+---
+## Documentation API
+
+👉 [Voir la documentation API](https://github.com/Git-najwa/humap/blob/main/docs/humap_api_doc.md)
+
+---
+
