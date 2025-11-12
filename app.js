@@ -7,6 +7,9 @@ import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
 
 import createDebugger from "debug";
+import * as config from './config.js';
+
+//--------------------------------------------------
 const debug = createDebugger("humap:database");
 
 const app = express();
@@ -37,8 +40,7 @@ app.use(function (err, req, res, next) {
 
 export default app;
 
-const uri = process.env.DATABASE_URL || "mongodb://localhost/humap";
 
-  mongoose.connect(uri)
+  mongoose.connect(config.dbUrl)
   .then(() => debug("✅ MongoDB connecté"))
   .catch(err => debug("❌ Erreur de connexion MongoDB :", err));
