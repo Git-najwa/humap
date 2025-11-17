@@ -3,11 +3,10 @@ import createError from "http-errors";
 import logger from "morgan";
 import mongoose from 'mongoose';
 
-import indexRouter from "./routes/index.js";
-import usersRouter from "./routes/users.js";
+import usersRouter from "./routes/users.routes.js";
 
 import createDebugger from "debug";
-import * as config from './config.js';
+import * as config from '../src/config/db.js';
 
 //--------------------------------------------------
 const debug = createDebugger("humap:database");
@@ -18,7 +17,7 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use("/", indexRouter);
+
 app.use("/users", usersRouter);
 
 // catch 404 and forward to error handler

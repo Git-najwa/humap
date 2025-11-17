@@ -3,8 +3,8 @@
 import createDebugger from "debug";
 import http from "node:http";
 
-import app from "../app.js";
-import * as config from '../config.js';
+import app from "../src/app.js";
+import * as config from '../src/config/db.js';
 
 
 const debug = createDebugger('humap:server')

@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  title: HUMAP API
+  version: "0.1.0"
+paths:
+  /auth/login:
+    post:
+      summary: Login and get JWT
+      responses:
+        "200":
+          description: Authenticated
+  /auth/register:
+    post:
+      summary: Create a user account
+      responses:
+        "201":
+          description: Created
