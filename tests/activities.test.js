@@ -1,1 +1,1 @@
-// Placeholder for activities route tests.
+test.todo("activities routes – add tests");
