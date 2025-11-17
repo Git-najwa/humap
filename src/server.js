@@ -1,65 +1,52 @@
-#!/usr/bin/env node
-
+import "dotenv/config";
 import createDebugger from "debug";
 import http from "node:http";
 
-import app from "../src/app.js";
-import * as config from '../src/config/db.js';
+import app from "./app.js";
+import { connectDb } from "./config/db.js";
 
+const debug = createDebugger("humap:server");
+const port = normalizePort(process.env.PORT || 3000);
 
-const debug = createDebugger('humap:server')
+async function start() {
+  await connectDb();
 
-// Get port from environment and store in Express
-const port = normalizePort(config.port);
-app.set("port", port);
+  const server = http.createServer(app);
+  server.listen(port);
+  server.on("error", onError);
+  server.on("listening", () => {
+    const addr = server.address();
+    const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
+    debug(`Listening on ${bind}`);
+  });
+}
 
-// Create HTTP server
-const httpServer = http.createServer(app);
+start().catch((err) => {
+  // eslint-disable-next-line no-console
+  console.error("Server failed to start:", err);
+  process.exit(1);
+});
 
-// Listen on provided port, on all network interfaces
-httpServer.listen(port);
-httpServer.on("error", onHttpServerError);
-httpServer.on("listening", onHttpServerListening);
-
-// Normalize a port into a number, string, or false
 function normalizePort(val) {
-  const port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
+  const portNumber = parseInt(val, 10);
+  if (Number.isNaN(portNumber)) return val;
+  if (portNumber >= 0) return portNumber;
   return false;
 }
 
-function onHttpServerError(error) {
-  if (error.syscall !== "listen") {
-    throw error;
-  }
-
+function onError(error) {
+  if (error.syscall !== "listen") throw error;
   const bind = typeof port === "string" ? `Pipe ${port}` : `Port ${port}`;
-
-  // Handle specific listen errors with friendly messages
   switch (error.code) {
     case "EACCES":
+      // eslint-disable-next-line no-console
       console.error(`${bind} requires elevated privileges`);
       process.exit(1);
     case "EADDRINUSE":
+      // eslint-disable-next-line no-console
       console.error(`${bind} is already in use`);
       process.exit(1);
     default:
       throw error;
   }
-}
-
-function onHttpServerListening() {
-  const addr = httpServer.address();
-  const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
-  debug(`Listening on ${bind}`);
 }

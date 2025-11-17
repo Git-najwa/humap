@@ -1,15 +1,13 @@
 import express from "express";
 import createError from "http-errors";
 import logger from "morgan";
-import mongoose from 'mongoose';
 
-import usersRouter from "./routes/users.routes.js";
-
-import createDebugger from "debug";
-import * as config from '../src/config/db.js';
-
-//--------------------------------------------------
-const debug = createDebugger("humap:database");
+import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/users.routes.js";
+import activityRoutes from "./routes/activities.routes.js";
+import reviewRoutes from "./routes/reviews.routes.js";
+import listRoutes from "./routes/lists.routes.js";
+import errorHandler from "./middlewares/errorHandler.js";
 
 const app = express();
 
@@ -17,29 +15,17 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.get("/", (req, res) => res.send("Ignition!"));
+app.use("/auth", authRoutes);
+app.use("/users", userRoutes);
+app.use("/activities", activityRoutes);
+app.use("/activities/:activityId/reviews", reviewRoutes);
+app.use("/lists", listRoutes);
 
-app.use("/users", usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404));
+app.use((req, res, next) => {
+  next(createError(404, "Not Found"));
 });
 
-// error handler
-app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-
-  // Send the error status
-  res.status(err.status || 500);
-  res.send(err.message);
-});
-
+app.use(errorHandler);
 
 export default app;
-
-
-  mongoose.connect(config.dbUrl)
-  .then(() => debug("✅ MongoDB connecté"))
-  .catch(err => debug("❌ Erreur de connexion MongoDB :", err));
