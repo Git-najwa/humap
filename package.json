@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node ./src/server.js",
-    "test": "cross-env NODE_ENV=test DATABASE_URL=mongodb://127.0.0.1/humap-test MY_APP_SECRET_KEY=testsecret node --experimental-vm-modules node_modules/.bin/jest --runInBand"
+    "test": "cross-env NODE_ENV=test DATABASE_URL=mongodb://127.0.0.1/humap-test MY_APP_SECRET_KEY=testsecret node --experimental-vm-modules ./node_modules/jest/bin/jest.js --runInBand"
+
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
