@@ -1,5 +1,6 @@
 import Review from "../models/Review.js";
-import { created, notFound, ok } from "../utils/responses.js";
+import { created, ok } from "../utils/responses.js";
+import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 
 export async function listReviews(req, res, next) {
   try {
@@ -26,7 +27,9 @@ export async function createReview(req, res, next) {
 export async function getReview(req, res, next) {
   try {
     const review = await Review.findById(req.params.id);
-    if (!review) return notFound(res);
+    if (!review) {
+      throw new NotFoundError("Review");
+    }
     return ok(res, review);
   } catch (error) {
     next(error);
@@ -36,11 +39,13 @@ export async function getReview(req, res, next) {
 export async function deleteReview(req, res, next) {
   try {
     const review = await Review.findById(req.params.id);
-    if (!review) return notFound(res);
+    if (!review) {
+      throw new NotFoundError("Review");
+    }
 
     // Vérifier que l'utilisateur est propriétaire ou admin
     if (review.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden", status: 403 });
+      throw new ForbiddenError("You can only delete your own reviews");
     }
 
     await Review.findByIdAndDelete(req.params.id);

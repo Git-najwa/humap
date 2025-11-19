@@ -1,6 +1,7 @@
 import Activity from "../models/Activity.js";
 import UserActivityList from "../models/UserActivityList.js";
-import { created, notFound, ok } from "../utils/responses.js";
+import { created, ok } from "../utils/responses.js";
+import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 
 export async function listActivities(req, res, next) {
   try {
@@ -23,7 +24,9 @@ export async function createActivity(req, res, next) {
 export async function getActivity(req, res, next) {
   try {
     const activity = await Activity.findById(req.params.id);
-    if (!activity) return notFound(res);
+    if (!activity) {
+      throw new NotFoundError("Activity");
+    }
     return ok(res, activity);
   } catch (error) {
     next(error);
@@ -33,11 +36,13 @@ export async function getActivity(req, res, next) {
 export async function updateActivity(req, res, next) {
   try {
     const activity = await Activity.findById(req.params.id);
-    if (!activity) return notFound(res);
-    
+    if (!activity) {
+      throw new NotFoundError("Activity");
+    }
+
     // Vérifier que l'utilisateur est propriétaire ou admin
     if (activity.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden", status: 403 });
+      throw new ForbiddenError("You can only update your own activities");
     }
 
     const updatedActivity = await Activity.findByIdAndUpdate(
@@ -54,11 +59,13 @@ export async function updateActivity(req, res, next) {
 export async function deleteActivity(req, res, next) {
   try {
     const activity = await Activity.findById(req.params.id);
-    if (!activity) return notFound(res);
-    
+    if (!activity) {
+      throw new NotFoundError("Activity");
+    }
+
     // Vérifier que l'utilisateur est propriétaire ou admin
     if (activity.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden", status: 403 });
+      throw new ForbiddenError("You can only delete your own activities");
     }
 
     await Activity.findByIdAndDelete(req.params.id);
@@ -72,7 +79,9 @@ export async function toggleLike(req, res, next) {
   try {
     const { id } = req.params;
     const activity = await Activity.findById(id);
-    if (!activity) return notFound(res);
+    if (!activity) {
+      throw new NotFoundError("Activity");
+    }
 
     // Chercher si l'activité est déjà dans les likes de l'utilisateur
     const existingLike = await UserActivityList.findOne({

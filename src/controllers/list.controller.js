@@ -1,5 +1,6 @@
 import UserActivityList from "../models/UserActivityList.js";
-import { created, notFound, ok } from "../utils/responses.js";
+import { created, ok } from "../utils/responses.js";
+import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 
 export async function listUserActivities(req, res, next) {
   try {
@@ -12,11 +13,13 @@ export async function listUserActivities(req, res, next) {
 
 export async function getListEntry(req, res, next) {
   try {
-    const entry = await UserActivityList.findById(req.params.id);
-    if (!entry) return notFound(res);
+    const entry = await UserActivityList.findById(req.params.listId);
+    if (!entry) {
+      throw new NotFoundError("List");
+    }
     // Vérifier que l'utilisateur est propriétaire
     if (entry.user_id.toString() !== req.currentUserId) {
-      return res.status(403).json({ message: "Forbidden", status: 403 });
+      throw new ForbiddenError("You can only access your own lists");
     }
     return ok(res, entry);
   } catch (error) {
@@ -39,11 +42,13 @@ export async function addToList(req, res, next) {
 export async function updateList(req, res, next) {
   try {
     const entry = await UserActivityList.findById(req.params.listId);
-    if (!entry) return notFound(res);
-    
+    if (!entry) {
+      throw new NotFoundError("List");
+    }
+
     // Vérifier que l'utilisateur est propriétaire
     if (entry.user_id.toString() !== req.currentUserId) {
-      return res.status(403).json({ message: "Forbidden", status: 403 });
+      throw new ForbiddenError("You can only update your own lists");
     }
 
     const updatedEntry = await UserActivityList.findByIdAndUpdate(
@@ -60,11 +65,13 @@ export async function updateList(req, res, next) {
 export async function deleteList(req, res, next) {
   try {
     const entry = await UserActivityList.findById(req.params.listId);
-    if (!entry) return notFound(res);
-    
+    if (!entry) {
+      throw new NotFoundError("List");
+    }
+
     // Vérifier que l'utilisateur est propriétaire
     if (entry.user_id.toString() !== req.currentUserId) {
-      return res.status(403).json({ message: "Forbidden", status: 403 });
+      throw new ForbiddenError("You can only delete your own lists");
     }
 
     await UserActivityList.findByIdAndDelete(req.params.listId);
@@ -82,8 +89,10 @@ export async function removeActivityFromList(req, res, next) {
       activity_id: activityId,
       user_id: req.currentUserId,
     });
-    
-    if (!entry) return notFound(res);
+
+    if (!entry) {
+      throw new NotFoundError("List entry");
+    }
 
     await UserActivityList.findByIdAndDelete(entry._id);
     return res.status(204).send();
