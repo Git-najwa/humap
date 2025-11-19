@@ -1,0 +1,324 @@
+openapi: 3.1.0
+info:
+  title: HUMAP API
+  version: 1.0.0
+  description: API de recommandation d'activités locales basée sur l'humeur et le contexte utilisateur.
+
+servers:
+  - url: https://api.humap.com/v1
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        username: { type: string }
+        email: { type: string }
+        gender: { type: string }
+        avatar: { type: string }
+        role:
+          type: string
+          enum: [user, admin]
+      required: [id, username, email, role]
+
+    Activity:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        mood: { type: string }
+        price_range: { type: number }
+        nb_people: { type: number }
+        age_range: { type: string }
+        location: { type: string }
+        hours: { type: number }
+        day: { type: string }
+      required: [id, title]
+
+    Review:
+      type: object
+      properties:
+        id: { type: string }
+        activity_id: { type: string }
+        user_id: { type: string }
+        comment: { type: string }
+        ranking: { type: number }
+        pictures:
+          type: array
+          items: { type: string }
+      required: [id, activity_id, user_id]
+
+    UserActivityList:
+      type: object
+      properties:
+        id: { type: string }
+        user_id: { type: string }
+        type:
+          type: string
+          enum: [liked, custom]
+        name:
+          type: string
+          nullable: true
+      required: [id, user_id, type]
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201': { description: User created }
+        '400': { description: Invalid input }
+
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200': { description: Login success }
+        '401': { description: Unauthorized }
+
+  /auth/me:
+    get:
+      security: [ { bearerAuth: [] } ]
+      summary: Get current user
+      responses:
+        '200': { description: OK }
+        '401': { description: Unauthorized }
+
+  /activities:
+    get:
+      summary: List activities
+      parameters:
+        - in: query
+          name: mood
+          schema: { type: string }
+        - in: query
+          name: nb_people
+          schema: { type: number }
+        - in: query
+          name: price_range
+          schema: { type: number }
+      responses:
+        '200': { description: OK }
+    post:
+      security: [ { bearerAuth: [] } ]
+      summary: Create activity
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activity'
+      responses:
+        '201': { description: Created }
+        '400': { description: Invalid input }
+
+  /activities/{id}:
+    get:
+      summary: Get activity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+        '404': { description: Not found }
+
+    patch:
+      security: [ { bearerAuth: [] } ]
+      summary: Update activity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+        '404': { description: Not found }
+
+    delete:
+      security: [ { bearerAuth: [] } ]
+      summary: Delete activity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+        '404': { description: Not found }
+
+  /activities/{id}/reviews:
+    get:
+      summary: List reviews for an activity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+
+    post:
+      security: [ { bearerAuth: [] } ]
+      summary: Add review
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+      responses:
+        '201': { description: Created }
+        '400': { description: Invalid input }
+
+  /reviews/{id}:
+    delete:
+      security: [ { bearerAuth: [] } ]
+      summary: Delete review
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+        '404': { description: Not found }
+
+  /recommendations:
+    get:
+      summary: Get recommendations
+      parameters:
+        - in: query
+          name: mood
+          schema: { type: string }
+        - in: query
+          name: nb_people
+          schema: { type: number }
+        - in: query
+          name: price_range
+          schema: { type: number }
+      responses:
+        '200': { description: OK }
+
+  /lists:
+    get:
+      security: [ { bearerAuth: [] } ]
+      summary: List user lists
+      responses:
+        '200': { description: OK }
+
+    post:
+      security: [ { bearerAuth: [] } ]
+      summary: Create custom list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+      responses:
+        '201': { description: Created }
+
+  /lists/{listId}:
+    patch:
+      security: [ { bearerAuth: [] } ]
+      summary: Rename list
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+        '400': { description: Invalid input }
+
+    delete:
+      security: [ { bearerAuth: [] } ]
+      summary: Delete custom list
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Deleted }
+
+  /lists/{listId}/activities:
+    post:
+      security: [ { bearerAuth: [] } ]
+      summary: Add activity to list
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                activity_id: { type: string }
+      responses:
+        '201': { description: Added }
+
+  /lists/{listId}/activities/{activityId}:
+    delete:
+      security: [ { bearerAuth: [] } ]
+      summary: Remove activity from list
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: activityId
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: Removed }
+
+  /activities/{id}/like:
+    post:
+      security: [ { bearerAuth: [] } ]
+      summary: Toggle like on activity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Toggled
+          content:
+            application/json:
+              example:
+                liked: true
