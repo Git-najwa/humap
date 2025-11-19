@@ -1,22 +1,33 @@
 import User from "../models/User.js";
 import { buildAuthToken } from "../utils/jwt.js";
-import { badRequest, created, ok, unauthorized, notFound } from "../utils/responses.js";
+import { ok, created } from "../utils/responses.js";
+import {
+  BadRequestError,
+  UnauthorizedError,
+  NotFoundError,
+  ConflictError,
+} from "../utils/errors.js";
 
 export async function register(req, res, next) {
   try {
     const { username, email, password, gender, avatar } = req.body;
+
+    // Validation
     if (!username || !email || !password) {
-      return badRequest(res, "username, email and password are required");
+      throw new BadRequestError("username, email and password are required");
     }
 
+    // Vérifier si email existe
     const existing = await User.exists({ email });
     if (existing) {
-      return badRequest(res, "Email already in use");
+      throw new ConflictError("Email already in use");
     }
 
+    // Créer l'utilisateur
     const user = new User({ username, email, password, gender, avatar });
     await user.save();
 
+    // Générer token
     const token = await buildAuthToken(user);
     return created(res, { user: user.toJSON(), token });
   } catch (error) {
@@ -27,14 +38,25 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return badRequest(res, "email and password are required");
 
+    // Validation
+    if (!email || !password) {
+      throw new BadRequestError("email and password are required");
+    }
+
+    // Chercher utilisateur
     const user = await User.findOne({ email });
-    if (!user) return unauthorized(res);
+    if (!user) {
+      throw new UnauthorizedError("Invalid email or password");
+    }
 
+    // Vérifier mot de passe
     const valid = await user.comparePassword(password);
-    if (!valid) return unauthorized(res);
+    if (!valid) {
+      throw new UnauthorizedError("Invalid email or password");
+    }
 
+    // Générer token
     const token = await buildAuthToken(user);
     return ok(res, { user: user.toJSON(), token });
   } catch (error) {
@@ -45,7 +67,9 @@ export async function login(req, res, next) {
 export async function me(req, res, next) {
   try {
     const user = await User.findById(req.currentUserId);
-    if (!user) return notFound(res);
+    if (!user) {
+      throw new NotFoundError("User");
+    }
     return ok(res, user.toJSON());
   } catch (error) {
     next(error);
