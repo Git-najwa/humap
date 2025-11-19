@@ -32,3 +32,20 @@ export async function getReview(req, res, next) {
     next(error);
   }
 }
+
+export async function deleteReview(req, res, next) {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) return notFound(res);
+
+    // Vérifier que l'utilisateur est propriétaire ou admin
+    if (review.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden", status: 403 });
+    }
+
+    await Review.findByIdAndDelete(req.params.id);
+    return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
