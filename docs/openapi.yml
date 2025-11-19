@@ -1,0 +1,895 @@
+openapi: 3.1.0
+info:
+  title: HUMAP API
+  version: 1.0.0
+  description: API de recommandation d'activités locales basée sur l'humeur et le contexte utilisateur.
+
+servers:
+  - url: https://api.humap.com/v1
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Response schemas
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        username: { type: string }
+        email: { type: string }
+        gender: { type: string }
+        avatar: { type: string }
+        role:
+          type: string
+          enum: [user, admin]
+        nb_reviews: { type: number }
+        created_at: { type: string, format: date-time }
+      required: [id, username, email, role]
+
+    Activity:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        mood: { type: string }
+        price_range: { type: number, minimum: 0, maximum: 3 }
+        nb_people: { type: number }
+        age_range: { type: string }
+        location: { type: string }
+        coordinates:
+          type: object
+          properties:
+            type: { type: string, enum: [Point] }
+            coordinates: { type: array, items: { type: number } }
+        hours: { type: number }
+        day: { type: string }
+        source: { type: string, enum: [user, google] }
+        user_id: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+      required: [id, title, location]
+
+    Review:
+      type: object
+      properties:
+        id: { type: string }
+        activity_id: { type: string }
+        user_id: { type: string }
+        comment: { type: string }
+        ranking: { type: number, minimum: 1, maximum: 5 }
+        pictures:
+          type: array
+          items: { type: string }
+        created_at: { type: string, format: date-time }
+      required: [id, activity_id, user_id, ranking]
+
+    UserActivityList:
+      type: object
+      properties:
+        id: { type: string }
+        user_id: { type: string }
+        activity_id: { type: string }
+        list_type:
+          type: string
+          enum: [history, liked, custom]
+        custom_name:
+          type: string
+          nullable: true
+        created_at: { type: string, format: date-time }
+      required: [id, user_id, activity_id, list_type]
+
+    # Input schemas
+    UserRegisterInput:
+      type: object
+      properties:
+        username: { type: string }
+        email: { type: string }
+        password: { type: string }
+        gender: { type: string }
+      required: [username, email, password]
+
+    UserLoginInput:
+      type: object
+      properties:
+        email: { type: string }
+        password: { type: string }
+      required: [email, password]
+
+    ActivityInput:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        mood: { type: string }
+        location: { type: string }
+        price_range: { type: number, minimum: 0, maximum: 3 }
+        nb_people: { type: number }
+        age_range: { type: string }
+        hours: { type: number }
+        day: { type: string }
+      required: [title, location]
+
+    ReviewInput:
+      type: object
+      properties:
+        comment: { type: string }
+        ranking: { type: number, minimum: 1, maximum: 5 }
+        pictures:
+          type: array
+          items: { type: string }
+      required: [ranking]
+
+    # Error schemas
+    Error:
+      type: object
+      properties:
+        message: { type: string }
+        status: { type: number }
+      required: [message, status]
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterInput'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+        '400':
+          description: Invalid input or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Login and get JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginInput'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      summary: Get current authenticated user
+      tags:
+        - Authentication
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '200':
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /activities:
+    get:
+      summary: List all activities with filters
+      tags:
+        - Activities
+      parameters:
+        - in: query
+          name: mood
+          schema: { type: string }
+          description: Filter by mood
+        - in: query
+          name: nb_people
+          schema: { type: number }
+          description: Filter by number of people
+        - in: query
+          name: price_range
+          schema: { type: number, minimum: 0, maximum: 3 }
+          description: Filter by price range
+      responses:
+        '200':
+          description: List of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new activity
+      tags:
+        - Activities
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityInput'
+      responses:
+        '201':
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /activities/{id}:
+    get:
+      summary: Get a specific activity
+      tags:
+        - Activities
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Activity ID
+      responses:
+        '200':
+          description: Activity found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Update an activity
+      tags:
+        - Activities
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Activity ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityInput'
+      responses:
+        '200':
+          description: Activity updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete an activity
+      tags:
+        - Activities
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Activity ID
+      responses:
+        '204':
+          description: Activity deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /activities/{id}/reviews:
+    get:
+      summary: List reviews for an activity
+      tags:
+        - Reviews
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Activity ID
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Add a review to an activity
+      tags:
+        - Reviews
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Activity ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInput'
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /reviews/{id}:
+    delete:
+      summary: Delete a review
+      tags:
+        - Reviews
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Review ID
+      responses:
+        '204':
+          description: Review deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /recommendations:
+    get:
+      summary: Get activity recommendations based on filters
+      tags:
+        - Recommendations
+      parameters:
+        - in: query
+          name: mood
+          schema: { type: string }
+          description: Filter by mood
+        - in: query
+          name: nb_people
+          schema: { type: number }
+          description: Number of people
+        - in: query
+          name: price_range
+          schema: { type: number, minimum: 0, maximum: 3 }
+          description: Budget range
+      responses:
+        '200':
+          description: List of recommended activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Activity'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lists:
+    get:
+      summary: Get user's activity lists
+      tags:
+        - Lists
+      security: [ { bearerAuth: [] } ]
+      responses:
+        '200':
+          description: List of user lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserActivityList'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a custom activity list
+      tags:
+        - Lists
+      security: [ { bearerAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+              required: [name]
+      responses:
+        '201':
+          description: List created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActivityList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lists/{listId}:
+    get:
+      summary: Get a specific list
+      tags:
+        - Lists
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+          description: List ID
+      responses:
+        '200':
+          description: List found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActivityList'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: List not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      summary: Rename a custom list
+      tags:
+        - Lists
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+          description: List ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+              required: [name]
+      responses:
+        '200':
+          description: List updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActivityList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: List not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete a custom list
+      tags:
+        - Lists
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+          description: List ID
+      responses:
+        '204':
+          description: List deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: List not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lists/{listId}/activities:
+    post:
+      summary: Add activity to a list
+      tags:
+        - Lists
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+          description: List ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                activity_id: { type: string }
+              required: [activity_id]
+      responses:
+        '201':
+          description: Activity added to list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserActivityList'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: List or activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /lists/{listId}/activities/{activityId}:
+    delete:
+      summary: Remove activity from a list
+      tags:
+        - Lists
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: listId
+          required: true
+          schema: { type: string }
+          description: List ID
+        - in: path
+          name: activityId
+          required: true
+          schema: { type: string }
+          description: Activity ID
+      responses:
+        '204':
+          description: Activity removed from list
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: List or activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /activities/{id}/like:
+    post:
+      summary: Toggle like on an activity
+      tags:
+        - Activities
+      security: [ { bearerAuth: [] } ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Activity ID
+      responses:
+        '200':
+          description: Like toggled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  liked:
+                    type: boolean
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Activity not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

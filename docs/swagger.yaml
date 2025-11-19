@@ -15,3 +15,5 @@ paths:
       responses:
         "201":
           description: Created
+servers:
+  - url: https://api.humap.com/v1

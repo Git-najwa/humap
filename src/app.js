@@ -8,6 +8,7 @@ import activityRoutes from "./routes/activities.routes.js";
 import reviewRoutes from "./routes/reviews.routes.js";
 import listRoutes from "./routes/lists.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
+import { swaggerUi, swaggerSpec } from "./utils/swagger.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req, res) => res.send("Salut les bgs"));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/activities", activityRoutes);
