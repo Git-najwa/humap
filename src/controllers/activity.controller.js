@@ -5,8 +5,59 @@ import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 
 export async function listActivities(req, res, next) {
   try {
-    const activities = await Activity.find();
-    return ok(res, activities);
+    // 📖 PAGINATION
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, Math.min(100, parseInt(req.query.limit) || 10));
+    const skip = (page - 1) * limit;
+
+    // 🔍 FILTRAGE
+    const query = {};
+
+    if (req.query.mood) {
+      query.mood = req.query.mood;
+    }
+
+    if (req.query.price_range !== undefined) {
+      const priceRange = parseInt(req.query.price_range);
+      if (!Number.isNaN(priceRange)) {
+        query.price_range = { $lte: priceRange };
+      }
+    }
+
+    if (req.query.nb_people !== undefined) {
+      const nbPeople = parseInt(req.query.nb_people);
+      if (!Number.isNaN(nbPeople)) {
+        query.nb_people = nbPeople;
+      }
+    }
+
+    if (req.query.day) {
+      query.day = req.query.day;
+    }
+
+    if (req.query.age_range) {
+      query.age_range = req.query.age_range;
+    }
+
+    // Search textuel (si q fourni)
+    if (req.query.q) {
+      query.$text = { $search: req.query.q };
+    }
+
+    // ⚡ Exécuter la query
+    const activities = await Activity.find(query).skip(skip).limit(limit);
+    const total = await Activity.countDocuments(query);
+
+    // 📊 Retourner avec métadonnées
+    return ok(res, {
+      data: activities,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (error) {
     next(error);
   }
