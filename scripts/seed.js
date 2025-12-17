@@ -1,9 +1,9 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import User from "../src/models/User.js";
-import Activity from "../src/models/Activity.js";
-import Review from "../src/models/Review.js";
-import UserActivityList from "../src/models/UserActivityList.js";
+import User from "../humap-backend/src/models/User.js";
+import Activity from "../humap-backend/src/models/Activity.js";
+import Review from "../humap-backend/src/models/Review.js";
+import UserActivityList from "../humap-backend/src/models/UserActivityList.js";
 
 async function seed() {
   try {
