@@ -6,10 +6,10 @@
   "scripts": {
     "start": "node ./src/server.js",
     "test": "cross-env NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules DATABASE_URL=mongodb://127.0.0.1/humap-test MY_APP_SECRET_KEY=testsecret jest --runInBand"
-
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
     "debug": "^4.4.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
