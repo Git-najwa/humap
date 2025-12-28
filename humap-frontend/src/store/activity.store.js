@@ -19,15 +19,18 @@ export const useActivityStore = defineStore('activity', () => {
     error.value = null
     try {
       const response = await activityService.getAll(page, limit, filterParams)
-      activities.value = response.data.activities
+      // Protection : vérifier que activities existe dans la réponse
+      activities.value = response.data.activities || []
       pagination.value = {
         page,
         limit,
-        total: response.data.total,
+        total: response.data.total || 0,
       }
       filters.value = filterParams
       return response.data
     } catch (err) {
+      // En cas d'erreur, garder un tableau vide
+      activities.value = []
       error.value = err.response?.data?.message || 'Erreur lors de la récupération des activités'
       throw error.value
     } finally {

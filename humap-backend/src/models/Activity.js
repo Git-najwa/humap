@@ -9,7 +9,7 @@ const activitySchema = new Schema(
     location: { type: String, required: true, trim: true },
     coordinates: {
       type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number], index: "2dsphere" },
+      coordinates: { type: [Number] },
     },
     mood: { type: String, trim: true },
     nb_people: { type: Number },
@@ -23,6 +23,10 @@ const activitySchema = new Schema(
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
 
+// Index texte pour recherche
 activitySchema.index({ title: "text", description: "text" });
+
+// Index géospatial pour les recherches "near"
+activitySchema.index({ coordinates: "2dsphere" });
 
 export default mongoose.model("Activity", activitySchema);

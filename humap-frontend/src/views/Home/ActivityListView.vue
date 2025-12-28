@@ -37,8 +37,8 @@ const router = useRouter()
 const activityStore = useActivityStore()
 const authStore = useAuthStore()
 
-onMounted(() => {
-  activityStore.fetchActivities()
+onMounted(async () => {
+  await activityStore.fetchActivities()
 })
 
 const handleLogout = () => {

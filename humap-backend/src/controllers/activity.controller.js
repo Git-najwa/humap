@@ -49,14 +49,14 @@ export async function listActivities(req, res, next) {
     const activities = await Activity.find(query).skip(skip).limit(limit);
     const total = await Activity.countDocuments(query);
 
-    // 📊 Retourner avec métadonnées
+    // 📊 Retourner avec métadonnées (contrat stable attendu par le frontend)
     return ok(res, {
-      data: activities,
+      items: activities,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
@@ -556,7 +556,7 @@ export async function nearbyActivities(req, res, next) {
       { $limit: 20 },
     ]);
 
-    return ok(res, { data: nearby });
+    return ok(res, { items: nearby });
   } catch (error) {
     next(error);
   }
