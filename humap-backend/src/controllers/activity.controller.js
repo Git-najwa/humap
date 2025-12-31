@@ -69,6 +69,14 @@ export async function createActivity(req, res, next) {
     const activity = await Activity.create({ ...req.body, user_id: req.currentUserId });
     return created(res, activity);
   } catch (error) {
+    // Return a 400 with validation details for Mongoose validation errors
+    if (error && error.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Validation error",
+        errors: Object.values(error.errors || {}).map((e) => e.message),
+      });
+    }
+
     next(error);
   }
 }

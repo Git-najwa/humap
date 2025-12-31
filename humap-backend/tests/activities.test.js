@@ -56,6 +56,7 @@ describe("Activity routes", () => {
         await Activity.create({
           title: `Activity ${i}`,
           location: "Lausanne",
+          coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
           mood: i % 2 === 0 ? "calm" : "social",
           price_range: i % 2,
           user_id: user._id,
@@ -81,6 +82,7 @@ describe("Activity routes", () => {
         await Activity.create({
           title: `Activity ${i}`,
           location: "Lausanne",
+          coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
           user_id: user._id,
         });
       }
@@ -98,12 +100,14 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Yoga",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         user_id: user._id,
       });
       await Activity.create({
         title: "Party",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "social",
         user_id: user._id,
       });
@@ -121,12 +125,14 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Free Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         price_range: 0,
         user_id: user._id,
       });
       await Activity.create({
         title: "Expensive Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         price_range: 3,
         user_id: user._id,
       });
@@ -143,6 +149,7 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Calm Free",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         price_range: 0,
         user_id: user._id,
@@ -150,6 +157,7 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Calm Expensive",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         price_range: 3,
         user_id: user._id,
@@ -167,6 +175,7 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         user_id: user._id,
       });
@@ -189,6 +198,7 @@ describe("Activity routes", () => {
         .send({
           title: "Yoga Class",
           location: "Lausanne",
+          coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
           mood: "calm",
           price_range: 1,
         })
@@ -221,7 +231,7 @@ describe("Activity routes", () => {
         .send({
           location: "Lausanne",
         })
-        .expect(422);
+        .expect(400);
 
       expect(res.body).toHaveProperty("errors");
     });
@@ -233,7 +243,7 @@ describe("Activity routes", () => {
         .send({
           title: "Yoga Class",
         })
-        .expect(422);
+        .expect(400);
 
       expect(res.body).toHaveProperty("errors");
     });
@@ -245,6 +255,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Yoga",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -277,6 +288,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Old Title",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -296,6 +308,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Alice's Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -312,6 +325,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -342,6 +356,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity to Delete",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -358,6 +373,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Alice's Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -375,6 +391,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -399,6 +416,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -423,6 +441,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 

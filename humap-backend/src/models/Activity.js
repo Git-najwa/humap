@@ -8,8 +8,20 @@ const activitySchema = new Schema(
     description: { type: String, trim: true },
     location: { type: String, required: true, trim: true },
     coordinates: {
-      type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number] },
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: true,
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // [lng, lat]
+        required: true,
+        validate: {
+          validator: (arr) => Array.isArray(arr) && arr.length === 2,
+          message: "coordinates.coordinates must be [lng, lat]",
+        },
+      },
     },
     mood: { type: String, trim: true },
     nb_people: { type: Number },
