@@ -22,6 +22,7 @@
         </router-link>
         <button @click="addToFavorites" class="action-link">⭐ Ajouter aux favoris</button>
         <button @click="refreshReviews" class="action-link">↻ Rafraîchir avis</button>
+        <button v-if="isOwner" @click="handleDelete" class="action-link" style="background:#dc3545">🗑️ Supprimer</button>
       </div>
 
       <div class="reviews-section">
@@ -39,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useReviewStore } from '../../store/review.store'
@@ -51,6 +52,12 @@ const activityStore = useActivityStore()
 const reviewStore = useReviewStore()
 // keep reviews reactive directly from the store
 const reviews = reviewStore.reviews
+const authStore = useAuthStore()
+
+const isOwner = computed(() => {
+  const ownerId = activityStore.currentActivity?.user_id || activityStore.currentActivity?.owner
+  return !!(authStore.user && ownerId && authStore.user._id === ownerId)
+})
 
 onMounted(async () => {
   await activityStore.fetchActivityById(route.params.id)
@@ -71,6 +78,16 @@ const goBack = () => {
 
 const addToFavorites = () => {
   alert('Ajouté aux favoris !')
+}
+
+const handleDelete = async () => {
+  if (!activityStore.currentActivity) return
+  try {
+    await activityStore.deleteActivity(activityStore.currentActivity._id)
+    router.push('/')
+  } catch (e) {
+    console.error('delete failed', e)
+  }
 }
 </script>
 
