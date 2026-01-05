@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
@@ -63,6 +63,14 @@ const q = ref('')
 const mood = ref('')
 const price_max = ref(null)
 const nb_people = ref(null)
+const pagination = activityStore.pagination
+const filters = activityStore.filters
+
+// initialize local filter inputs from store
+q.value = filters.value?.q || ''
+mood.value = filters.value?.mood || ''
+price_max.value = filters.value?.price_range || null
+nb_people.value = filters.value?.nb_people || null
 
 onMounted(async () => {
   try {
@@ -79,7 +87,12 @@ const applyFilters = async () => {
   if (nb_people.value) filters.nb_people = nb_people.value
   if (q.value) filters.q = q.value
   try {
-    await activityStore.fetchActivities(1, activityStore.pagination.limit, filters)
+    const f = {}
+    if (mood.value) f.mood = mood.value
+    if (price_max.value !== null && price_max.value !== undefined && price_max.value !== '') f.price_range = price_max.value
+    if (nb_people.value) f.nb_people = nb_people.value
+    if (q.value) f.q = q.value
+    await activityStore.applyFilters(f)
   } catch (e) {
     console.error('applyFilters failed', e)
   }
@@ -91,7 +104,11 @@ const resetFilters = async () => {
   price_max.value = null
   nb_people.value = null
   try {
-    await activityStore.fetchActivities(1, activityStore.pagination.limit, {})
+    await activityStore.applyFilters({})
+    q.value = ''
+    mood.value = ''
+    price_max.value = null
+    nb_people.value = null
   } catch (e) {
     console.error(e)
   }
@@ -100,7 +117,7 @@ const resetFilters = async () => {
 const goToPage = async (page) => {
   if (page < 1) return
   try {
-    await activityStore.fetchActivities(page, activityStore.pagination.limit, activityStore.filters)
+    await activityStore.goToPage(page)
   } catch (e) {
     console.error('goToPage failed', e)
   }

@@ -38,6 +38,21 @@ export const useActivityStore = defineStore('activity', () => {
     }
   }
 
+  const applyFilters = async (filterParams = {}) => {
+    filters.value = filterParams
+    return await fetchActivities(1, pagination.value.limit || 10, filters.value)
+  }
+
+  const goToPage = async (page) => {
+    const p = Math.max(1, page)
+    return await fetchActivities(p, pagination.value.limit || 10, filters.value)
+  }
+
+  const setLimit = async (limit) => {
+    pagination.value.limit = limit
+    return await fetchActivities(1, limit, filters.value)
+  }
+
   const fetchActivityById = async (id) => {
     isLoading.value = true
     error.value = null
