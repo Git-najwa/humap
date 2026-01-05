@@ -21,6 +21,7 @@
           Ajouter un avis
         </router-link>
         <button @click="addToFavorites" class="action-link">⭐ Ajouter aux favoris</button>
+        <button @click="refreshReviews" class="action-link">↻ Rafraîchir avis</button>
       </div>
 
       <div class="reviews-section">
@@ -48,13 +49,21 @@ const router = useRouter()
 const route = useRoute()
 const activityStore = useActivityStore()
 const reviewStore = useReviewStore()
-const reviews = ref([])
+// keep reviews reactive directly from the store
+const reviews = reviewStore.reviews
 
 onMounted(async () => {
   await activityStore.fetchActivityById(route.params.id)
   await reviewStore.fetchReviewsByActivity(route.params.id)
-  reviews.value = reviewStore.reviews
 })
+
+const refreshReviews = async () => {
+  try {
+    await reviewStore.fetchReviewsByActivity(route.params.id)
+  } catch (e) {
+    console.error('refreshReviews failed', e)
+  }
+}
 
 const goBack = () => {
   router.back()
