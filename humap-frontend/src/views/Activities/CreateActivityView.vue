@@ -75,10 +75,29 @@ const form = ref({
   mood: '',
   price_range: 0,
   nb_people: 2,
+  // coordinates will be set before submit
+  coordinates: { type: 'Point', coordinates: [null, null] },
 })
+const lng = ref(null)
+const lat = ref(null)
 
 const handleCreate = async () => {
   try {
+    // Client-side validation
+    activityStore.error = null
+
+    // price_range libre côté frontend (aucune restriction appliquée ici)
+
+    // coordinates must be provided
+    const lngVal = Number(lng.value)
+    const latVal = Number(lat.value)
+    if (!Number.isFinite(lngVal) || !Number.isFinite(latVal)) {
+      activityStore.error = 'Veuillez renseigner les coordonnées (longitude et latitude).'
+      return
+    }
+
+    form.value.coordinates = { type: 'Point', coordinates: [lngVal, latVal] }
+
     await activityStore.createActivity(form.value)
     router.push('/')
   } catch (err) {

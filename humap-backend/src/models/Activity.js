@@ -25,7 +25,8 @@ const activitySchema = new Schema(
     },
     mood: { type: String, trim: true },
     nb_people: { type: Number },
-    price_range: { type: Number, min: 0, max: 3 },
+    // Budget libre côté frontend : aucune restriction maximale côté modèle
+    price_range: { type: Number, min: 0 },
     age_range: { type: String, trim: true },
     hours: { type: Number },
     day: { type: String, trim: true },

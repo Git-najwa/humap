@@ -2,11 +2,27 @@
   <div class="activity-list-container">
     <header class="header">
       <h1>Activités HUMAP</h1>
-      <router-link to="/activities/create" class="create-btn">+ Nouvelle activité</router-link>
-      <button @click="handleLogout" class="logout-btn">Déconnexion</button>
+      <div style="display:flex;gap:12px;align-items:center">
+        <router-link to="/activities/create" class="create-btn">+ Nouvelle activité</router-link>
+        <button @click="handleLogout" class="logout-btn">Déconnexion</button>
+      </div>
     </header>
 
     <ErrorMessage :message="activityStore.error" />
+
+    <section class="filters">
+      <input v-model="q" placeholder="Recherche..." @keyup.enter="applyFilters" />
+      <select v-model="mood">
+        <option value="">Tous les moods</option>
+        <option value="calm">calm</option>
+        <option value="social">social</option>
+        <option value="energetic">energetic</option>
+      </select>
+      <input v-model.number="price_max" type="number" placeholder="Prix max" />
+      <input v-model.number="nb_people" type="number" placeholder="Nb personnes" />
+      <button @click="applyFilters" class="create-btn">Filtrer</button>
+      <button @click="resetFilters" class="logout-btn">Réinitialiser</button>
+    </section>
 
     <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
 
@@ -23,6 +39,12 @@
         <router-link :to="`/activities/${activity._id}`" class="detail-link">Voir détails</router-link>
       </div>
     </div>
+
+    <div class="pagination" v-if="pagination.total > pagination.limit">
+      <button @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</button>
+      <span>Page {{ pagination.page }} / {{ pagination.totalPages || Math.ceil(pagination.total / pagination.limit) }}</span>
+      <button @click="goToPage(pagination.page + 1)" :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))">Suiv</button>
+    </div>
   </div>
 </template>
 
@@ -37,9 +59,52 @@ const router = useRouter()
 const activityStore = useActivityStore()
 const authStore = useAuthStore()
 
+const q = ref('')
+const mood = ref('')
+const price_max = ref(null)
+const nb_people = ref(null)
+
 onMounted(async () => {
-  await activityStore.fetchActivities()
+  try {
+    await activityStore.fetchActivities()
+  } catch (e) {
+    console.error('fetchActivities failed:', e)
+  }
 })
+
+const applyFilters = async () => {
+  const filters = {}
+  if (mood.value) filters.mood = mood.value
+  if (price_max.value !== null && price_max.value !== undefined && price_max.value !== '') filters.price_range = price_max.value
+  if (nb_people.value) filters.nb_people = nb_people.value
+  if (q.value) filters.q = q.value
+  try {
+    await activityStore.fetchActivities(1, activityStore.pagination.limit, filters)
+  } catch (e) {
+    console.error('applyFilters failed', e)
+  }
+}
+
+const resetFilters = async () => {
+  q.value = ''
+  mood.value = ''
+  price_max.value = null
+  nb_people.value = null
+  try {
+    await activityStore.fetchActivities(1, activityStore.pagination.limit, {})
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const goToPage = async (page) => {
+  if (page < 1) return
+  try {
+    await activityStore.fetchActivities(page, activityStore.pagination.limit, activityStore.filters)
+  } catch (e) {
+    console.error('goToPage failed', e)
+  }
+}
 
 const handleLogout = () => {
   authStore.logout()
