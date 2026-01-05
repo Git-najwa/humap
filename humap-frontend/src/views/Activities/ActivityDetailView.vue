@@ -20,6 +20,7 @@
         <router-link :to="`/reviews/${activityStore.currentActivity._id}`" class="action-link">
           Ajouter un avis
         </router-link>
+        <router-link v-if="isOwner" :to="`/activities/${activityStore.currentActivity._id}/edit`" class="action-link">✏️ Modifier</router-link>
         <button @click="addToFavorites" class="action-link">⭐ Ajouter aux favoris</button>
         <button @click="refreshReviews" class="action-link">↻ Rafraîchir avis</button>
         <button v-if="isOwner" @click="handleDelete" class="action-link" style="background:#dc3545">🗑️ Supprimer</button>
@@ -44,6 +45,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useReviewStore } from '../../store/review.store'
+import { useAuthStore } from '../../store/auth.store'
 import ErrorMessage from '../../components/ui/ErrorMessage.vue'
 
 const router = useRouter()
