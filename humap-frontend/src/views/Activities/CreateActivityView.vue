@@ -42,6 +42,12 @@
         placeholder="2"
       />
 
+      <div class="coords-row">
+        <AppInput v-model.number="lng" label="Longitude" placeholder="ex: 2.3522" />
+        <AppInput v-model.number="lat" label="Latitude" placeholder="ex: 48.8566" />
+        <button type="button" @click="useMyLocation" class="create-btn">Utiliser ma position</button>
+      </div>
+
       <div class="form-actions">
         <AppButton
           type="submit"
@@ -86,7 +92,14 @@ const handleCreate = async () => {
     // Client-side validation
     activityStore.error = null
 
-    // price_range libre côté frontend (aucune restriction appliquée ici)
+    if (!form.value.title || !form.value.title.trim()) {
+      activityStore.error = 'Le titre est requis.'
+      return
+    }
+    if (!form.value.description || !form.value.description.trim()) {
+      activityStore.error = 'La description est requise.'
+      return
+    }
 
     // coordinates must be provided
     const lngVal = Number(lng.value)
@@ -103,6 +116,24 @@ const handleCreate = async () => {
   } catch (err) {
     console.error(err)
   }
+}
+
+const useMyLocation = () => {
+  activityStore.error = null
+  if (!navigator.geolocation) {
+    activityStore.error = 'Géolocalisation non supportée par ce navigateur.'
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      lat.value = pos.coords.latitude
+      lng.value = pos.coords.longitude
+    },
+    (err) => {
+      activityStore.error = 'Impossible de récupérer la position : ' + err.message
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  )
 }
 
 const goBack = () => {
