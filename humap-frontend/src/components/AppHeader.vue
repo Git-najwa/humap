@@ -2,26 +2,46 @@
   <header class="app-header">
     <div class="header-left">
       <router-link to="/" class="logo">
-        🗺️ HUMAP
+        <span class="logo-icon">H</span>
+        <span class="logo-text">HUMAP</span>
       </router-link>
     </div>
 
     <nav class="header-nav">
       <router-link to="/" class="nav-link">
-        Activités
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <span>Activités</span>
       </router-link>
       <router-link to="/lists" class="nav-link">
-        Mes listes
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>Mes listes</span>
       </router-link>
     </nav>
 
     <div class="header-right">
       <router-link to="/profile" class="profile-btn">
-        <span class="profile-icon">👤</span>
+        <div class="profile-avatar">
+          <img 
+            v-if="authStore.user?.avatar" 
+            :src="authStore.user.avatar" 
+            :alt="displayName"
+            @error="$event.target.style.display = 'none'"
+          />
+          <span v-else class="avatar-initial">{{ avatarInitial }}</span>
+        </div>
         <span class="profile-name">{{ displayName }}</span>
       </router-link>
       <button @click="handleLogout" class="logout-btn" title="Déconnexion">
-        🚪
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
       </button>
     </div>
   </header>
@@ -39,6 +59,11 @@ const displayName = computed(() => {
   return authStore.user?.username || 'Mon profil'
 })
 
+const avatarInitial = computed(() => {
+  const name = authStore.user?.username || 'U'
+  return name.charAt(0).toUpperCase()
+})
+
 const handleLogout = () => {
   authStore.logout()
   router.push('/login')
@@ -50,36 +75,71 @@ const handleLogout = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 0 2rem;
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-left .logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   text-decoration: none;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.logo-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: -0.025em;
 }
 
 .header-nav {
   display: flex;
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 
 .nav-link {
-  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.875rem;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
-.nav-link:hover,
+.nav-link:hover {
+  color: #6366f1;
+  background-color: #f3f4f6;
+}
+
 .nav-link.router-link-active {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  color: #6366f1;
+  background-color: #eef2ff;
+}
+
+.nav-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .header-right {
@@ -91,25 +151,47 @@ const handleLogout = () => {
 .profile-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
+  gap: 0.75rem;
+  padding: 0.375rem 0.75rem 0.375rem 0.375rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  color: #374151;
   text-decoration: none;
-  border-radius: 2rem;
-  transition: all 0.3s ease;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
 }
 
 .profile-btn:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
 }
 
-.profile-icon {
-  font-size: 1.2rem;
+.profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-initial {
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
 }
 
 .profile-name {
   font-weight: 500;
+  font-size: 0.875rem;
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -117,35 +199,62 @@ const handleLogout = () => {
 }
 
 .logout-btn {
-  padding: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: none;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
-  font-size: 1.2rem;
+  color: #6b7280;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .logout-btn:hover {
-  background-color: rgba(220, 53, 69, 0.8);
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.logout-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .app-header {
-    flex-wrap: wrap;
-    gap: 1rem;
-    padding: 1rem;
+    padding: 0 1rem;
+    height: 56px;
   }
 
-  .header-nav {
-    order: 3;
-    width: 100%;
-    justify-content: center;
+  .logo-text {
+    display: none;
+  }
+
+  .nav-link span {
+    display: none;
+  }
+
+  .nav-link {
+    padding: 0.5rem;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
   }
 
   .profile-name {
     display: none;
+  }
+
+  .profile-btn {
+    padding: 0.25rem;
+    border: none;
+    background: transparent;
   }
 }
 </style>
