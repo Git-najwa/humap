@@ -31,7 +31,7 @@
         <div v-if="reviews.length === 0" class="no-reviews">Aucun avis pour cette activité</div>
         <div v-else class="reviews-list">
           <div v-for="review in reviews" :key="review._id" class="review">
-            <p><strong>{{ review.user_id.username }}</strong> - ⭐ {{ review.rating }}/5</p>
+            <p><strong>{{ review.user_id.username }}</strong> - ⭐ {{ review.ranking }}/5</p>
             <p>{{ review.comment }}</p>
           </div>
         </div>

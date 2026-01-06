@@ -6,8 +6,8 @@
 
     <form @submit.prevent="handleAddReview" class="review-form">
       <div class="form-group">
-        <label for="rating">Note (1-5)</label>
-        <select v-model.number="form.rating" id="rating" required>
+        <label for="ranking">Note (1-5)</label>
+        <select v-model.number="form.ranking" id="ranking" required>
           <option value="">-- Choisir une note --</option>
           <option value="1">1 - Mauvais</option>
           <option value="2">2 - Moyen</option>
@@ -53,12 +53,17 @@ const reviewStore = useReviewStore()
 
 const form = ref({
   activity_id: route.params.activityId,
-  rating: '',
+  ranking: '',
   comment: '',
 })
 
 const handleAddReview = async () => {
   try {
+    reviewStore.error = null
+    if (!form.value.ranking) {
+      reviewStore.error = 'Veuillez sélectionner une note.'
+      return
+    }
     await reviewStore.createReview(form.value)
     router.back()
   } catch (err) {
