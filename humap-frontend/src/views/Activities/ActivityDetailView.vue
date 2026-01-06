@@ -9,6 +9,12 @@
     <div v-else-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-md)">
       <div class="flex-between">
         <div>
+          <img
+            class="activity-hero"
+            :src="getActivityImage(activityStore.currentActivity)"
+            :alt="activityStore.currentActivity.title"
+            loading="lazy"
+          />
           <h1 class="text-2xl font-semibold">{{ activityStore.currentActivity.title }}</h1>
           <p class="text-secondary" style="margin-top:8px">{{ activityStore.currentActivity.description }}</p>
         </div>
@@ -121,6 +127,27 @@ const isOwner = computed(() => {
   const userId = authStore.user?._id
   return !!(ownerId && userId && ownerId.toString() === userId.toString())
 })
+
+const DEFAULT_ACTIVITY_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f5e7d7"/>
+        <stop offset="100%" stop-color="#f0d9c7"/>
+      </linearGradient>
+    </defs>
+    <rect width="900" height="520" fill="url(#bg)"/>
+    <circle cx="720" cy="150" r="110" fill="#f7c58f" opacity="0.7"/>
+    <path d="M0 420 L200 300 L360 420 L520 300 L720 420 L900 360 L900 520 L0 520 Z" fill="#e9bfa1"/>
+    <path d="M0 350 L150 250 L300 330 L420 250 L600 350 L900 300 L900 520 L0 520 Z" fill="#d9a887"/>
+    <text x="70" y="140" font-family="Georgia, serif" font-size="38" fill="#7a4f3a">HUMAP</text>
+    <text x="70" y="185" font-family="Georgia, serif" font-size="22" fill="#7a4f3a">Activité locale</text>
+  </svg>`
+)}`;
+
+const getActivityImage = (activity) => {
+  return activity?.photos?.[0] || activity?.image || activity?.photo || activity?.pictures?.[0] || DEFAULT_ACTIVITY_IMAGE
+}
 
 const customLists = computed(() => {
   const map = new Map()
@@ -288,5 +315,14 @@ const deleteReview = async (reviewId) => {
   object-fit: cover;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
+}
+
+.activity-hero {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 12px;
 }
 </style>

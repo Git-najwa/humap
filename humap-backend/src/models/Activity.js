@@ -30,6 +30,7 @@ const activitySchema = new Schema(
     age_range: { type: String, trim: true },
     hours: { type: Number },
     day: { type: String, trim: true },
+    photos: [{ type: String }],
     user_id: { type: Schema.Types.ObjectId, ref: "User" },
     source: { type: String, enum: ["user", "google"], default: "user" },
   },

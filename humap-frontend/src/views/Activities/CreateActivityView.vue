@@ -22,9 +22,31 @@
           <AppButton variant="secondary" @click="useMyLocation" type="button">Utiliser ma position</AppButton>
         </div>
 
+        <div class="form-group" style="margin-top:var(--spacing-md)">
+          <label class="font-medium">Photos de l'activité</label>
+          <div class="photo-input-row">
+            <input
+              class="input"
+              type="file"
+              accept="image/*"
+              multiple
+              @change="handlePhotoUpload"
+            />
+          </div>
+          <div v-if="uploadError" class="text-tertiary" style="margin-top:6px;color:#dc2626">
+            {{ uploadError }}
+          </div>
+          <div v-if="form.photos.length" class="photo-chip-list">
+            <span v-for="(url, idx) in form.photos" :key="`${url}-${idx}`" class="photo-chip">
+              {{ url }}
+              <button type="button" class="photo-chip-remove" @click="removePhoto(idx)">×</button>
+            </span>
+          </div>
+        </div>
+
         <div class="form-actions" style="display:flex;gap:12px;margin-top:var(--spacing-lg)">
-          <AppButton type="submit" variant="primary" :disabled="activityStore.isLoading">
-            {{ activityStore.isLoading ? 'Création...' : 'Créer' }}
+          <AppButton type="submit" variant="primary" :disabled="activityStore.isLoading || isUploading">
+            {{ activityStore.isLoading || isUploading ? 'Création...' : 'Créer' }}
           </AppButton>
           <AppButton type="button" variant="secondary" @click="goBack">Annuler</AppButton>
         </div>
@@ -40,6 +62,7 @@ import { useActivityStore } from '../../store/activity.store'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
+import { uploadService } from '../../services/upload.service'
 
 const router = useRouter()
 const activityStore = useActivityStore()
@@ -55,11 +78,14 @@ const form = ref({
   mood: '',
   price_range: 0,
   nb_people: 2,
+  photos: [],
   // coordinates will be set before submit
   coordinates: { type: 'Point', coordinates: [null, null] },
 })
 const lng = ref(null)
 const lat = ref(null)
+const isUploading = ref(false)
+const uploadError = ref('')
 
 const handleCreate = async () => {
   try {
@@ -92,6 +118,31 @@ const handleCreate = async () => {
   }
 }
 
+const handlePhotoUpload = async (event) => {
+  const files = Array.from(event.target.files || [])
+  if (!files.length) return
+  isUploading.value = true
+  uploadError.value = ''
+  try {
+    for (const file of files) {
+      const response = await uploadService.uploadImage(file)
+      const url = response.data?.url
+      if (url && !form.value.photos.includes(url)) {
+        form.value.photos.push(url)
+      }
+    }
+  } catch (err) {
+    uploadError.value = err.response?.data?.message || 'Erreur lors de l\'upload des photos'
+  } finally {
+    isUploading.value = false
+    event.target.value = ''
+  }
+}
+
+const removePhoto = (index) => {
+  form.value.photos.splice(index, 1)
+}
+
 const useMyLocation = () => {
   activityStore.error = null
   if (!navigator.geolocation) {
@@ -115,3 +166,38 @@ const goBack = () => {
 }
 
 </script>
+
+<style scoped>
+.photo-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.photo-chip-list {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.photo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 0.75rem;
+}
+
+.photo-chip-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: #6b7280;
+}
+</style>

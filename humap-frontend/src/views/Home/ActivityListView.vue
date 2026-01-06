@@ -56,6 +56,12 @@
           <span v-if="isFavorited(activity._id)">★</span>
           <span v-else>☆</span>
         </button>
+        <img
+          class="activity-image"
+          :src="getActivityImage(activity)"
+          :alt="activity.title"
+          loading="lazy"
+        />
         <h3 class="text-lg font-semibold">{{ activity.title }}</h3>
         <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
@@ -256,6 +262,27 @@ const addToCustomList = async (activityId) => {
   }
 }
 
+const DEFAULT_ACTIVITY_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520" viewBox="0 0 800 520">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f5e7d7"/>
+        <stop offset="100%" stop-color="#f0d9c7"/>
+      </linearGradient>
+    </defs>
+    <rect width="800" height="520" fill="url(#bg)"/>
+    <circle cx="640" cy="140" r="90" fill="#f7c58f" opacity="0.7"/>
+    <path d="M0 420 L180 280 L340 400 L480 300 L680 420 L800 360 L800 520 L0 520 Z" fill="#e9bfa1"/>
+    <path d="M0 360 L130 260 L260 340 L380 260 L560 360 L800 300 L800 520 L0 520 Z" fill="#d9a887"/>
+    <text x="60" y="120" font-family="Georgia, serif" font-size="36" fill="#7a4f3a">HUMAP</text>
+    <text x="60" y="165" font-family="Georgia, serif" font-size="20" fill="#7a4f3a">Activité locale</text>
+  </svg>`
+)}`;
+
+const getActivityImage = (activity) => {
+  return activity?.photos?.[0] || activity?.image || activity?.photo || activity?.pictures?.[0] || DEFAULT_ACTIVITY_IMAGE
+}
+
 const initMap = () => {
   if (!mapEl.value || mapInstance.value) return
   const { L } = window
@@ -339,6 +366,15 @@ const refreshMapMarkers = () => {
 .list-inline .input {
   flex: 1;
   min-width: 180px;
+}
+
+.activity-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #e5e7eb;
 }
 
 .map-section {
