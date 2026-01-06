@@ -101,9 +101,26 @@
           ref="avatarInput"
           v-model="form.avatar"
           type="url"
-          label="URL de la photo de profil"
+          label="URL de la photo de profil (optionnel)"
           placeholder="https://exemple.com/photo.jpg"
         />
+        <div class="form-group">
+          <label class="form-label">Photo de profil (depuis l'appareil)</label>
+          <div class="photo-input-row">
+            <input
+              class="form-select"
+              type="file"
+              accept="image/*"
+              @change="handleAvatarUpload"
+            />
+          </div>
+          <div v-if="isUploadingAvatar" class="text-tertiary" style="margin-top:6px">
+            Upload en cours...
+          </div>
+          <div v-if="avatarUploadError" class="text-tertiary" style="margin-top:6px;color:#dc2626">
+            {{ avatarUploadError }}
+          </div>
+        </div>
 
         <div class="form-actions">
           <AppButton type="button" variant="secondary" @click="cancelEditing">
@@ -140,12 +157,15 @@ import { useAuthStore } from '../../store/auth.store'
 import AppInput from '../../components/ui/AppInput.vue'
 import AppButton from '../../components/ui/AppButton.vue'
 import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import { uploadService } from '../../services/upload.service'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const isEditing = ref(false)
 const successMessage = ref('')
+const isUploadingAvatar = ref(false)
+const avatarUploadError = ref('')
 const form = ref({
   username: '',
   gender: '',
@@ -206,6 +226,25 @@ const handleSave = async () => {
   }
 }
 
+const handleAvatarUpload = async (event) => {
+  const file = event.target.files?.[0]
+  if (!file) return
+  isUploadingAvatar.value = true
+  avatarUploadError.value = ''
+  try {
+    const response = await uploadService.uploadImage(file)
+    const url = response.data?.url
+    if (url) {
+      form.value.avatar = url
+    }
+  } catch (err) {
+    avatarUploadError.value = err.response?.data?.message || 'Erreur lors de l\'upload'
+  } finally {
+    isUploadingAvatar.value = false
+    event.target.value = ''
+  }
+}
+
 const confirmDelete = async () => {
   const confirmed = window.confirm(
     'Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.'
@@ -241,6 +280,12 @@ onMounted(() => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   overflow: hidden;
+}
+
+.photo-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /* Header */

@@ -13,7 +13,7 @@
       <div class="map-header">
         <div>
           <h2 class="text-xl font-semibold">Carte des activités</h2>
-          <p class="text-tertiary">Explorez les activités proches, façon Airbnb.</p>
+          <p class="text-tertiary">Explorez les activités proches.</p>
         </div>
         <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
       </div>

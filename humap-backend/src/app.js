@@ -1,4 +1,6 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import createError from "http-errors";
 import logger from "morgan";
 import cors from "cors";
@@ -9,6 +11,7 @@ import activityRoutes from "./routes/activities.routes.js";
 import reviewRoutes from "./routes/reviews.routes.js";
 import reviewByIdRoutes from "./routes/reviewById.routes.js";
 import listRoutes from "./routes/lists.routes.js";
+import uploadRoutes from "./routes/uploads.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { swaggerUi, swaggerSpec } from "./utils/swagger.js";
 
@@ -29,6 +32,10 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDir = path.resolve(__dirname, "../uploads");
+
 app.get("/", (req, res) => res.send("Salut les bgs"));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/auth", authRoutes);
@@ -37,6 +44,8 @@ app.use("/activities", activityRoutes);
 app.use("/activities/:activityId/reviews", reviewRoutes);
 app.use("/reviews", reviewByIdRoutes);
 app.use("/lists", listRoutes);
+app.use("/uploads", uploadRoutes);
+app.use("/uploads", express.static(uploadDir));
 
 app.use((req, res, next) => {
   next(createError(404, "Not Found"));

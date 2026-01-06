@@ -26,16 +26,18 @@
         />
 
         <div class="form-group">
-          <label class="font-medium">Photos (URLs)</label>
+          <label class="font-medium">Photos (depuis l'appareil)</label>
           <div class="photo-input-row">
-            <AppInput
-              v-model="photoUrl"
-              placeholder="https://exemple.com/photo.jpg"
-              type="url"
+            <input
+              class="input"
+              type="file"
+              accept="image/*"
+              multiple
+              @change="handlePhotoUpload"
             />
-            <AppButton variant="secondary" type="button" @click="addPhoto">
-              Ajouter
-            </AppButton>
+          </div>
+          <div v-if="uploadError" class="text-tertiary" style="margin-top:6px;color:#dc2626">
+            {{ uploadError }}
           </div>
           <div v-if="form.pictures.length" class="photo-chip-list">
             <span v-for="(url, idx) in form.pictures" :key="`${url}-${idx}`" class="photo-chip">
@@ -48,10 +50,10 @@
         <div class="form-actions" style="margin-top:var(--spacing-md)">
           <AppButton
             type="submit"
-            :disabled="reviewStore.isLoading"
+            :disabled="reviewStore.isLoading || isUploading"
             variant="primary"
           >
-            {{ reviewStore.isLoading ? 'Envoi...' : 'Poster l\'avis' }}
+            {{ reviewStore.isLoading || isUploading ? 'Envoi...' : 'Poster l\'avis' }}
           </AppButton>
           <AppButton variant="secondary" @click="goBack">Annuler</AppButton>
         </div>
@@ -67,6 +69,7 @@ import { useReviewStore } from '../../store/review.store'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
+import { uploadService } from '../../services/upload.service'
 
 const AppInput = AppInputModern
 const AppButton = AppButtonModern
@@ -81,7 +84,8 @@ const form = ref({
   comment: '',
   pictures: [],
 })
-const photoUrl = ref('')
+const isUploading = ref(false)
+const uploadError = ref('')
 
 const handleAddReview = async () => {
   try {
@@ -102,17 +106,29 @@ const handleAddReview = async () => {
   }
 }
 
-const addPhoto = () => {
-  const url = photoUrl.value.trim()
-  if (!url) return
-  if (!form.value.pictures.includes(url)) {
-    form.value.pictures.push(url)
-  }
-  photoUrl.value = ''
-}
-
 const removePhoto = (index) => {
   form.value.pictures.splice(index, 1)
+}
+
+const handlePhotoUpload = async (event) => {
+  const files = Array.from(event.target.files || [])
+  if (!files.length) return
+  isUploading.value = true
+  uploadError.value = ''
+  try {
+    for (const file of files) {
+      const response = await uploadService.uploadImage(file)
+      const url = response.data?.url
+      if (url && !form.value.pictures.includes(url)) {
+        form.value.pictures.push(url)
+      }
+    }
+  } catch (err) {
+    uploadError.value = err.response?.data?.message || 'Erreur lors de l\'upload des photos'
+  } finally {
+    isUploading.value = false
+    event.target.value = ''
+  }
 }
 
 const goBack = () => {
