@@ -6,6 +6,9 @@
         <router-link to="/activities/create">
           <AppButton-modern variant="primary">+ Nouvelle activité</AppButton-modern>
         </router-link>
+        <router-link to="/lists">
+          <AppButton-modern variant="secondary">Favoris ({{ likedCount }})</AppButton-modern>
+        </router-link>
         <AppButton-modern variant="secondary" @click="handleLogout">Déconnexion</AppButton-modern>
       </div>
     </header>
@@ -57,10 +60,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
+import { useListStore } from '../../store/list.store'
 import ErrorMessage from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
@@ -68,6 +72,9 @@ import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 const router = useRouter()
 const activityStore = useActivityStore()
 const authStore = useAuthStore()
+const listStore = useListStore()
+
+const likedCount = computed(() => listStore.lists.filter(l => l.list_type === 'liked').length)
 
 const q = ref('')
 const mood = ref('')
@@ -85,6 +92,14 @@ nb_people.value = filters.value?.nb_people || null
 onMounted(async () => {
   try {
     await activityStore.fetchActivities()
+    // also fetch user's lists to show favorites badge
+    if (authStore.user) {
+      try {
+        await listStore.fetchAllLists()
+      } catch (e) {
+        console.warn('Could not load user lists for badge', e)
+      }
+    }
   } catch (e) {
     console.error('fetchActivities failed:', e)
   }
