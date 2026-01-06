@@ -7,6 +7,18 @@
 
     <ErrorMessage :message="listStore.error" />
 
+    <section class="favorites-section" v-if="likedActivities.length">
+      <h2>Favoris</h2>
+      <div class="lists-grid">
+        <div v-for="act in likedActivities" :key="act._id" class="list-card">
+          <h3>{{ act.title }}</h3>
+          <p class="count">{{ act.location }}</p>
+          <router-link :to="`/activities/${act._id}`" class="open-link">Voir</router-link>
+          <button @click="toggleFavorite(act._id)" class="delete-btn">Retirer</button>
+        </div>
+      </div>
+    </section>
+
     <div v-if="showCreateForm" class="create-form-container">
       <input v-model="newListName" type="text" placeholder="Nom de la liste" class="input" />
       <button @click="handleCreateList" class="save-btn">Créer</button>
@@ -32,14 +44,30 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useListStore } from '../../store/list.store'
+import { useActivityStore } from '../../store/activity.store'
 import ErrorMessage from '../../components/ui/ErrorMessage.vue'
 
 const listStore = useListStore()
+const activityStore = useActivityStore()
 const showCreateForm = ref(false)
 const newListName = ref('')
+const likedActivities = ref([])
 
-onMounted(() => {
-  listStore.fetchAllLists()
+onMounted(async () => {
+  try {
+    await listStore.fetchAllLists()
+    // load liked activities details
+    const likedEntries = listStore.lists.filter(l => l.list_type === 'liked')
+    if (likedEntries.length) {
+      const promises = likedEntries.map(e => activityStore.fetchActivityById(e.activity_id))
+      const results = await Promise.allSettled(promises)
+      likedActivities.value = results
+        .filter(r => r.status === 'fulfilled')
+        .map(r => r.value)
+    }
+  } catch (err) {
+    console.error(err)
+  }
 })
 
 const handleCreateList = async () => {
@@ -61,6 +89,21 @@ const deleteList = async (id) => {
     } catch (err) {
       console.error(err)
     }
+  }
+}
+
+const toggleFavorite = async (activityId) => {
+  try {
+    await activityStore.toggleLike(activityId)
+    // refresh lists and favorites
+    await listStore.fetchAllLists()
+    // reload liked activities
+    const likedEntries = listStore.lists.filter(l => l.list_type === 'liked')
+    const promises = likedEntries.map(e => activityStore.fetchActivityById(e.activity_id))
+    const results = await Promise.allSettled(promises)
+    likedActivities.value = results.filter(r => r.status === 'fulfilled').map(r => r.value)
+  } catch (err) {
+    console.error('toggleFavorite failed', err)
   }
 }
 </script>
