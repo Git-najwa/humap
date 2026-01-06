@@ -1,38 +1,49 @@
 <template>
-  <div class="activity-detail-container">
-    <button @click="goBack" class="back-btn">← Retour</button>
+  <div class="container">
+    <AppButton variant="secondary" @click="goBack">← Retour</AppButton>
 
     <ErrorMessage :message="activityStore.error" />
 
-    <div v-if="activityStore.isLoading" class="loading">Chargement de l'activité...</div>
+    <div v-if="activityStore.isLoading" class="loading text-tertiary">Chargement de l'activité...</div>
 
-    <div v-else-if="activityStore.currentActivity" class="activity-detail">
-      <h1>{{ activityStore.currentActivity.title }}</h1>
-      <p class="description">{{ activityStore.currentActivity.description }}</p>
-      <div class="details">
-        <p><strong>📍 Lieu :</strong> {{ activityStore.currentActivity.location }}</p>
-        <p><strong>🎭 Ambiance :</strong> {{ activityStore.currentActivity.mood }}</p>
-        <p><strong>💰 Budget :</strong> {{ activityStore.currentActivity.price_range }}</p>
-        <p><strong>👥 Nombre de personnes :</strong> {{ activityStore.currentActivity.nb_people }}</p>
+    <div v-else-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-md)">
+      <div class="flex-between">
+        <div>
+          <h1 class="text-2xl font-semibold">{{ activityStore.currentActivity.title }}</h1>
+          <p class="text-secondary" style="margin-top:8px">{{ activityStore.currentActivity.description }}</p>
+        </div>
+        <div class="flex-col" style="gap:8px">
+          <AppButton v-if="isOwner" variant="secondary" @click="() => $router.push(`/activities/${activityStore.currentActivity._id}/edit`)">✏️ Modifier</AppButton>
+          <AppButton variant="primary" @click="addToFavorites">⭐ Favoris</AppButton>
+        </div>
       </div>
 
-      <div class="actions">
-        <router-link :to="`/reviews/${activityStore.currentActivity._id}`" class="action-link">
-          Ajouter un avis
+      <div class="details" style="margin-top:var(--spacing-md);display:flex;gap:12px;align-items:center;justify-content:space-between">
+        <div>
+          <p class="text-tertiary">📍 {{ activityStore.currentActivity.location }}</p>
+          <p class="text-tertiary">🎭 {{ activityStore.currentActivity.mood }}</p>
+        </div>
+        <div>
+          <p class="text-tertiary">💰 {{ activityStore.currentActivity.price_range }}</p>
+          <p class="text-tertiary">👥 {{ activityStore.currentActivity.nb_people }}</p>
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top:var(--spacing-md);display:flex;gap:12px">
+        <router-link :to="`/reviews/${activityStore.currentActivity._id}`">
+          <AppButton variant="secondary">Ajouter un avis</AppButton>
         </router-link>
-        <router-link v-if="isOwner" :to="`/activities/${activityStore.currentActivity._id}/edit`" class="action-link">✏️ Modifier</router-link>
-        <button @click="addToFavorites" class="action-link">⭐ Ajouter aux favoris</button>
-        <button @click="refreshReviews" class="action-link">↻ Rafraîchir avis</button>
-        <button v-if="isOwner" @click="handleDelete" class="action-link" style="background:#dc3545">🗑️ Supprimer</button>
+        <AppButton variant="secondary" @click="refreshReviews">↻ Rafraîchir avis</AppButton>
+        <AppButton v-if="isOwner" variant="danger" @click="handleDelete">🗑️ Supprimer</AppButton>
       </div>
 
-      <div class="reviews-section">
-        <h2>Avis</h2>
-        <div v-if="reviews.length === 0" class="no-reviews">Aucun avis pour cette activité</div>
-        <div v-else class="reviews-list">
-          <div v-for="review in reviews" :key="review._id" class="review">
-            <p><strong>{{ review.user_id.username }}</strong> - ⭐ {{ review.ranking }}/5</p>
-            <p>{{ review.comment }}</p>
+      <div class="reviews-section" style="margin-top:var(--spacing-md)">
+        <h2 class="font-semibold">Avis</h2>
+        <div v-if="reviews.length === 0" class="no-reviews text-tertiary">Aucun avis pour cette activité</div>
+        <div v-else class="reviews-list" style="margin-top:var(--spacing-md)">
+          <div v-for="review in reviews" :key="review._id" class="card" style="margin-bottom:var(--spacing-sm)">
+            <p class="font-medium">{{ review.user_id.username }} - ⭐ {{ review.ranking }}/5</p>
+            <p class="text-secondary" style="margin-top:6px">{{ review.comment }}</p>
           </div>
         </div>
       </div>
@@ -46,7 +57,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useReviewStore } from '../../store/review.store'
 import { useAuthStore } from '../../store/auth.store'
-import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -55,6 +67,10 @@ const reviewStore = useReviewStore()
 // keep reviews reactive directly from the store
 const reviews = reviewStore.reviews
 const authStore = useAuthStore()
+
+// expose modern components to template by importing them
+const AppButton = AppButtonModern
+const ErrorMessage = ErrorMessageModern
 
 const isOwner = computed(() => {
   const ownerId = activityStore.currentActivity?.user_id || activityStore.currentActivity?.owner
