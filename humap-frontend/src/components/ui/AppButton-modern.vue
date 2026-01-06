@@ -41,8 +41,13 @@ defineEmits(['click'])
   cursor: not-allowed;
 }
 
+.modern-btn:focus-visible {
+  outline: 2px solid rgba(14, 116, 144, 0.35);
+  outline-offset: 2px;
+}
+
 .modern-btn-primary {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, #0E7490 0%, #0B4C5F 100%);
   color: white;
 }
 
@@ -65,8 +70,8 @@ defineEmits(['click'])
 }
 
 .modern-btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-bg-alt);
-  border-color: var(--color-text-tertiary);
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(124, 139, 154, 0.4);
 }
 
 .modern-btn-danger {

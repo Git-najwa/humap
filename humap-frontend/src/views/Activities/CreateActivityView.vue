@@ -3,30 +3,30 @@
     <div class="container">
       <h1 class="text-2xl font-semibold" style="margin-bottom:var(--spacing-md)">Créer une nouvelle activité</h1>
 
-      <ErrorMessage-modern :message="activityStore.error" />
+      <ErrorMessage :message="activityStore.error" />
 
       <form @submit.prevent="handleCreate" class="card">
-        <AppInput-modern v-model="form.title" label="Titre" placeholder="Nom de l'activité" />
-        <AppInput-modern v-model="form.description" label="Description" placeholder="Décrivez votre activité..." />
-        <AppInput-modern v-model="form.location" label="Lieu" placeholder="Lieu de l'activité" />
-        <AppInput-modern v-model="form.mood" label="Ambiance" placeholder="Ambiance (calm, energetic, ...)" />
+        <AppInput v-model="form.title" label="Titre" placeholder="Nom de l'activité" />
+        <AppInput v-model="form.description" label="Description" placeholder="Décrivez votre activité..." :rows="4" />
+        <AppInput v-model="form.location" label="Lieu" placeholder="Lieu de l'activité" />
+        <AppInput v-model="form.mood" label="Ambiance" placeholder="Ambiance (calm, energetic, ...)" />
 
         <div style="display:flex;gap:12px;align-items:center">
-          <AppInput-modern v-model.number="form.price_range" type="number" label="Budget" placeholder="0" />
-          <AppInput-modern v-model.number="form.nb_people" type="number" label="Nombre de personnes" placeholder="2" />
+          <AppInput v-model.number="form.price_range" type="number" label="Budget" placeholder="0" />
+          <AppInput v-model.number="form.nb_people" type="number" label="Nombre de personnes" placeholder="2" />
         </div>
 
         <div class="coords-row" style="display:flex;gap:12px;align-items:center;margin-top:var(--spacing-md)">
-          <AppInput-modern v-model.number="lng" label="Longitude" placeholder="ex: 2.3522" />
-          <AppInput-modern v-model.number="lat" label="Latitude" placeholder="ex: 48.8566" />
-          <AppButton-modern variant="secondary" @click="useMyLocation" type="button">Utiliser ma position</AppButton-modern>
+          <AppInput v-model.number="lng" label="Longitude" placeholder="ex: 2.3522" />
+          <AppInput v-model.number="lat" label="Latitude" placeholder="ex: 48.8566" />
+          <AppButton variant="secondary" @click="useMyLocation" type="button">Utiliser ma position</AppButton>
         </div>
 
         <div class="form-actions" style="display:flex;gap:12px;margin-top:var(--spacing-lg)">
-          <AppButton-modern type="submit" variant="primary" :disabled="activityStore.isLoading">
+          <AppButton type="submit" variant="primary" :disabled="activityStore.isLoading">
             {{ activityStore.isLoading ? 'Création...' : 'Créer' }}
-          </AppButton-modern>
-          <AppButton-modern type="button" variant="secondary" @click="goBack">Annuler</AppButton-modern>
+          </AppButton>
+          <AppButton type="button" variant="secondary" @click="goBack">Annuler</AppButton>
         </div>
       </form>
     </div>
@@ -43,6 +43,10 @@ import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 
 const router = useRouter()
 const activityStore = useActivityStore()
+
+const AppInput = AppInputModern
+const AppButton = AppButtonModern
+const ErrorMessage = ErrorMessageModern
 
 const form = ref({
   title: '',
@@ -109,46 +113,5 @@ const useMyLocation = () => {
 const goBack = () => {
   router.back()
 }
+
 </script>
-
-<style scoped>
-.create-activity-container {
-  padding: 2rem;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.create-form {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.cancel-btn {
-  flex: 1;
-  padding: 0.75rem 1.5rem;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.cancel-btn:hover {
-  background-color: #545b62;
-}
-</style>

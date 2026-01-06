@@ -15,11 +15,15 @@ defineProps({
 
 <style scoped>
 .error-message {
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 0.5rem;
-  color: #721c24;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  background-color: rgba(254, 226, 226, 0.8);
+  border: 1px solid rgba(254, 202, 202, 0.8);
+  border-radius: var(--radius-lg);
+  color: #B91C1C;
+  font-weight: var(--font-weight-medium);
 }
 </style>

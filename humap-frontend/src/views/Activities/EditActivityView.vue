@@ -1,27 +1,31 @@
 <template>
   <div class="edit-activity-container">
-    <h1>Modifier l'activité</h1>
+    <div class="container">
+      <h1 class="text-2xl font-semibold" style="margin-bottom:var(--spacing-md)">Modifier l'activité</h1>
 
-    <ErrorMessage :message="activityStore.error" />
+      <ErrorMessage :message="activityStore.error" />
 
-    <form @submit.prevent="handleUpdate" class="edit-form">
-      <AppInput v-model="form.title" label="Titre" required />
-      <AppInput v-model="form.description" label="Description" required />
-      <AppInput v-model="form.location" label="Lieu" required />
-      <AppInput v-model="form.mood" label="Ambiance" />
-      <AppInput v-model.number="form.price_range" type="number" label="Budget" />
-      <AppInput v-model.number="form.nb_people" type="number" label="Nb personnes" />
+      <form @submit.prevent="handleUpdate" class="card edit-form">
+        <AppInput v-model="form.title" label="Titre" required />
+        <AppInput v-model="form.description" label="Description" :rows="4" required />
+        <AppInput v-model="form.location" label="Lieu" required />
+        <AppInput v-model="form.mood" label="Ambiance" />
+        <AppInput v-model.number="form.price_range" type="number" label="Budget" />
+        <AppInput v-model.number="form.nb_people" type="number" label="Nb personnes" />
 
-      <div class="coords-row">
-        <AppInput v-model.number="lng" label="Longitude" />
-        <AppInput v-model.number="lat" label="Latitude" />
-      </div>
+        <div class="coords-row" style="display:flex;gap:12px;align-items:center">
+          <AppInput v-model.number="lng" label="Longitude" />
+          <AppInput v-model.number="lat" label="Latitude" />
+        </div>
 
-      <div class="form-actions">
-        <AppButton :disabled="activityStore.isLoading" type="submit">{{ activityStore.isLoading ? 'Enregistrement...' : 'Enregistrer' }}</AppButton>
-        <button type="button" @click="goBack" class="cancel-btn">Annuler</button>
-      </div>
-    </form>
+        <div class="form-actions" style="display:flex;gap:12px;margin-top:var(--spacing-lg)">
+          <AppButton :disabled="activityStore.isLoading" type="submit">
+            {{ activityStore.isLoading ? 'Enregistrement...' : 'Enregistrer' }}
+          </AppButton>
+          <AppButton type="button" variant="secondary" @click="goBack">Annuler</AppButton>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -78,9 +82,3 @@ const handleUpdate = async () => {
 
 const goBack = () => router.back()
 </script>
-
-<style scoped>
-.edit-activity-container { padding: 2rem; max-width: 700px; margin: 0 auto }
-.form-actions { display:flex; gap:1rem; margin-top:1.5rem }
-.cancel-btn { background:#6c757d; color:white; border:none; padding:0.75rem 1rem; border-radius:0.5rem }
-</style>

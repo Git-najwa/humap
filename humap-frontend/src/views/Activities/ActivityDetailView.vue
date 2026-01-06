@@ -17,36 +17,6 @@
           <AppButton :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">{{ isLiked ? '★ Favori' : '☆ Favoris' }}</AppButton>
         </div>
       </div>
-
-      <div class="details" style="margin-top:var(--spacing-md);display:flex;gap:12px;align-items:center;justify-content:space-between">
-        <div>
-          <p class="text-tertiary">📍 {{ activityStore.currentActivity.location }}</p>
-          <p class="text-tertiary">🎭 {{ activityStore.currentActivity.mood }}</p>
-        </div>
-        <div>
-          <p class="text-tertiary">💰 {{ activityStore.currentActivity.price_range }}</p>
-          <p class="text-tertiary">👥 {{ activityStore.currentActivity.nb_people }}</p>
-        </div>
-      </div>
-
-      <div class="actions" style="margin-top:var(--spacing-md);display:flex;gap:12px">
-        <router-link :to="`/reviews/${activityStore.currentActivity._id}`">
-          <AppButton variant="secondary">Ajouter un avis</AppButton>
-        </router-link>
-        <AppButton variant="secondary" @click="refreshReviews">↻ Rafraîchir avis</AppButton>
-        <AppButton v-if="isOwner" variant="danger" @click="handleDelete">🗑️ Supprimer</AppButton>
-      </div>
-
-      <div class="reviews-section" style="margin-top:var(--spacing-md)">
-        <h2 class="font-semibold">Avis</h2>
-        <div v-if="reviews.length === 0" class="no-reviews text-tertiary">Aucun avis pour cette activité</div>
-        <div v-else class="reviews-list" style="margin-top:var(--spacing-md)">
-          <div v-for="review in reviews" :key="review._id" class="card" style="margin-bottom:var(--spacing-sm)">
-            <p class="font-medium">{{ review.user_id.username }} - ⭐ {{ review.ranking }}/5</p>
-            <p class="text-secondary" style="margin-top:6px">{{ review.comment }}</p>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -109,7 +79,7 @@ const goBack = () => {
   router.back()
 }
 
-const addToFavorites = () => {
+const addToFavorites = async () => {
   if (!authStore.user) {
     router.push('/login')
     return
@@ -137,115 +107,3 @@ const handleDelete = async () => {
   }
 }
 </script>
-
-<style scoped>
-.activity-detail-container {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.back-btn {
-  padding: 0.5rem 1rem;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  margin-bottom: 1rem;
-}
-
-.back-btn:hover {
-  background-color: #545b62;
-}
-
-.activity-detail {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  margin-top: 0;
-  color: #333;
-}
-
-.description {
-  font-size: 1.1rem;
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-}
-
-.details {
-  background-color: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.details p {
-  margin: 0.5rem 0;
-}
-
-.actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.action-link {
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.action-link:hover {
-  background-color: #0056b3;
-}
-
-.reviews-section {
-  margin-top: 2rem;
-  border-top: 1px solid #ddd;
-  padding-top: 1.5rem;
-}
-
-.reviews-section h2 {
-  margin-top: 0;
-}
-
-.no-reviews {
-  color: #999;
-  text-align: center;
-  padding: 1rem;
-}
-
-.reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.review {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
-
-.review p {
-  margin: 0.5rem 0;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-</style>

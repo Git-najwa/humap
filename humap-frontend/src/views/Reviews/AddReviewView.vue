@@ -3,7 +3,7 @@
     <div class="card">
       <h1 class="text-2xl font-semibold">Ajouter un avis</h1>
 
-      <ErrorMessage-modern :message="reviewStore.error" />
+      <ErrorMessage :message="reviewStore.error" />
 
       <form @submit.prevent="handleAddReview" class="review-form">
         <div class="form-group">
@@ -18,21 +18,22 @@
           </select>
         </div>
 
-        <AppInput-modern
+        <AppInput
           v-model="form.comment"
+          label="Commentaire"
           placeholder="Partager votre expérience..."
-          rows="4"
+          :rows="4"
         />
 
         <div class="form-actions" style="margin-top:var(--spacing-md)">
-          <AppButton-modern
+          <AppButton
             type="submit"
             :disabled="reviewStore.isLoading"
             variant="primary"
           >
             {{ reviewStore.isLoading ? 'Envoi...' : 'Poster l\'avis' }}
-          </AppButton-modern>
-          <AppButton-modern variant="secondary" @click="goBack">Annuler</AppButton-modern>
+          </AppButton>
+          <AppButton variant="secondary" @click="goBack">Annuler</AppButton>
         </div>
       </form>
     </div>
@@ -80,69 +81,3 @@ const goBack = () => {
   router.back()
 }
 </script>
-
-<style scoped>
-.add-review-container {
-  padding: 2rem;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-h1 {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.review-form {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.form-group select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-}
-
-.form-group select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.cancel-btn {
-  flex: 1;
-  padding: 0.75rem 1.5rem;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.cancel-btn:hover {
-  background-color: #545b62;
-}
-</style>

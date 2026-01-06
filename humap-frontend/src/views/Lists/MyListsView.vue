@@ -1,23 +1,17 @@
 <template>
-  <div class="lists-container">
-    <header class="header">
-      <h1>Mes listes</h1>
-      <button @click="showCreateForm = true" class="create-btn">+ Nouvelle liste</button>
-    </header>
-<template>
   <div class="lists-container container">
     <header class="header">
       <h1 class="text-2xl font-semibold">Mes listes</h1>
-      <AppButton-modern variant="primary" @click="() => showCreateForm = true">+ Nouvelle liste</AppButton-modern>
+      <AppButtonModern variant="primary" @click="() => showCreateForm = true">+ Nouvelle liste</AppButtonModern>
     </header>
 
     <ErrorMessage :message="listStore.error" />
 
     <div v-if="showCreateForm" class="create-form-container card">
-      <AppInput-modern v-model="newListName" placeholder="Nom de la liste" />
+      <AppInputModern v-model="newListName" placeholder="Nom de la liste" />
       <div style="display:flex;gap:12px;margin-top:var(--spacing-sm)">
-        <AppButton-modern variant="primary" @click="handleCreateList">Créer</AppButton-modern>
-        <AppButton-modern variant="secondary" @click="() => showCreateForm = false">Annuler</AppButton-modern>
+        <AppButtonModern variant="primary" @click="handleCreateList">Créer</AppButtonModern>
+        <AppButtonModern variant="secondary" @click="() => showCreateForm = false">Annuler</AppButtonModern>
       </div>
     </div>
 
@@ -32,15 +26,9 @@
         <h3 class="font-semibold">{{ list.name }}</h3>
         <p class="count text-tertiary">{{ list.activities?.length || 0 }} activité(s)</p>
         <div style="margin-top:12px;display:flex;gap:8px">
-          <AppButton-modern variant="secondary" @click="() => $router.push(`/lists/${list._id}`)">Ouvrir</AppButton-modern>
-          <AppButton-modern variant="danger" @click="deleteList(list._id)">Supprimer</AppButton-modern>
+          <AppButtonModern variant="secondary" @click="() => $router.push(`/lists/${list._id}`)">Ouvrir</AppButtonModern>
+          <AppButtonModern variant="danger" @click="deleteList(list._id)">Supprimer</AppButtonModern>
         </div>
-      </div>
-    </div>
-  </div>
-</template>
-        <p class="count">{{ list.activities?.length || 0 }} activité(s)</p>
-        <button @click="deleteList(list._id)" class="delete-btn">Supprimer</button>
       </div>
     </div>
   </div>
@@ -106,120 +94,3 @@ const toggleFavorite = async (activityId) => {
   }
 }
 </script>
-
-<style scoped>
-.lists-container {
-  padding: 2rem;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-h1 {
-  margin: 0;
-}
-
-.create-btn {
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.create-btn:hover {
-  background-color: #0056b3;
-}
-
-.create-form-container {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  background: white;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 0.5rem;
-}
-
-.save-btn, .cancel-btn, .delete-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.save-btn {
-  background-color: #28a745;
-  color: white;
-}
-
-.save-btn:hover {
-  background-color: #218838;
-}
-
-.cancel-btn {
-  background-color: #6c757d;
-  color: white;
-}
-
-.cancel-btn:hover {
-  background-color: #545b62;
-}
-
-.delete-btn {
-  background-color: #dc3545;
-  color: white;
-  width: 100%;
-  margin-top: 1rem;
-}
-
-.delete-btn:hover {
-  background-color: #c82333;
-}
-
-.loading, .no-lists {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
-.lists-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 2rem;
-}
-
-.list-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.list-card h3 {
-  margin: 0 0 0.5rem 0;
-  color: #333;
-}
-
-.count {
-  color: #666;
-  margin: 0.5rem 0;
-  font-size: 0.9rem;
-}
-</style>

@@ -4,29 +4,29 @@
       <h1 class="text-2xl font-semibold">Activités HUMAP</h1>
       <div class="flex gap-sm">
         <router-link to="/activities/create">
-          <AppButton-modern variant="primary">+ Nouvelle activité</AppButton-modern>
+          <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
         </router-link>
         <router-link to="/lists">
-          <AppButton-modern variant="secondary">Favoris ({{ likedCount }})</AppButton-modern>
+          <AppButtonModern variant="secondary">Favoris ({{ likedCount }})</AppButtonModern>
         </router-link>
-        <AppButton-modern variant="secondary" @click="handleLogout">Déconnexion</AppButton-modern>
+        <AppButtonModern variant="secondary" @click="handleLogout">Déconnexion</AppButtonModern>
       </div>
     </header>
 
     <ErrorMessage :message="activityStore.error" />
 
     <section class="filters container card" style="display:flex;gap:12px;align-items:center;margin-bottom:var(--spacing-lg)">
-      <AppInput-modern v-model="q" placeholder="Recherche..." />
+      <AppInputModern v-model="q" placeholder="Recherche..." />
       <select v-model="mood" class="input" style="width:180px">
         <option value="">Tous les moods</option>
         <option value="calm">calm</option>
         <option value="social">social</option>
         <option value="energetic">energetic</option>
       </select>
-      <AppInput-modern v-model.number="price_max" type="number" placeholder="Prix max" style="width:120px" />
-      <AppInput-modern v-model.number="nb_people" type="number" placeholder="Nb personnes" style="width:120px" />
-      <AppButton-modern variant="primary" @click="applyFilters">Filtrer</AppButton-modern>
-      <AppButton-modern variant="secondary" @click="resetFilters">Réinitialiser</AppButton-modern>
+      <AppInputModern v-model.number="price_max" type="number" placeholder="Prix max" style="width:120px" />
+      <AppInputModern v-model.number="nb_people" type="number" placeholder="Nb personnes" style="width:120px" />
+      <AppButtonModern variant="primary" @click="applyFilters">Filtrer</AppButtonModern>
+      <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
     </section>
 
     <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
@@ -49,27 +49,38 @@
             <p class="mood text-tertiary">Ambiance : {{ activity.mood }}</p>
           </div>
           <router-link :to="`/activities/${activity._id}`">
-            <AppButton-modern variant="secondary">Voir</AppButton-modern>
+            <AppButtonModern variant="secondary">Voir</AppButtonModern>
           </router-link>
         </div>
       </div>
     </div>
 
-    <div class="pagination container" v-if="pagination.total > pagination.limit" style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:var(--spacing-lg)">
-      <AppButton-modern variant="secondary" @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</AppButton-modern>
+    <div
+      v-if="pagination.total > pagination.limit"
+      class="pagination container"
+      style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:var(--spacing-lg)"
+    >
+      <AppButtonModern variant="secondary" @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</AppButtonModern>
       <span class="text-sm text-tertiary">Page {{ pagination.page }} / {{ pagination.totalPages || Math.ceil(pagination.total / pagination.limit) }}</span>
-      <AppButton-modern variant="secondary" @click="goToPage(pagination.page + 1)" :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))">Suiv</AppButton-modern>
+      <AppButtonModern
+        variant="secondary"
+        @click="goToPage(pagination.page + 1)"
+        :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))"
+      >
+        Suiv
+      </AppButtonModern>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
 import { useFavoriteStore } from '../../store/favorite.store'
-import ErrorMessage from '../../components/ui/ErrorMessage-modern.vue'
+import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
@@ -77,52 +88,42 @@ const router = useRouter()
 const activityStore = useActivityStore()
 const authStore = useAuthStore()
 const favoriteStore = useFavoriteStore()
-const likedCount = favoriteStore.count
+
+const { pagination } = storeToRefs(activityStore)
+const { favorites, count: likedCount } = storeToRefs(favoriteStore)
+
+const ErrorMessage = ErrorMessageModern
 
 const q = ref('')
 const mood = ref('')
 const price_max = ref(null)
 const nb_people = ref(null)
-const pagination = activityStore.pagination
-const filters = activityStore.filters
 
-// initialize local filter inputs from store
-q.value = filters.value?.q || ''
-mood.value = filters.value?.mood || ''
-price_max.value = filters.value?.price_range || null
-nb_people.value = filters.value?.nb_people || null
+const buildFilters = () => {
+  const filters = {}
+  if (q.value) filters.q = q.value
+  if (mood.value) filters.mood = mood.value
+  if (price_max.value !== null && price_max.value !== '') filters.price_max = price_max.value
+  if (nb_people.value !== null && nb_people.value !== '') filters.nb_people = nb_people.value
+  return filters
+}
 
 onMounted(async () => {
   try {
     await activityStore.fetchActivities()
-    // also load user's favorites for badge
     if (authStore.user) {
-      try {
-        await favoriteStore.loadFavorites()
-      } catch (e) {
-        console.warn('Could not load favorites for badge', e)
-      }
+      await favoriteStore.loadFavorites()
     }
-  } catch (e) {
-    console.error('fetchActivities failed:', e)
+  } catch (err) {
+    console.error(err)
   }
 })
 
 const applyFilters = async () => {
-  const filters = {}
-  if (mood.value) filters.mood = mood.value
-  if (price_max.value !== null && price_max.value !== undefined && price_max.value !== '') filters.price_range = price_max.value
-  if (nb_people.value) filters.nb_people = nb_people.value
-  if (q.value) filters.q = q.value
   try {
-    const f = {}
-    if (mood.value) f.mood = mood.value
-    if (price_max.value !== null && price_max.value !== undefined && price_max.value !== '') f.price_range = price_max.value
-    if (nb_people.value) f.nb_people = nb_people.value
-    if (q.value) f.q = q.value
-    await activityStore.applyFilters(f)
-  } catch (e) {
-    console.error('applyFilters failed', e)
+    await activityStore.applyFilters(buildFilters())
+  } catch (err) {
+    console.error(err)
   }
 }
 
@@ -133,21 +134,26 @@ const resetFilters = async () => {
   nb_people.value = null
   try {
     await activityStore.applyFilters({})
-    q.value = ''
-    mood.value = ''
-    price_max.value = null
-    nb_people.value = null
-  } catch (e) {
-    console.error(e)
+  } catch (err) {
+    console.error(err)
   }
 }
 
 const goToPage = async (page) => {
-  if (page < 1) return
   try {
     await activityStore.goToPage(page)
-  } catch (e) {
-    console.error('goToPage failed', e)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const isFavorited = (activityId) => favorites.value.some(activity => activity._id === activityId)
+
+const toggleFavorite = async (activityId) => {
+  try {
+    await favoriteStore.toggleFavorite(activityId)
+  } catch (err) {
+    console.error(err)
   }
 }
 
@@ -155,130 +161,17 @@ const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }
-
-const isFavorited = (id) => {
-  return favoriteStore.favorites.some(f => f._id === id)
-}
-
-const toggleFavorite = async (id) => {
-  if (!authStore.user) {
-    router.push('/login')
-    return
-  }
-  try {
-    await favoriteStore.toggleFavorite(id)
-  } catch (e) {
-    console.error('toggleFavorite failed', e)
-  }
-}
 </script>
 
 <style scoped>
-.activity-list-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  gap: 1rem;
-}
-
-h1 {
-  margin: 0;
-  flex: 1;
-}
-
-.create-btn, .logout-btn {
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.create-btn:hover {
-  background-color: #0056b3;
-}
-
-.logout-btn {
-  background-color: #6c757d;
-}
-
-.logout-btn:hover {
-  background-color: #545b62;
-}
-
-.loading, .no-activities {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-
 .activities-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  gap: var(--spacing-lg);
 }
 
-.activity-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s;
-}
-
-.activity-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-}
-
-.favorite-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: transparent;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  color: var(--accent-color, #ffb400);
-}
-
-.favorite-badge span { display:inline-block }
-
-.activity-card h3 {
-  margin: 0 0 0.5rem 0;
-  color: #333;
-}
-
-.activity-card p {
-  margin: 0.5rem 0;
-  color: #666;
-  line-height: 1.5;
-}
-
-.location, .mood {
-  font-size: 0.9rem;
-}
-
-.detail-link {
-  display: inline-block;
-  margin-top: 1rem;
-  color: #007bff;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.detail-link:hover {
-  text-decoration: underline;
+.location,
+.mood {
+  font-size: var(--font-size-sm);
 }
 </style>

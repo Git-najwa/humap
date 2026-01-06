@@ -19,10 +19,10 @@ defineProps({
   align-items: center;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
-  background-color: #FEE2E2;
-  color: #DC2626;
+  background-color: rgba(254, 226, 226, 0.8);
+  color: #B91C1C;
   border-radius: var(--radius-lg);
-  border: 1px solid #FECACA;
+  border: 1px solid rgba(254, 202, 202, 0.8);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   margin-bottom: var(--spacing-lg);

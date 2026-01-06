@@ -1,34 +1,35 @@
-/* Modern Apple-inspired Design System */
+/* Warm, airy design system */
 
 :root {
   /* Primary Colors */
-  --color-primary: #007AFF;
-  --color-primary-dark: #0051D5;
-  --color-primary-light: #F2F9FF;
-  --color-secondary: #5AC8FA;
-  --color-accent: #FF3B30;
-  --color-accent-green: #34C759;
-  --color-accent-orange: #FF9500;
+  --color-primary: #0E7490;
+  --color-primary-dark: #0B4C5F;
+  --color-primary-light: #E0F2F1;
+  --color-secondary: #F59E0B;
+  --color-accent: #E11D48;
+  --color-accent-green: #16A34A;
+  --color-accent-orange: #EA580C;
   
   /* Neutral Colors */
-  --color-bg: #FFFFFF;
-  --color-bg-alt: #F9FAFB;
-  --color-bg-elevated: #FAFBFC;
-  --color-text: #1F2937;
-  --color-text-secondary: #6B7280;
-  --color-text-tertiary: #9CA3AF;
-  --color-border: #E5E7EB;
-  --color-border-light: #F3F4F6;
+  --color-bg: #FFF8F1;
+  --color-bg-alt: #F4EEE6;
+  --color-bg-elevated: #FFFCF8;
+  --color-text: #1F2933;
+  --color-text-secondary: #4B5563;
+  --color-text-tertiary: #7C8B9A;
+  --color-border: #E6DDD2;
+  --color-border-light: #F0E6DA;
   
   /* Shadows */
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 6px 0 rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 10px 18px -8px rgba(15, 23, 42, 0.18);
+  --shadow-lg: 0 18px 32px -14px rgba(15, 23, 42, 0.22);
+  --shadow-xl: 0 28px 45px -20px rgba(15, 23, 42, 0.28);
   
   /* Typography */
-  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-family: "Avenir Next", "Avenir", "Trebuchet MS", "Segoe UI", sans-serif;
+  --font-family-display: "Iowan Old Style", "Palatino Linotype", "Bookman Old Style", "Georgia", serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;

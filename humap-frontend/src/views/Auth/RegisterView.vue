@@ -2,6 +2,7 @@
   <div class="register-container">
     <div class="register-card">
       <h1>HUMAP - Inscription</h1>
+      <p class="auth-subtitle">Creez votre compte pour partager des activites.</p>
       <ErrorMessage :message="authStore.error" />
       <form @submit.prevent="handleRegister">
         <AppInput
@@ -70,49 +71,3 @@ const handleRegister = async () => {
   }
 }
 </script>
-
-<style scoped>
-.register-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.register-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  width: 100%;
-  max-width: 400px;
-}
-
-h1 {
-  margin-bottom: 1.5rem;
-  text-align: center;
-  color: #333;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-}
-
-.login-link {
-  margin-top: 1rem;
-  text-align: center;
-  color: #666;
-}
-
-.login-link a {
-  color: #007bff;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.login-link a:hover {
-  text-decoration: underline;
-}
-</style>
