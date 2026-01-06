@@ -74,6 +74,7 @@
           <p class="text-tertiary" style="margin-top:8px">📍 {{ activity.location }}</p>
           <div style="margin-top:12px;display:flex;gap:8px">
             <AppButtonModern variant="secondary" @click="() => router.push(`/activities/${activity._id}`)">Voir</AppButtonModern>
+            <AppButtonModern variant="danger" @click="removeFromCustomList(activity._id)">Retirer</AppButtonModern>
           </div>
         </div>
       </div>
@@ -196,14 +197,46 @@ const viewCustomList = async (name) => {
   try {
     const activityIds = entries.map(entry => entry.activity_id).filter(Boolean)
     const results = await Promise.allSettled(activityIds.map(id => activityService.getById(id)))
-    selectedListActivities.value = results
+    const activityMap = new Map()
+    results
       .filter(result => result.status === 'fulfilled')
-      .map(result => result.value.data)
+      .forEach(result => {
+        activityMap.set(result.value.data._id, result.value.data)
+      })
+    const entryMap = new Map()
+    entries.forEach(entry => {
+      if (!entry.activity_id || entryMap.has(entry.activity_id)) return
+      entryMap.set(entry.activity_id, entry._id)
+    })
+    selectedListActivities.value = Array.from(entryMap.entries())
+      .map(([activityId, entryId]) => {
+        const activity = activityMap.get(activityId)
+        if (!activity) return null
+        return { ...activity, _entryId: entryId }
+      })
+      .filter(Boolean)
   } catch (err) {
     console.error(err)
     selectedListActivities.value = []
   } finally {
     listActivitiesLoading.value = false
+  }
+}
+
+const removeFromCustomList = async (activityId) => {
+  const name = selectedListName.value
+  if (!name) return
+  const entries = listStore.lists.filter(entry =>
+    entry.list_type === 'custom' &&
+    (entry.custom_name?.trim() || 'Sans nom') === name &&
+    entry.activity_id === activityId
+  )
+  if (!entries.length) return
+  try {
+    await Promise.all(entries.map(entry => listStore.deleteList(entry._id)))
+    selectedListActivities.value = selectedListActivities.value.filter(a => a._id !== activityId)
+  } catch (err) {
+    console.error(err)
   }
 }
 </script>

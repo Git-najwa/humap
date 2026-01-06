@@ -79,10 +79,10 @@
           </select>
           <AppButtonModern
             variant="secondary"
-            :disabled="!selectedListByActivity[activity._id]"
+            :disabled="!selectedListByActivity[activity._id] || isActivityInList(activity._id, selectedListByActivity[activity._id])"
             @click="addToCustomList(activity._id)"
           >
-            Ajouter
+            {{ isActivityInList(activity._id, selectedListByActivity[activity._id]) ? 'Déjà dans la liste' : 'Ajouter' }}
           </AppButtonModern>
         </div>
       </div>
@@ -157,6 +157,17 @@ const customLists = computed(() => {
   return Array.from(map.values())
 })
 const selectedListByActivity = ref({})
+
+const isActivityInList = (activityId, listId) => {
+  const baseEntry = listStore.lists.find(entry => entry._id === listId)
+  if (!baseEntry) return false
+  const listName = baseEntry.custom_name?.trim() || 'Sans nom'
+  return listStore.lists.some(entry =>
+    entry.list_type === 'custom' &&
+    (entry.custom_name?.trim() || 'Sans nom') === listName &&
+    entry.activity_id === activityId
+  )
+}
 
 const buildFilters = () => {
   const filters = {}
@@ -236,7 +247,7 @@ const toggleFavorite = async (activityId) => {
 
 const addToCustomList = async (activityId) => {
   const listId = selectedListByActivity.value[activityId]
-  if (!listId) return
+  if (!listId || isActivityInList(activityId, listId)) return
   try {
     await listStore.addActivityToList(listId, activityId)
     selectedListByActivity.value[activityId] = ''

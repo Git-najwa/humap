@@ -34,8 +34,12 @@
               {{ list.custom_name || 'Sans nom' }}
             </option>
           </select>
-          <AppButton variant="secondary" :disabled="!selectedListId" @click="addToCustomList">
-            Ajouter
+          <AppButton
+            variant="secondary"
+            :disabled="!selectedListId || isActivityInList(activityStore.currentActivity._id, selectedListId)"
+            @click="addToCustomList"
+          >
+            {{ isActivityInList(activityStore.currentActivity._id, selectedListId) ? 'Déjà dans la liste' : 'Ajouter' }}
           </AppButton>
         </div>
         <div v-else class="text-tertiary">
@@ -132,6 +136,17 @@ const customLists = computed(() => {
 })
 const selectedListId = ref('')
 
+const isActivityInList = (activityId, listId) => {
+  const baseEntry = listStore.lists.find(entry => entry._id === listId)
+  if (!baseEntry) return false
+  const listName = baseEntry.custom_name?.trim() || 'Sans nom'
+  return listStore.lists.some(entry =>
+    entry.list_type === 'custom' &&
+    (entry.custom_name?.trim() || 'Sans nom') === listName &&
+    entry.activity_id === activityId
+  )
+}
+
 const reviewCount = computed(() => reviews.value.length)
 const averageRating = computed(() => {
   if (!reviews.value.length) return '0.0'
@@ -193,9 +208,11 @@ const addToFavorites = async () => {
 }
 
 const addToCustomList = async () => {
-  if (!selectedListId.value || !activityStore.currentActivity?._id) return
+  const activityId = activityStore.currentActivity?._id
+  if (!selectedListId.value || !activityId) return
+  if (isActivityInList(activityId, selectedListId.value)) return
   try {
-    await listStore.addActivityToList(selectedListId.value, activityStore.currentActivity._id)
+    await listStore.addActivityToList(selectedListId.value, activityId)
     selectedListId.value = ''
   } catch (e) {
     console.error('addToCustomList failed', e)

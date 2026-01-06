@@ -48,6 +48,16 @@ export async function addToList(req, res, next) {
         throw new BadRequestError("Only custom lists can accept activities");
       }
 
+      const existingEntry = await UserActivityList.findOne({
+        user_id: req.currentUserId,
+        list_type: "custom",
+        custom_name: baseEntry.custom_name,
+        activity_id: resolvedActivityId,
+      });
+      if (existingEntry) {
+        return ok(res, existingEntry);
+      }
+
       const entry = await UserActivityList.create({
         user_id: req.currentUserId,
         list_type: "custom",
@@ -67,6 +77,18 @@ export async function addToList(req, res, next) {
 
     if (list_type === "custom" && !custom_name) {
       throw new BadRequestError("custom_name is required for custom lists");
+    }
+
+    if (list_type === "custom") {
+      const existingEntry = await UserActivityList.findOne({
+        user_id: req.currentUserId,
+        list_type: "custom",
+        custom_name,
+        activity_id: resolvedActivityId,
+      });
+      if (existingEntry) {
+        return ok(res, existingEntry);
+      }
     }
 
     const entry = await UserActivityList.create({
