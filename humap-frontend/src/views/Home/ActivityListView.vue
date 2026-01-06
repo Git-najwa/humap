@@ -64,7 +64,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
-import { useListStore } from '../../store/list.store'
+import { useFavoriteStore } from '../../store/favorite.store'
 import ErrorMessage from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
@@ -72,9 +72,8 @@ import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 const router = useRouter()
 const activityStore = useActivityStore()
 const authStore = useAuthStore()
-const listStore = useListStore()
-
-const likedCount = computed(() => listStore.lists.filter(l => l.list_type === 'liked').length)
+const favoriteStore = useFavoriteStore()
+const likedCount = favoriteStore.count
 
 const q = ref('')
 const mood = ref('')
@@ -92,12 +91,12 @@ nb_people.value = filters.value?.nb_people || null
 onMounted(async () => {
   try {
     await activityStore.fetchActivities()
-    // also fetch user's lists to show favorites badge
+    // also load user's favorites for badge
     if (authStore.user) {
       try {
-        await listStore.fetchAllLists()
+        await favoriteStore.loadFavorites()
       } catch (e) {
-        console.warn('Could not load user lists for badge', e)
+        console.warn('Could not load favorites for badge', e)
       }
     }
   } catch (e) {
