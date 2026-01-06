@@ -14,7 +14,7 @@
         </div>
         <div class="flex-col" style="gap:8px">
           <AppButton v-if="isOwner" variant="secondary" @click="() => $router.push(`/activities/${activityStore.currentActivity._id}/edit`)">✏️ Modifier</AppButton>
-          <AppButton variant="primary" @click="addToFavorites">⭐ Favoris</AppButton>
+          <AppButton :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">{{ isLiked ? '★ Favori' : '☆ Favoris' }}</AppButton>
         </div>
       </div>
 
@@ -59,6 +59,7 @@ import { useReviewStore } from '../../store/review.store'
 import { useAuthStore } from '../../store/auth.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
+import { listService } from '../../services/list.service'
 
 const router = useRouter()
 const route = useRoute()
@@ -81,6 +82,17 @@ onMounted(async () => {
   try {
     await activityStore.fetchActivityById(route.params.id)
     await reviewStore.fetchReviewsByActivity(route.params.id)
+    // determine whether current user has liked this activity
+    if (authStore.user) {
+      try {
+        const resp = await listService.getAll()
+        const lists = resp.data || []
+        const likedEntry = lists.find(l => l.activity_id === route.params.id || l.activity_id?._id === route.params.id)
+        isLiked.value = !!(likedEntry && likedEntry.list_type === 'liked')
+      } catch (e) {
+        console.warn('Could not fetch user lists to determine liked state', e)
+      }
+    }
   } catch (e) {
     console.error('ActivityDetail load failed', e)
     // leave activityStore.error populated by the store and avoid unhandled rejection
@@ -100,8 +112,22 @@ const goBack = () => {
 }
 
 const addToFavorites = () => {
-  alert('Ajouté aux favoris !')
+  if (!authStore.user) {
+    router.push('/login')
+    return
+  }
+  try {
+    activityStore.toggleLike(activityStore.currentActivity._id).then(res => {
+      isLiked.value = !!res.liked
+    }).catch(e => {
+      console.error('toggleLike failed', e)
+    })
+  } catch (e) {
+    console.error('addToFavorites failed', e)
+  }
 }
+
+const isLiked = ref(false)
 
 const handleDelete = async () => {
   if (!activityStore.currentActivity) return

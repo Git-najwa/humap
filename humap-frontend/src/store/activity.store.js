@@ -143,6 +143,23 @@ export const useActivityStore = defineStore('activity', () => {
     }
   }
 
+  const toggleLike = async (id) => {
+    error.value = null
+    try {
+      const response = await activityService.toggleLike(id)
+      // backend returns { liked }
+      const liked = response.data?.liked
+      // if currentActivity matches, you may attach liked flag locally
+      if (currentActivity.value?._id === id) {
+        currentActivity.value.liked = !!liked
+      }
+      return { liked }
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Erreur lors du like'
+      throw error.value
+    }
+  }
+
   return {
     activities,
     currentActivity,
@@ -158,5 +175,6 @@ export const useActivityStore = defineStore('activity', () => {
     createActivity,
     updateActivity,
     deleteActivity,
+    toggleLike,
   }
 })
