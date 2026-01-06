@@ -42,12 +42,20 @@ export const useListStore = defineStore('list', () => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await listService.create(data)
+      const payload = { ...data }
+      if (!payload.list_type) {
+        payload.list_type = 'custom'
+      }
+      if (!payload.custom_name && payload.name) {
+        payload.custom_name = payload.name
+        delete payload.name
+      }
+      const response = await listService.create(payload)
       lists.value.push(response.data)
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'Erreur lors de la création de la liste'
-      throw error.value
+      throw err
     } finally {
       isLoading.value = false
     }

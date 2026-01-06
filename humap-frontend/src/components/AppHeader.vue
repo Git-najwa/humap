@@ -20,8 +20,16 @@
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
         </svg>
-        <span>Mes listes</span>
+        <span>Mes listes ({{ favoriteCount }} favoris)</span>
       </router-link>
+      <button @click="handleLogout" class="nav-link nav-button" title="Déconnexion">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span>Déconnexion</span>
+      </button>
     </nav>
 
     <div class="header-right">
@@ -33,17 +41,10 @@
             :alt="displayName"
             @error="$event.target.style.display = 'none'"
           />
-          <span v-else class="avatar-initial">{{ avatarInitial }}</span>
-        </div>
-        <span class="profile-name">{{ displayName }}</span>
+        <span v-else class="avatar-initial">{{ avatarInitial }}</span>
+      </div>
+      <span class="profile-name">{{ displayName }}</span>
       </router-link>
-      <button @click="handleLogout" class="logout-btn desktop-only" title="Déconnexion">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-      </button>
     </div>
   </header>
 
@@ -86,12 +87,16 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth.store'
+import { useFavoriteStore } from '../store/favorite.store'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const favoriteStore = useFavoriteStore()
+const { count: favoriteCount } = storeToRefs(favoriteStore)
 
 const displayName = computed(() => {
   return authStore.user?.username || 'Mon profil'
@@ -106,6 +111,14 @@ const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }
+
+onMounted(async () => {
+  try {
+    await favoriteStore.loadFavorites()
+  } catch (err) {
+    console.error(err)
+  }
+})
 </script>
 
 <style scoped>
@@ -163,6 +176,13 @@ const handleLogout = () => {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .nav-link:hover {
@@ -234,31 +254,6 @@ const handleLogout = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.logout-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: transparent;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.logout-btn:hover {
-  background-color: #fef2f2;
-  border-color: #fecaca;
-  color: #dc2626;
-}
-
-.logout-btn svg {
-  width: 18px;
-  height: 18px;
 }
 
 /* Mobile Bottom Navigation */

@@ -6,10 +6,6 @@
         <router-link to="/activities/create">
           <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
         </router-link>
-        <router-link to="/lists">
-          <AppButtonModern variant="secondary">Favoris ({{ likedCount }})</AppButtonModern>
-        </router-link>
-        <AppButtonModern variant="secondary" @click="handleLogout">Déconnexion</AppButtonModern>
       </div>
     </header>
 
@@ -84,20 +80,17 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
-import { useAuthStore } from '../../store/auth.store'
 import { useFavoriteStore } from '../../store/favorite.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
 const activityStore = useActivityStore()
-const authStore = useAuthStore()
 const favoriteStore = useFavoriteStore()
 
 const { pagination } = storeToRefs(activityStore)
-const { favorites, count: likedCount } = storeToRefs(favoriteStore)
+const { favorites } = storeToRefs(favoriteStore)
 
 const ErrorMessage = ErrorMessageModern
 
@@ -118,9 +111,7 @@ const buildFilters = () => {
 onMounted(async () => {
   try {
     await activityStore.fetchActivities()
-    if (authStore.user) {
-      await favoriteStore.loadFavorites()
-    }
+    await favoriteStore.loadFavorites()
   } catch (err) {
     console.error(err)
   }
@@ -164,10 +155,6 @@ const toggleFavorite = async (activityId) => {
   }
 }
 
-const handleLogout = () => {
-  authStore.logout()
-  router.push('/login')
-}
 </script>
 
 <style scoped>

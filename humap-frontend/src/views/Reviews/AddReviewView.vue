@@ -57,7 +57,6 @@ const route = useRoute()
 const reviewStore = useReviewStore()
 
 const form = ref({
-  activity_id: route.params.activityId,
   ranking: '',
   comment: '',
 })
@@ -69,7 +68,7 @@ const handleAddReview = async () => {
       reviewStore.error = 'Veuillez sélectionner une note.'
       return
     }
-    await reviewStore.createReview(form.value)
+    await reviewStore.createReview(route.params.activityId, form.value)
     router.push(`/activities/${route.params.activityId}`)
   } catch (err) {
     console.error(err)

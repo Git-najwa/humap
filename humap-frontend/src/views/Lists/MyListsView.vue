@@ -110,7 +110,7 @@ const handleCreateList = async () => {
       newListName.value = ''
       showCreateForm.value = false
     } catch (err) {
-      console.error(err)
+      console.error(err?.response?.data || err)
     }
   }
 }

@@ -23,11 +23,11 @@ export const useReviewStore = defineStore('review', () => {
     }
   }
 
-  const createReview = async (data) => {
+  const createReview = async (activityId, data) => {
     isLoading.value = true
     error.value = null
     try {
-      const response = await reviewService.create(data)
+      const response = await reviewService.create(activityId, data)
       reviews.value.unshift(response.data)
       return response.data
     } catch (err) {

@@ -9,6 +9,7 @@
         <slot name="prefix"></slot>
       </span>
       <input
+        ref="inputEl"
         :id="id"
         :type="type"
         :value="modelValue"
@@ -34,7 +35,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -77,8 +78,15 @@ const props = defineProps({
 })
 
 const id = computed(() => `input-${Math.random().toString(36).substr(2, 9)}`)
+const inputEl = ref(null)
 
 defineEmits(['update:modelValue', 'blur', 'focus'])
+
+const focus = () => {
+  inputEl.value?.focus()
+}
+
+defineExpose({ focus })
 </script>
 
 <style scoped>
