@@ -9,6 +9,17 @@
       </div>
     </header>
 
+    <section class="map-section container card">
+      <div class="map-header">
+        <div>
+          <h2 class="text-xl font-semibold">Carte des activités</h2>
+          <p class="text-tertiary">Explorez les activités proches, façon Airbnb.</p>
+        </div>
+        <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
+      </div>
+      <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
+    </section>
+
     <!-- Error Message -->
     <ErrorMessage :message="activityStore.error" />
 
@@ -78,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useActivityStore } from '../../store/activity.store'
 import { useFavoriteStore } from '../../store/favorite.store'
@@ -98,6 +109,16 @@ const q = ref('')
 const mood = ref('')
 const price_max = ref(null)
 const nb_people = ref(null)
+const mapEl = ref(null)
+const mapInstance = ref(null)
+const markerLayer = ref(null)
+
+const hasMapData = computed(() => {
+  return activityStore.activities.some(activity => {
+    const coords = activity.coordinates?.coordinates
+    return Array.isArray(coords) && coords.length === 2
+  })
+})
 
 const buildFilters = () => {
   const filters = {}
@@ -112,10 +133,27 @@ onMounted(async () => {
   try {
     await activityStore.fetchActivities()
     await favoriteStore.loadFavorites()
+    initMap()
+    refreshMapMarkers()
   } catch (err) {
     console.error(err)
   }
 })
+
+onBeforeUnmount(() => {
+  if (mapInstance.value) {
+    mapInstance.value.remove()
+    mapInstance.value = null
+  }
+})
+
+watch(
+  () => activityStore.activities,
+  () => {
+    refreshMapMarkers()
+  },
+  { deep: true }
+)
 
 const applyFilters = async () => {
   try {
@@ -155,6 +193,56 @@ const toggleFavorite = async (activityId) => {
   }
 }
 
+const initMap = () => {
+  if (!mapEl.value || mapInstance.value) return
+  const { L } = window
+  if (!L) return
+  mapInstance.value = L.map(mapEl.value, {
+    zoomControl: true,
+    scrollWheelZoom: false,
+  }).setView([46.5197, 6.6323], 12)
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(mapInstance.value)
+
+  markerLayer.value = L.layerGroup().addTo(mapInstance.value)
+}
+
+const refreshMapMarkers = () => {
+  const { L } = window
+  if (!L || !mapInstance.value || !markerLayer.value) return
+  markerLayer.value.clearLayers()
+
+  const points = activityStore.activities
+    .map(activity => {
+      const coords = activity.coordinates?.coordinates
+      if (!Array.isArray(coords) || coords.length !== 2) return null
+      return {
+        id: activity._id,
+        title: activity.title,
+        location: activity.location,
+        lat: coords[1],
+        lng: coords[0],
+      }
+    })
+    .filter(Boolean)
+
+  if (!points.length) return
+
+  const bounds = []
+  points.forEach(point => {
+    const marker = L.marker([point.lat, point.lng]).addTo(markerLayer.value)
+    marker.bindPopup(`<strong>${point.title}</strong><br/>${point.location}`)
+    bounds.push([point.lat, point.lng])
+  })
+
+  if (bounds.length === 1) {
+    mapInstance.value.setView(bounds[0], 13)
+  } else {
+    mapInstance.value.fitBounds(bounds, { padding: [32, 32] })
+  }
+}
 </script>
 
 <style scoped>
@@ -167,5 +255,41 @@ const toggleFavorite = async (activityId) => {
 .location,
 .mood {
   font-size: var(--font-size-sm);
+}
+
+.map-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-md);
+}
+
+.map-empty {
+  font-size: 0.875rem;
+  color: var(--color-text-tertiary, #6b7280);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.activity-map {
+  width: 100%;
+  height: 320px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .activity-map {
+    height: 260px;
+  }
 }
 </style>
