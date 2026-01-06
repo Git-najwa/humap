@@ -24,6 +24,24 @@
           <AppButton :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">{{ isLiked ? '★ Favori' : '☆ Favoris' }}</AppButton>
         </div>
       </div>
+
+      <div class="list-actions" v-if="authStore.user">
+        <div v-if="customLists.length" class="list-actions-row">
+          <label class="text-tertiary" for="listSelect">Ajouter à une liste</label>
+          <select id="listSelect" v-model="selectedListId" class="input" style="min-width:220px">
+            <option value="">Choisir une liste</option>
+            <option v-for="list in customLists" :key="list._id" :value="list._id">
+              {{ list.custom_name || 'Sans nom' }}
+            </option>
+          </select>
+          <AppButton variant="secondary" :disabled="!selectedListId" @click="addToCustomList">
+            Ajouter
+          </AppButton>
+        </div>
+        <div v-else class="text-tertiary">
+          Aucune liste personnalisée. <a class="link" @click.prevent="router.push('/lists')">Créer une liste</a>
+        </div>
+      </div>
     </div>
 
     <section v-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-lg)">
@@ -67,6 +85,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useReviewStore } from '../../store/review.store'
 import { useAuthStore } from '../../store/auth.store'
+import { useListStore } from '../../store/list.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import { useFavoriteStore } from '../../store/favorite.store'
@@ -77,6 +96,7 @@ const activityStore = useActivityStore()
 const reviewStore = useReviewStore()
 const { reviews } = storeToRefs(reviewStore)
 const authStore = useAuthStore()
+const listStore = useListStore()
 
 // expose modern components to template by importing them
 const AppButton = AppButtonModern
@@ -89,6 +109,9 @@ const isOwner = computed(() => {
   return !!(ownerId && userId && ownerId.toString() === userId.toString())
 })
 
+const customLists = computed(() => listStore.lists.filter(entry => entry.list_type === 'custom'))
+const selectedListId = ref('')
+
 const reviewCount = computed(() => reviews.value.length)
 const averageRating = computed(() => {
   if (!reviews.value.length) return '0.0'
@@ -100,6 +123,9 @@ onMounted(async () => {
   try {
     await activityStore.fetchActivityById(route.params.id)
     await reviewStore.fetchReviewsByActivity(route.params.id)
+    if (authStore.user) {
+      await listStore.fetchAllLists()
+    }
     // determine whether current user has liked this activity via favoriteStore
     if (authStore.user) {
       try {
@@ -146,6 +172,16 @@ const addToFavorites = async () => {
   }
 }
 
+const addToCustomList = async () => {
+  if (!selectedListId.value || !activityStore.currentActivity?._id) return
+  try {
+    await listStore.addActivityToList(selectedListId.value, activityStore.currentActivity._id)
+    selectedListId.value = ''
+  } catch (e) {
+    console.error('addToCustomList failed', e)
+  }
+}
+
 const isLiked = ref(false)
 const favoriteStore = useFavoriteStore()
 
@@ -176,3 +212,29 @@ const deleteReview = async (reviewId) => {
   }
 }
 </script>
+
+<style scoped>
+.list-actions {
+  margin-top: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.list-actions-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.link {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+</style>

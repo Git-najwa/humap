@@ -29,13 +29,39 @@ export async function getListEntry(req, res, next) {
 
 export async function addToList(req, res, next) {
   try {
-    const { list_type, activity_id, custom_name } = req.body;
+    const { list_type, activity_id, custom_name, activityId } = req.body;
+    const resolvedActivityId = activity_id || activityId;
+
+    if (req.params.listId) {
+      if (!resolvedActivityId) {
+        throw new BadRequestError("activity_id is required");
+      }
+
+      const baseEntry = await UserActivityList.findById(req.params.listId);
+      if (!baseEntry) {
+        throw new NotFoundError("List");
+      }
+      if (baseEntry.user_id.toString() !== req.currentUserId) {
+        throw new ForbiddenError("You can only update your own lists");
+      }
+      if (baseEntry.list_type !== "custom") {
+        throw new BadRequestError("Only custom lists can accept activities");
+      }
+
+      const entry = await UserActivityList.create({
+        user_id: req.currentUserId,
+        list_type: "custom",
+        custom_name: baseEntry.custom_name,
+        activity_id: resolvedActivityId,
+      });
+      return created(res, entry);
+    }
 
     if (!list_type) {
       throw new BadRequestError("list_type is required");
     }
 
-    if (list_type !== "custom" && !activity_id) {
+    if (list_type !== "custom" && !resolvedActivityId) {
       throw new BadRequestError("activity_id is required");
     }
 
@@ -45,6 +71,7 @@ export async function addToList(req, res, next) {
 
     const entry = await UserActivityList.create({
       ...req.body,
+      activity_id: resolvedActivityId,
       user_id: req.currentUserId,
     });
     return created(res, entry);

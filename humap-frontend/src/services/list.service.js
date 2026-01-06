@@ -6,6 +6,6 @@ export const listService = {
   create: (data) => api.post('/lists', data),
   update: (id, data) => api.put(`/lists/${id}`, data),
   delete: (id) => api.delete(`/lists/${id}`),
-  addActivityToList: (listId, activityId) => api.post(`/lists/${listId}/activities`, { activityId }),
+  addActivityToList: (listId, activityId) => api.post(`/lists/${listId}/activities`, { activity_id: activityId }),
   removeActivityFromList: (listId, activityId) => api.delete(`/lists/${listId}/activities/${activityId}`),
 }

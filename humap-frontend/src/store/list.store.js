@@ -101,8 +101,18 @@ export const useListStore = defineStore('list', () => {
 
   const addActivityToList = async (listId, activityId) => {
     try {
-      await listService.addActivityToList(listId, activityId)
-      await fetchListById(listId)
+      const baseList = lists.value.find(entry => entry._id === listId)
+      const customName = baseList?.custom_name
+      if (!customName) {
+        error.value = 'Liste personnalisée introuvable'
+        throw error.value
+      }
+      await listService.create({
+        list_type: 'custom',
+        custom_name: customName,
+        activity_id: activityId,
+      })
+      await fetchAllLists()
     } catch (err) {
       error.value = err.response?.data?.message || 'Erreur lors de l\'ajout de l\'activité'
       throw error.value

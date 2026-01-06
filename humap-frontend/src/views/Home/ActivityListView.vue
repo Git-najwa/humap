@@ -67,6 +67,24 @@
             <AppButtonModern variant="secondary">Voir</AppButtonModern>
           </router-link>
         </div>
+        <div v-if="authStore.user && customLists.length" class="list-inline">
+          <select
+            v-model="selectedListByActivity[activity._id]"
+            class="input"
+          >
+            <option value="">Ajouter à une liste</option>
+            <option v-for="list in customLists" :key="list._id" :value="list._id">
+              {{ list.custom_name || 'Sans nom' }}
+            </option>
+          </select>
+          <AppButtonModern
+            variant="secondary"
+            :disabled="!selectedListByActivity[activity._id]"
+            @click="addToCustomList(activity._id)"
+          >
+            Ajouter
+          </AppButtonModern>
+        </div>
       </div>
     </div>
 
@@ -92,13 +110,17 @@
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useActivityStore } from '../../store/activity.store'
+import { useAuthStore } from '../../store/auth.store'
 import { useFavoriteStore } from '../../store/favorite.store'
+import { useListStore } from '../../store/list.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
 const activityStore = useActivityStore()
+const authStore = useAuthStore()
 const favoriteStore = useFavoriteStore()
+const listStore = useListStore()
 
 const { pagination } = storeToRefs(activityStore)
 const { favorites } = storeToRefs(favoriteStore)
@@ -120,6 +142,9 @@ const hasMapData = computed(() => {
   })
 })
 
+const customLists = computed(() => listStore.lists.filter(entry => entry.list_type === 'custom'))
+const selectedListByActivity = ref({})
+
 const buildFilters = () => {
   const filters = {}
   if (q.value) filters.q = q.value
@@ -133,6 +158,9 @@ onMounted(async () => {
   try {
     await activityStore.fetchActivities()
     await favoriteStore.loadFavorites()
+    if (authStore.user) {
+      await listStore.fetchAllLists()
+    }
     initMap()
     refreshMapMarkers()
   } catch (err) {
@@ -190,6 +218,17 @@ const toggleFavorite = async (activityId) => {
     await favoriteStore.toggleFavorite(activityId)
   } catch (err) {
     console.error(err)
+  }
+}
+
+const addToCustomList = async (activityId) => {
+  const listId = selectedListByActivity.value[activityId]
+  if (!listId) return
+  try {
+    await listStore.addActivityToList(listId, activityId)
+    selectedListByActivity.value[activityId] = ''
+  } catch (err) {
+    console.error('addToCustomList failed', err)
   }
 }
 
@@ -255,6 +294,18 @@ const refreshMapMarkers = () => {
 .location,
 .mood {
   font-size: var(--font-size-sm);
+}
+
+.list-inline {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.list-inline .input {
+  flex: 1;
+  min-width: 180px;
 }
 
 .map-section {
