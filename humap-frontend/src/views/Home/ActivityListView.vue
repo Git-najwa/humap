@@ -289,6 +289,12 @@ const refreshMapMarkers = () => {
     marker.on('click', () => {
       router.push(`/activities/${point.id}`)
     })
+    marker.on('mouseover', () => {
+      marker.openPopup()
+    })
+    marker.on('mouseout', () => {
+      marker.closePopup()
+    })
     bounds.push([point.lat, point.lng])
   })
 
