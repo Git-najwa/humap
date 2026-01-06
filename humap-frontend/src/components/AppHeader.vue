@@ -7,7 +7,8 @@
       </router-link>
     </div>
 
-    <nav class="header-nav">
+    <!-- Desktop Navigation -->
+    <nav class="header-nav desktop-nav">
       <router-link to="/" class="nav-link">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -24,7 +25,7 @@
     </nav>
 
     <div class="header-right">
-      <router-link to="/profile" class="profile-btn">
+      <router-link to="/profile" class="profile-btn desktop-only">
         <div class="profile-avatar">
           <img 
             v-if="authStore.user?.avatar" 
@@ -36,7 +37,7 @@
         </div>
         <span class="profile-name">{{ displayName }}</span>
       </router-link>
-      <button @click="handleLogout" class="logout-btn" title="Déconnexion">
+      <button @click="handleLogout" class="logout-btn desktop-only" title="Déconnexion">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
           <polyline points="16 17 21 12 16 7"></polyline>
@@ -45,6 +46,43 @@
       </button>
     </div>
   </header>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <router-link to="/" class="mobile-nav-item">
+      <svg class="mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+      <span>Activités</span>
+    </router-link>
+    <router-link to="/lists" class="mobile-nav-item">
+      <svg class="mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>Listes</span>
+    </router-link>
+    <router-link to="/profile" class="mobile-nav-item mobile-nav-profile">
+      <div class="mobile-profile-avatar">
+        <img 
+          v-if="authStore.user?.avatar" 
+          :src="authStore.user.avatar" 
+          :alt="displayName"
+          @error="$event.target.style.display = 'none'"
+        />
+        <span v-else class="mobile-avatar-initial">{{ avatarInitial }}</span>
+      </div>
+      <span>Profil</span>
+    </router-link>
+    <button @click="handleLogout" class="mobile-nav-item mobile-nav-button">
+      <svg class="mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+        <polyline points="16 17 21 12 16 7"></polyline>
+        <line x1="21" y1="12" x2="9" y2="12"></line>
+      </svg>
+      <span>Quitter</span>
+    </button>
+  </nav>
 </template>
 
 <script setup>
@@ -223,6 +261,88 @@ const handleLogout = () => {
   height: 18px;
 }
 
+/* Mobile Bottom Navigation */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+  padding: 0.5rem 0;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  z-index: 1000;
+  box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.05);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  flex: 1;
+  padding: 0.5rem;
+  color: #6b7280;
+  text-decoration: none;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-nav-item:hover {
+  color: #6366f1;
+}
+
+.mobile-nav-item.router-link-active {
+  color: #6366f1;
+}
+
+.mobile-nav-button {
+  font-family: inherit;
+}
+
+.mobile-nav-icon {
+  width: 22px;
+  height: 22px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Mobile Profile Avatar */
+.mobile-profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.mobile-nav-profile.router-link-active .mobile-profile-avatar {
+  border-color: #6366f1;
+}
+
+.mobile-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-avatar-initial {
+  color: white;
+  font-weight: 600;
+  font-size: 0.6875rem;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .app-header {
@@ -234,17 +354,13 @@ const handleLogout = () => {
     display: none;
   }
 
-  .nav-link span {
+  /* Hide desktop nav on mobile */
+  .desktop-nav {
     display: none;
   }
 
-  .nav-link {
-    padding: 0.5rem;
-  }
-
-  .nav-icon {
-    width: 20px;
-    height: 20px;
+  .desktop-only {
+    display: none;
   }
 
   .profile-name {
@@ -255,6 +371,22 @@ const handleLogout = () => {
     padding: 0.25rem;
     border: none;
     background: transparent;
+  }
+
+  /* Show mobile bottom nav */
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  /* Add padding to body for bottom nav */
+  :global(body) {
+    padding-bottom: 70px;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none;
   }
 }
 </style>

@@ -53,3 +53,10 @@ input, select, textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Mobile bottom navigation spacing */
+@media (max-width: 768px) {
+  #app {
+    padding-bottom: 70px;
+  }
+}
