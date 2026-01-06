@@ -13,7 +13,14 @@
           <p class="text-secondary" style="margin-top:8px">{{ activityStore.currentActivity.description }}</p>
         </div>
         <div class="flex-col" style="gap:8px">
-          <AppButton v-if="isOwner" variant="secondary" @click="() => $router.push(`/activities/${activityStore.currentActivity._id}/edit`)">✏️ Modifier</AppButton>
+          <AppButton
+            v-if="isOwner"
+            variant="secondary"
+            @click="() => $router.push(`/activities/${activityStore.currentActivity._id}/edit`)"
+          >
+            ✏️ Modifier
+          </AppButton>
+          <AppButton v-if="isOwner" variant="danger" @click="handleDelete">🗑️ Supprimer</AppButton>
           <AppButton :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">{{ isLiked ? '★ Favori' : '☆ Favoris' }}</AppButton>
         </div>
       </div>
@@ -76,8 +83,10 @@ const AppButton = AppButtonModern
 const ErrorMessage = ErrorMessageModern
 
 const isOwner = computed(() => {
-  const ownerId = activityStore.currentActivity?.user_id || activityStore.currentActivity?.owner
-  return !!(authStore.user && ownerId && authStore.user._id === ownerId)
+  const owner = activityStore.currentActivity?.user_id || activityStore.currentActivity?.owner
+  const ownerId = typeof owner === 'string' ? owner : owner?._id || owner?.id
+  const userId = authStore.user?._id
+  return !!(ownerId && userId && ownerId.toString() === userId.toString())
 })
 
 const reviewCount = computed(() => reviews.value.length)
@@ -142,6 +151,8 @@ const favoriteStore = useFavoriteStore()
 
 const handleDelete = async () => {
   if (!activityStore.currentActivity) return
+  const shouldDelete = window.confirm('Supprimer cette activité ?')
+  if (!shouldDelete) return
   try {
     await activityStore.deleteActivity(activityStore.currentActivity._id)
     router.push('/')
@@ -159,7 +170,7 @@ const deleteReview = async (reviewId) => {
   const shouldDelete = window.confirm('Supprimer cet avis ?')
   if (!shouldDelete) return
   try {
-    await reviewStore.deleteReview(reviewId)
+    await reviewStore.deleteReview(route.params.id, reviewId)
   } catch (e) {
     console.error('deleteReview failed', e)
   }

@@ -56,12 +56,12 @@ export const useReviewStore = defineStore('review', () => {
     }
   }
 
-  const deleteReview = async (id) => {
+  const deleteReview = async (activityId, reviewId) => {
     isLoading.value = true
     error.value = null
     try {
-      await reviewService.delete(id)
-      reviews.value = reviews.value.filter(r => r._id !== id)
+      await reviewService.delete(activityId, reviewId)
+      reviews.value = reviews.value.filter(r => r._id !== reviewId)
     } catch (err) {
       error.value = err.response?.data?.message || 'Erreur lors de la suppression de l\'avis'
       throw error.value

@@ -101,6 +101,9 @@ export async function updateActivity(req, res, next) {
     }
 
     // Vérifier que l'utilisateur est propriétaire ou admin
+    if (!activity.user_id) {
+      throw new ForbiddenError("You can only update your own activities");
+    }
     if (activity.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
       throw new ForbiddenError("You can only update your own activities");
     }
@@ -124,6 +127,9 @@ export async function deleteActivity(req, res, next) {
     }
 
     // Vérifier que l'utilisateur est propriétaire ou admin
+    if (!activity.user_id) {
+      throw new ForbiddenError("You can only delete your own activities");
+    }
     if (activity.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
       throw new ForbiddenError("You can only delete your own activities");
     }
