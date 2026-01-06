@@ -59,7 +59,7 @@ import { useReviewStore } from '../../store/review.store'
 import { useAuthStore } from '../../store/auth.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
-import { listService } from '../../services/list.service'
+import { useFavoriteStore } from '../../store/favorite.store'
 
 const router = useRouter()
 const route = useRoute()
@@ -82,15 +82,13 @@ onMounted(async () => {
   try {
     await activityStore.fetchActivityById(route.params.id)
     await reviewStore.fetchReviewsByActivity(route.params.id)
-    // determine whether current user has liked this activity
+    // determine whether current user has liked this activity via favoriteStore
     if (authStore.user) {
       try {
-        const resp = await listService.getAll()
-        const lists = resp.data || []
-        const likedEntry = lists.find(l => l.activity_id === route.params.id || l.activity_id?._id === route.params.id)
-        isLiked.value = !!(likedEntry && likedEntry.list_type === 'liked')
+        await favoriteStore.loadFavorites()
+        isLiked.value = favoriteStore.favorites.some(f => f._id === route.params.id)
       } catch (e) {
-        console.warn('Could not fetch user lists to determine liked state', e)
+        console.warn('Could not load favorites to determine liked state', e)
       }
     }
   } catch (e) {
@@ -117,17 +115,17 @@ const addToFavorites = () => {
     return
   }
   try {
-    activityStore.toggleLike(activityStore.currentActivity._id).then(res => {
-      isLiked.value = !!res.liked
-    }).catch(e => {
-      console.error('toggleLike failed', e)
-    })
+    await favoriteStore.toggleFavorite(activityStore.currentActivity._id)
+    // reload favorites and update local flag
+    await favoriteStore.loadFavorites()
+    isLiked.value = favoriteStore.favorites.some(f => f._id === activityStore.currentActivity._id)
   } catch (e) {
     console.error('addToFavorites failed', e)
   }
 }
 
 const isLiked = ref(false)
+const favoriteStore = useFavoriteStore()
 
 const handleDelete = async () => {
   if (!activityStore.currentActivity) return
