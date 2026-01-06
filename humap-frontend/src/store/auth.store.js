@@ -3,6 +3,20 @@ import { ref, computed } from 'vue'
 import { authService } from '../services/auth.service'
 import { userService } from '../services/user.service'
 
+// Traduction des messages d'erreur
+const translateError = (message) => {
+  const translations = {
+    'Invalid email or password': 'Email ou mot de passe incorrect',
+    'email and password are required': 'L\'email et le mot de passe sont requis',
+    'Email already in use': 'Cet email est déjà utilisé',
+    'Username already taken': 'Ce nom d\'utilisateur est déjà pris',
+    'username, email and password are required': 'Le nom d\'utilisateur, l\'email et le mot de passe sont requis',
+    'User not found': 'Utilisateur introuvable',
+    'Unauthorized': 'Non autorisé',
+  }
+  return translations[message] || message
+}
+
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(null)
   const user = ref(null)
@@ -22,7 +36,8 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('token', token.value)
       return response.data
     } catch (err) {
-      error.value = err.response?.data?.message || 'Erreur de connexion'
+      const rawMessage = err.response?.data?.message || 'Erreur de connexion'
+      error.value = translateError(rawMessage)
       throw error.value
     } finally {
       isLoading.value = false
@@ -39,7 +54,8 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('token', token.value)
       return response.data
     } catch (err) {
-      error.value = err.response?.data?.message || 'Erreur d\'inscription'
+      const rawMessage = err.response?.data?.message || 'Erreur d\'inscription'
+      error.value = translateError(rawMessage)
       throw error.value
     } finally {
       isLoading.value = false

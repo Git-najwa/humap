@@ -6,7 +6,7 @@ const BCRYPT_COST_FACTOR = 10;
 
 const userSchema = new Schema(
   {
-    username: { type: String, required: true, trim: true },
+    username: { type: String, required: true, unique: true, trim: true },
     gender: { type: String, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     avatar: { type: String, trim: true },

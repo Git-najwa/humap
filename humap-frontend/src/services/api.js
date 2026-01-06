@@ -22,7 +22,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Ne pas rediriger si on est déjà sur login/register ou si c'est une erreur de login
+    const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register'
+    const isAuthEndpoint = error.config?.url?.includes('/auth/')
+    
+    if (error.response?.status === 401 && !isAuthPage && !isAuthEndpoint) {
       localStorage.removeItem('token')
       window.location.href = '/login'
     }

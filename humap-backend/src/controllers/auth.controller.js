@@ -18,9 +18,15 @@ export async function register(req, res, next) {
     }
 
     // Vérifier si email existe
-    const existing = await User.exists({ email });
-    if (existing) {
+    const existingEmail = await User.exists({ email });
+    if (existingEmail) {
       throw new ConflictError("Email already in use");
+    }
+
+    // Vérifier si username existe
+    const existingUsername = await User.exists({ username });
+    if (existingUsername) {
+      throw new ConflictError("Username already taken");
     }
 
     // Créer l'utilisateur
