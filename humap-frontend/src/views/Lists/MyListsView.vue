@@ -15,43 +15,87 @@
       </div>
     </div>
 
-    <div v-if="listStore.isLoading" class="loading">Chargement des listes...</div>
+    <section class="card" style="margin-top:var(--spacing-lg)">
+      <div class="flex-between" style="margin-bottom:var(--spacing-md)">
+        <div>
+          <h2 class="text-xl font-semibold">Favoris</h2>
+          <p class="text-tertiary">{{ favoritesCount }} activité(s)</p>
+        </div>
+        <AppButtonModern variant="secondary" @click="refreshFavorites">Rafraîchir</AppButtonModern>
+      </div>
 
-    <div v-else-if="listStore.lists.length === 0" class="no-lists card">
-      Aucune liste créée
-    </div>
-
-    <div v-else class="lists-grid">
-      <div v-for="list in listStore.lists" :key="list._id" class="list-card card">
-        <h3 class="font-semibold">{{ list.name }}</h3>
-        <p class="count text-tertiary">{{ list.activities?.length || 0 }} activité(s)</p>
-        <div style="margin-top:12px;display:flex;gap:8px">
-          <AppButtonModern variant="secondary" @click="() => $router.push(`/lists/${list._id}`)">Ouvrir</AppButtonModern>
-          <AppButtonModern variant="danger" @click="deleteList(list._id)">Supprimer</AppButtonModern>
+      <div v-if="favoriteStore.isLoading" class="loading">Chargement des favoris...</div>
+      <div v-else-if="favorites.length === 0" class="no-lists">Aucun favori pour le moment.</div>
+      <div v-else class="activities-grid">
+        <div v-for="activity in favorites" :key="activity._id" class="card activity-card">
+          <h3 class="font-semibold">{{ activity.title }}</h3>
+          <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
+          <p class="text-tertiary" style="margin-top:8px">📍 {{ activity.location }}</p>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <AppButtonModern variant="secondary" @click="() => router.push(`/activities/${activity._id}`)">Voir</AppButtonModern>
+            <AppButtonModern variant="danger" @click="removeFavorite(activity._id)">Retirer</AppButtonModern>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <section style="margin-top:var(--spacing-lg)">
+      <h2 class="text-xl font-semibold" style="margin-bottom:var(--spacing-md)">Listes personnalisées</h2>
+
+      <div v-if="listStore.isLoading" class="loading">Chargement des listes...</div>
+      <div v-else-if="customLists.length === 0" class="no-lists card">Aucune liste personnalisée.</div>
+      <div v-else class="lists-grid">
+        <div v-for="list in customLists" :key="list.name" class="list-card card">
+          <h3 class="font-semibold">{{ list.name }}</h3>
+          <p class="count text-tertiary">{{ list.count }} activité(s)</p>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <AppButtonModern variant="danger" @click="deleteCustomList(list.name)">Supprimer</AppButtonModern>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useListStore } from '../../store/list.store'
-import { useActivityStore } from '../../store/activity.store'
+import { useFavoriteStore } from '../../store/favorite.store'
 import ErrorMessage from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import { useRouter } from 'vue-router'
 
 const listStore = useListStore()
-const activityStore = useActivityStore()
+const favoriteStore = useFavoriteStore()
 const router = useRouter()
 const showCreateForm = ref(false)
 const newListName = ref('')
 
+const { favorites } = storeToRefs(favoriteStore)
+const favoritesCount = computed(() => favorites.value.length)
+
+const customLists = computed(() => {
+  const map = new Map()
+  listStore.lists
+    .filter(entry => entry.list_type === 'custom')
+    .forEach(entry => {
+      const name = entry.custom_name?.trim() || 'Sans nom'
+      if (!map.has(name)) {
+        map.set(name, { name, count: 0, entries: [] })
+      }
+      const current = map.get(name)
+      current.count += 1
+      current.entries.push(entry)
+    })
+  return Array.from(map.values())
+})
+
 onMounted(async () => {
   try {
     await listStore.fetchAllLists()
+    await favoriteStore.loadFavorites()
   } catch (err) {
     console.error(err)
   }
@@ -79,18 +123,30 @@ const deleteList = async (id) => {
   }
 }
 
-const toggleFavorite = async (activityId) => {
+const removeFavorite = async (activityId) => {
   try {
-    await activityStore.toggleLike(activityId)
-    // refresh lists and favorites
-    await listStore.fetchAllLists()
-    // reload liked activities
-    const likedEntries = listStore.lists.filter(l => l.list_type === 'liked')
-    const promises = likedEntries.map(e => activityStore.fetchActivityById(e.activity_id))
-    const results = await Promise.allSettled(promises)
-    likedActivities.value = results.filter(r => r.status === 'fulfilled').map(r => r.value)
+    await favoriteStore.toggleFavorite(activityId)
   } catch (err) {
     console.error('toggleFavorite failed', err)
+  }
+}
+
+const refreshFavorites = async () => {
+  try {
+    await favoriteStore.loadFavorites()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const deleteCustomList = async (name) => {
+  const entries = customLists.value.find(l => l.name === name)?.entries || []
+  if (!entries.length) return
+  if (!confirm('Supprimer cette liste personnalisée ?')) return
+  try {
+    await Promise.all(entries.map(entry => listStore.deleteList(entry._id)))
+  } catch (err) {
+    console.error(err)
   }
 }
 </script>
