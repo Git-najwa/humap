@@ -1,27 +1,29 @@
 <template>
   <div class="activity-list-container">
-    <header class="header">
-      <h1>Activités HUMAP</h1>
-      <div style="display:flex;gap:12px;align-items:center">
-        <router-link to="/activities/create" class="create-btn">+ Nouvelle activité</router-link>
-        <button @click="handleLogout" class="logout-btn">Déconnexion</button>
+    <header class="header container">
+      <h1 class="text-2xl font-semibold">Activités HUMAP</h1>
+      <div class="flex gap-sm">
+        <router-link to="/activities/create">
+          <AppButton-modern variant="primary">+ Nouvelle activité</AppButton-modern>
+        </router-link>
+        <AppButton-modern variant="secondary" @click="handleLogout">Déconnexion</AppButton-modern>
       </div>
     </header>
 
     <ErrorMessage :message="activityStore.error" />
 
-    <section class="filters">
-      <input v-model="q" placeholder="Recherche..." @keyup.enter="applyFilters" />
-      <select v-model="mood">
+    <section class="filters container card" style="display:flex;gap:12px;align-items:center;margin-bottom:var(--spacing-lg)">
+      <AppInput-modern v-model="q" placeholder="Recherche..." />
+      <select v-model="mood" class="input" style="width:180px">
         <option value="">Tous les moods</option>
         <option value="calm">calm</option>
         <option value="social">social</option>
         <option value="energetic">energetic</option>
       </select>
-      <input v-model.number="price_max" type="number" placeholder="Prix max" />
-      <input v-model.number="nb_people" type="number" placeholder="Nb personnes" />
-      <button @click="applyFilters" class="create-btn">Filtrer</button>
-      <button @click="resetFilters" class="logout-btn">Réinitialiser</button>
+      <AppInput-modern v-model.number="price_max" type="number" placeholder="Prix max" style="width:120px" />
+      <AppInput-modern v-model.number="nb_people" type="number" placeholder="Nb personnes" style="width:120px" />
+      <AppButton-modern variant="primary" @click="applyFilters">Filtrer</AppButton-modern>
+      <AppButton-modern variant="secondary" @click="resetFilters">Réinitialiser</AppButton-modern>
     </section>
 
     <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
@@ -30,20 +32,26 @@
       Aucune activité trouvée
     </div>
 
-    <div v-else class="activities-grid">
-      <div v-for="activity in activityStore.activities" :key="activity._id" class="activity-card">
-        <h3>{{ activity.title }}</h3>
-        <p>{{ activity.description }}</p>
-        <p class="location">📍 {{ activity.location }}</p>
-        <p class="mood">Ambiance : {{ activity.mood }}</p>
-        <router-link :to="`/activities/${activity._id}`" class="detail-link">Voir détails</router-link>
+    <div v-else class="activities-grid container grid grid-cols-3">
+      <div v-for="activity in activityStore.activities" :key="activity._id" class="card">
+        <h3 class="text-lg font-semibold">{{ activity.title }}</h3>
+        <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <p class="location text-tertiary">📍 {{ activity.location }}</p>
+            <p class="mood text-tertiary">Ambiance : {{ activity.mood }}</p>
+          </div>
+          <router-link :to="`/activities/${activity._id}`">
+            <AppButton-modern variant="secondary">Voir</AppButton-modern>
+          </router-link>
+        </div>
       </div>
     </div>
 
-    <div class="pagination" v-if="pagination.total > pagination.limit">
-      <button @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</button>
-      <span>Page {{ pagination.page }} / {{ pagination.totalPages || Math.ceil(pagination.total / pagination.limit) }}</span>
-      <button @click="goToPage(pagination.page + 1)" :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))">Suiv</button>
+    <div class="pagination container" v-if="pagination.total > pagination.limit" style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:var(--spacing-lg)">
+      <AppButton-modern variant="secondary" @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</AppButton-modern>
+      <span class="text-sm text-tertiary">Page {{ pagination.page }} / {{ pagination.totalPages || Math.ceil(pagination.total / pagination.limit) }}</span>
+      <AppButton-modern variant="secondary" @click="goToPage(pagination.page + 1)" :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))">Suiv</AppButton-modern>
     </div>
   </div>
 </template>
@@ -53,7 +61,9 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
-import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import ErrorMessage from '../../components/ui/ErrorMessage-modern.vue'
+import AppInputModern from '../../components/ui/AppInput-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
 const router = useRouter()
 const activityStore = useActivityStore()
