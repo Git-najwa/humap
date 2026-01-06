@@ -62,8 +62,13 @@ const isOwner = computed(() => {
 })
 
 onMounted(async () => {
-  await activityStore.fetchActivityById(route.params.id)
-  await reviewStore.fetchReviewsByActivity(route.params.id)
+  try {
+    await activityStore.fetchActivityById(route.params.id)
+    await reviewStore.fetchReviewsByActivity(route.params.id)
+  } catch (e) {
+    console.error('ActivityDetail load failed', e)
+    // leave activityStore.error populated by the store and avoid unhandled rejection
+  }
 })
 
 const refreshReviews = async () => {

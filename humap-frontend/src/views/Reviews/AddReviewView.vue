@@ -63,6 +63,7 @@ const handleAddReview = async () => {
     router.back()
   } catch (err) {
     console.error(err)
+    reviewStore.error = err.response?.data?.message || err.message || 'Impossible de poster l\'avis'
   }
 }
 
