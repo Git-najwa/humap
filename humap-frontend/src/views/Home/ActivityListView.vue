@@ -109,6 +109,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
 import { useFavoriteStore } from '../../store/favorite.store'
@@ -118,6 +119,7 @@ import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
 const activityStore = useActivityStore()
+const router = useRouter()
 const authStore = useAuthStore()
 const favoriteStore = useFavoriteStore()
 const listStore = useListStore()
@@ -142,7 +144,18 @@ const hasMapData = computed(() => {
   })
 })
 
-const customLists = computed(() => listStore.lists.filter(entry => entry.list_type === 'custom'))
+const customLists = computed(() => {
+  const map = new Map()
+  listStore.lists
+    .filter(entry => entry.list_type === 'custom')
+    .forEach(entry => {
+      const name = entry.custom_name?.trim() || 'Sans nom'
+      if (!map.has(name)) {
+        map.set(name, { _id: entry._id, custom_name: name })
+      }
+    })
+  return Array.from(map.values())
+})
 const selectedListByActivity = ref({})
 
 const buildFilters = () => {
@@ -273,6 +286,9 @@ const refreshMapMarkers = () => {
   points.forEach(point => {
     const marker = L.marker([point.lat, point.lng]).addTo(markerLayer.value)
     marker.bindPopup(`<strong>${point.title}</strong><br/>${point.location}`)
+    marker.on('click', () => {
+      router.push(`/activities/${point.id}`)
+    })
     bounds.push([point.lat, point.lng])
   })
 

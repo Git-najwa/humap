@@ -49,7 +49,31 @@
           <h3 class="font-semibold">{{ list.name }}</h3>
           <p class="count text-tertiary">{{ list.count }} activité(s)</p>
           <div style="margin-top:12px;display:flex;gap:8px">
+            <AppButtonModern variant="secondary" @click="viewCustomList(list.name)">
+              {{ selectedListName === list.name ? 'Masquer' : 'Voir' }}
+            </AppButtonModern>
             <AppButtonModern variant="danger" @click="deleteCustomList(list.name)">Supprimer</AppButtonModern>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="selectedListName" class="card" style="margin-top:var(--spacing-lg)">
+      <div class="flex-between" style="margin-bottom:var(--spacing-md)">
+        <div>
+          <h2 class="text-xl font-semibold">{{ selectedListName }}</h2>
+          <p class="text-tertiary">{{ selectedListActivities.length }} activité(s)</p>
+        </div>
+      </div>
+      <div v-if="listActivitiesLoading" class="loading">Chargement des activités...</div>
+      <div v-else-if="!selectedListActivities.length" class="no-lists">Aucune activité dans cette liste.</div>
+      <div v-else class="activities-grid">
+        <div v-for="activity in selectedListActivities" :key="activity._id" class="card activity-card">
+          <h3 class="font-semibold">{{ activity.title }}</h3>
+          <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
+          <p class="text-tertiary" style="margin-top:8px">📍 {{ activity.location }}</p>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <AppButtonModern variant="secondary" @click="() => router.push(`/activities/${activity._id}`)">Voir</AppButtonModern>
           </div>
         </div>
       </div>
@@ -66,12 +90,16 @@ import ErrorMessage from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import { useRouter } from 'vue-router'
+import { activityService } from '../../services/activity.service'
 
 const listStore = useListStore()
 const favoriteStore = useFavoriteStore()
 const router = useRouter()
 const showCreateForm = ref(false)
 const newListName = ref('')
+const selectedListName = ref('')
+const selectedListActivities = ref([])
+const listActivitiesLoading = ref(false)
 
 const { favorites } = storeToRefs(favoriteStore)
 const favoritesCount = computed(() => favorites.value.length)
@@ -147,8 +175,35 @@ const deleteCustomList = async (name) => {
   if (!confirm('Supprimer cette liste personnalisée ?')) return
   try {
     await Promise.all(entries.map(entry => listStore.deleteList(entry._id)))
+    if (selectedListName.value === name) {
+      selectedListName.value = ''
+      selectedListActivities.value = []
+    }
   } catch (err) {
     console.error(err)
+  }
+}
+
+const viewCustomList = async (name) => {
+  if (selectedListName.value === name) {
+    selectedListName.value = ''
+    selectedListActivities.value = []
+    return
+  }
+  const entries = customLists.value.find(l => l.name === name)?.entries || []
+  selectedListName.value = name
+  listActivitiesLoading.value = true
+  try {
+    const activityIds = entries.map(entry => entry.activity_id).filter(Boolean)
+    const results = await Promise.allSettled(activityIds.map(id => activityService.getById(id)))
+    selectedListActivities.value = results
+      .filter(result => result.status === 'fulfilled')
+      .map(result => result.value.data)
+  } catch (err) {
+    console.error(err)
+    selectedListActivities.value = []
+  } finally {
+    listActivitiesLoading.value = false
   }
 }
 </script>

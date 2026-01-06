@@ -69,6 +69,15 @@
             </div>
           </div>
           <p class="review-comment">{{ review.comment || 'Aucun commentaire.' }}</p>
+          <div v-if="review.pictures?.length" class="review-photos">
+            <img
+              v-for="(url, idx) in review.pictures"
+              :key="`${review._id}-${idx}`"
+              :src="url"
+              alt="Photo avis"
+              loading="lazy"
+            />
+          </div>
           <div class="review-actions" v-if="canDeleteReview(review)">
             <AppButton variant="secondary" @click="deleteReview(review._id)">Supprimer</AppButton>
           </div>
@@ -109,7 +118,18 @@ const isOwner = computed(() => {
   return !!(ownerId && userId && ownerId.toString() === userId.toString())
 })
 
-const customLists = computed(() => listStore.lists.filter(entry => entry.list_type === 'custom'))
+const customLists = computed(() => {
+  const map = new Map()
+  listStore.lists
+    .filter(entry => entry.list_type === 'custom')
+    .forEach(entry => {
+      const name = entry.custom_name?.trim() || 'Sans nom'
+      if (!map.has(name)) {
+        map.set(name, { _id: entry._id, custom_name: name })
+      }
+    })
+  return Array.from(map.values())
+})
 const selectedListId = ref('')
 
 const reviewCount = computed(() => reviews.value.length)
@@ -236,5 +256,20 @@ const deleteReview = async (reviewId) => {
 
 .link:hover {
   text-decoration: underline;
+}
+
+.review-photos {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.review-photos img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
 }
 </style>

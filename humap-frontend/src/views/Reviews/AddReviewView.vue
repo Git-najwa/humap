@@ -25,6 +25,26 @@
           :rows="4"
         />
 
+        <div class="form-group">
+          <label class="font-medium">Photos (URLs)</label>
+          <div class="photo-input-row">
+            <AppInput
+              v-model="photoUrl"
+              placeholder="https://exemple.com/photo.jpg"
+              type="url"
+            />
+            <AppButton variant="secondary" type="button" @click="addPhoto">
+              Ajouter
+            </AppButton>
+          </div>
+          <div v-if="form.pictures.length" class="photo-chip-list">
+            <span v-for="(url, idx) in form.pictures" :key="`${url}-${idx}`" class="photo-chip">
+              {{ url }}
+              <button type="button" class="photo-chip-remove" @click="removePhoto(idx)">×</button>
+            </span>
+          </div>
+        </div>
+
         <div class="form-actions" style="margin-top:var(--spacing-md)">
           <AppButton
             type="submit"
@@ -59,7 +79,9 @@ const reviewStore = useReviewStore()
 const form = ref({
   ranking: '',
   comment: '',
+  pictures: [],
 })
+const photoUrl = ref('')
 
 const handleAddReview = async () => {
   try {
@@ -68,7 +90,11 @@ const handleAddReview = async () => {
       reviewStore.error = 'Veuillez sélectionner une note.'
       return
     }
-    await reviewStore.createReview(route.params.activityId, form.value)
+    const payload = {
+      ...form.value,
+      pictures: form.value.pictures.filter(Boolean),
+    }
+    await reviewStore.createReview(route.params.activityId, payload)
     router.push(`/activities/${route.params.activityId}`)
   } catch (err) {
     console.error(err)
@@ -76,7 +102,55 @@ const handleAddReview = async () => {
   }
 }
 
+const addPhoto = () => {
+  const url = photoUrl.value.trim()
+  if (!url) return
+  if (!form.value.pictures.includes(url)) {
+    form.value.pictures.push(url)
+  }
+  photoUrl.value = ''
+}
+
+const removePhoto = (index) => {
+  form.value.pictures.splice(index, 1)
+}
+
 const goBack = () => {
   router.back()
 }
 </script>
+
+<style scoped>
+.photo-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.photo-chip-list {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.photo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 0.75rem;
+}
+
+.photo-chip-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: #6b7280;
+}
+</style>
