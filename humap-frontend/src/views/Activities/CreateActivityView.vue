@@ -1,65 +1,35 @@
 <template>
   <div class="create-activity-container">
-    <h1>Créer une nouvelle activité</h1>
+    <div class="container">
+      <h1 class="text-2xl font-semibold" style="margin-bottom:var(--spacing-md)">Créer une nouvelle activité</h1>
 
-    <ErrorMessage :message="activityStore.error" />
+      <ErrorMessage-modern :message="activityStore.error" />
 
-    <form @submit.prevent="handleCreate" class="create-form">
-      <AppInput
-        v-model="form.title"
-        label="Titre"
-        placeholder="Nom de l'activité"
-        required
-      />
-      <AppInput
-        v-model="form.description"
-        label="Description"
-        placeholder="Décrivez votre activité..."
-        required
-      />
-      <AppInput
-        v-model="form.location"
-        label="Lieu"
-        placeholder="Lieu de l'activité"
-        required
-      />
-      <AppInput
-        v-model="form.mood"
-        label="Ambiance"
-        placeholder="Ambiance (calm, energetic, ...)"
-        required
-      />
-      <AppInput
-        v-model.number="form.price_range"
-        type="number"
-        label="Budget"
-        placeholder="0"
-      />
-      <AppInput
-        v-model.number="form.nb_people"
-        type="number"
-        label="Nombre de personnes"
-        placeholder="2"
-      />
+      <form @submit.prevent="handleCreate" class="card">
+        <AppInput-modern v-model="form.title" label="Titre" placeholder="Nom de l'activité" />
+        <AppInput-modern v-model="form.description" label="Description" placeholder="Décrivez votre activité..." />
+        <AppInput-modern v-model="form.location" label="Lieu" placeholder="Lieu de l'activité" />
+        <AppInput-modern v-model="form.mood" label="Ambiance" placeholder="Ambiance (calm, energetic, ...)" />
 
-      <div class="coords-row">
-        <AppInput v-model.number="lng" label="Longitude" placeholder="ex: 2.3522" />
-        <AppInput v-model.number="lat" label="Latitude" placeholder="ex: 48.8566" />
-        <button type="button" @click="useMyLocation" class="create-btn">Utiliser ma position</button>
-      </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <AppInput-modern v-model.number="form.price_range" type="number" label="Budget" placeholder="0" />
+          <AppInput-modern v-model.number="form.nb_people" type="number" label="Nombre de personnes" placeholder="2" />
+        </div>
 
-      <div class="form-actions">
-        <AppButton
-          type="submit"
-          :disabled="activityStore.isLoading"
-        >
-          {{ activityStore.isLoading ? 'Création...' : 'Créer' }}
-        </AppButton>
-        <button type="button" @click="goBack" class="cancel-btn">
-          Annuler
-        </button>
-      </div>
-    </form>
+        <div class="coords-row" style="display:flex;gap:12px;align-items:center;margin-top:var(--spacing-md)">
+          <AppInput-modern v-model.number="lng" label="Longitude" placeholder="ex: 2.3522" />
+          <AppInput-modern v-model.number="lat" label="Latitude" placeholder="ex: 48.8566" />
+          <AppButton-modern variant="secondary" @click="useMyLocation" type="button">Utiliser ma position</AppButton-modern>
+        </div>
+
+        <div class="form-actions" style="display:flex;gap:12px;margin-top:var(--spacing-lg)">
+          <AppButton-modern type="submit" variant="primary" :disabled="activityStore.isLoading">
+            {{ activityStore.isLoading ? 'Création...' : 'Créer' }}
+          </AppButton-modern>
+          <AppButton-modern type="button" variant="secondary" @click="goBack">Annuler</AppButton-modern>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -67,9 +37,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
-import AppInput from '../../components/ui/AppInput.vue'
-import AppButton from '../../components/ui/AppButton.vue'
-import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import AppInputModern from '../../components/ui/AppInput-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
+import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 
 const router = useRouter()
 const activityStore = useActivityStore()
