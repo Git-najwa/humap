@@ -54,12 +54,17 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth.store'
-import AppInput from '../../components/ui/AppInput.vue'
-import AppButton from '../../components/ui/AppButton.vue'
-import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import AppInputModern from '../../components/ui/AppInput-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
+import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// alias modern components to existing names used in template
+const AppInput = AppInputModern
+const AppButton = AppButtonModern
+const ErrorMessage = ErrorMessageModern
 
 const form = ref({
   username: '',

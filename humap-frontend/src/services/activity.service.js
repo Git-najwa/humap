@@ -6,4 +6,5 @@ export const activityService = {
   create: (data) => api.post('/activities', data),
   update: (id, data) => api.put(`/activities/${id}`, data),
   delete: (id) => api.delete(`/activities/${id}`),
+  toggleLike: (id) => api.post(`/activities/${id}/like`),
 }

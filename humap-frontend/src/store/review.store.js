@@ -12,7 +12,8 @@ export const useReviewStore = defineStore('review', () => {
     error.value = null
     try {
       const response = await reviewService.getByActivityId(activityId)
-      reviews.value = response.data
+      const payload = response.data?.items || response.data
+      reviews.value = Array.isArray(payload) ? payload : []
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'Erreur lors de la récupération des avis'
@@ -27,7 +28,7 @@ export const useReviewStore = defineStore('review', () => {
     error.value = null
     try {
       const response = await reviewService.create(data)
-      reviews.value.push(response.data)
+      reviews.value.unshift(response.data)
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'Erreur lors de la création de l\'avis'

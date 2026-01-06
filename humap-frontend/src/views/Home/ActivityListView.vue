@@ -1,28 +1,36 @@
 <template>
-  <div class="activity-list-page">
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="page-header-content">
-        <h1 class="page-title">Activités</h1>
-        <p class="page-subtitle">Découvrez les activités disponibles</p>
+  <div class="activity-list-container">
+    <header class="header container">
+      <h1 class="text-2xl font-semibold">Activités HUMAP</h1>
+      <div class="flex gap-sm">
+        <router-link to="/activities/create">
+          <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
+        </router-link>
+        <router-link to="/lists">
+          <AppButtonModern variant="secondary">Favoris ({{ likedCount }})</AppButtonModern>
+        </router-link>
+        <AppButtonModern variant="secondary" @click="handleLogout">Déconnexion</AppButtonModern>
       </div>
-      <router-link to="/activities/create" class="create-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        <span>Nouvelle activité</span>
-      </router-link>
-    </div>
+    </header>
 
     <!-- Error Message -->
     <ErrorMessage :message="activityStore.error" />
 
-    <!-- Loading State -->
-    <div v-if="activityStore.isLoading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>Chargement des activités...</p>
-    </div>
+    <section class="filters container card" style="display:flex;gap:12px;align-items:center;margin-bottom:var(--spacing-lg)">
+      <AppInputModern v-model="q" placeholder="Recherche..." />
+      <select v-model="mood" class="input" style="width:180px">
+        <option value="">Tous les moods</option>
+        <option value="calm">calm</option>
+        <option value="social">social</option>
+        <option value="energetic">energetic</option>
+      </select>
+      <AppInputModern v-model.number="price_max" type="number" placeholder="Prix max" style="width:120px" />
+      <AppInputModern v-model.number="nb_people" type="number" placeholder="Nb personnes" style="width:120px" />
+      <AppButtonModern variant="primary" @click="applyFilters">Filtrer</AppButtonModern>
+      <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
+    </section>
+
+    <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
 
     <!-- Empty State -->
     <div v-else-if="activityStore.activities.length === 0" class="empty-state">
@@ -35,336 +43,142 @@
       <router-link to="/activities/create" class="empty-state-btn">Créer une activité</router-link>
     </div>
 
-    <!-- Activities Grid -->
-    <div v-else class="activities-grid">
-      <article v-for="activity in activityStore.activities" :key="activity._id" class="activity-card">
-        <div class="card-header">
-          <span class="card-mood" :class="getMoodClass(activity.mood)">{{ activity.mood }}</span>
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">{{ activity.title }}</h3>
-          <p class="card-description">{{ truncateText(activity.description, 100) }}</p>
-          <div class="card-location">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-            <span>{{ activity.location }}</span>
+    <div v-else class="activities-grid container grid grid-cols-3">
+      <div v-for="activity in activityStore.activities" :key="activity._id" class="card activity-card" style="position:relative;">
+        <button class="favorite-badge" @click.prevent="toggleFavorite(activity._id)">
+          <span v-if="isFavorited(activity._id)">★</span>
+          <span v-else>☆</span>
+        </button>
+        <h3 class="text-lg font-semibold">{{ activity.title }}</h3>
+        <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <p class="location text-tertiary">📍 {{ activity.location }}</p>
+            <p class="mood text-tertiary">Ambiance : {{ activity.mood }}</p>
           </div>
-        </div>
-        <div class="card-footer">
-          <router-link :to="`/activities/${activity._id}`" class="detail-link">
-            Voir détails
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
+          <router-link :to="`/activities/${activity._id}`">
+            <AppButtonModern variant="secondary">Voir</AppButtonModern>
           </router-link>
         </div>
-      </article>
+      </div>
+    </div>
+
+    <div
+      v-if="pagination.total > pagination.limit"
+      class="pagination container"
+      style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:var(--spacing-lg)"
+    >
+      <AppButtonModern variant="secondary" @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</AppButtonModern>
+      <span class="text-sm text-tertiary">Page {{ pagination.page }} / {{ pagination.totalPages || Math.ceil(pagination.total / pagination.limit) }}</span>
+      <AppButtonModern
+        variant="secondary"
+        @click="goToPage(pagination.page + 1)"
+        :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))"
+      >
+        Suiv
+      </AppButtonModern>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
-import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import { useAuthStore } from '../../store/auth.store'
+import { useFavoriteStore } from '../../store/favorite.store'
+import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
+import AppInputModern from '../../components/ui/AppInput-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
 const activityStore = useActivityStore()
+const authStore = useAuthStore()
+const favoriteStore = useFavoriteStore()
 
-onMounted(() => {
-  activityStore.fetchActivities()
-})
+const { pagination } = storeToRefs(activityStore)
+const { favorites, count: likedCount } = storeToRefs(favoriteStore)
 
-const truncateText = (text, maxLength) => {
-  if (!text) return ''
-  if (text.length <= maxLength) return text
-  return text.substring(0, maxLength) + '...'
+const ErrorMessage = ErrorMessageModern
+
+const q = ref('')
+const mood = ref('')
+const price_max = ref(null)
+const nb_people = ref(null)
+
+const buildFilters = () => {
+  const filters = {}
+  if (q.value) filters.q = q.value
+  if (mood.value) filters.mood = mood.value
+  if (price_max.value !== null && price_max.value !== '') filters.price_max = price_max.value
+  if (nb_people.value !== null && nb_people.value !== '') filters.nb_people = nb_people.value
+  return filters
 }
 
-const getMoodClass = (mood) => {
-  const moodMap = {
-    'calme': 'mood-calm',
-    'énergique': 'mood-energetic',
-    'festif': 'mood-festive',
-    'romantique': 'mood-romantic',
-    'aventurier': 'mood-adventure'
+onMounted(async () => {
+  try {
+    await activityStore.fetchActivities()
+    if (authStore.user) {
+      await favoriteStore.loadFavorites()
+    }
+  } catch (err) {
+    console.error(err)
   }
-  return moodMap[mood?.toLowerCase()] || 'mood-default'
+})
+
+const applyFilters = async () => {
+  try {
+    await activityStore.applyFilters(buildFilters())
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const resetFilters = async () => {
+  q.value = ''
+  mood.value = ''
+  price_max.value = null
+  nb_people.value = null
+  try {
+    await activityStore.applyFilters({})
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const goToPage = async (page) => {
+  try {
+    await activityStore.goToPage(page)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const isFavorited = (activityId) => favorites.value.some(activity => activity._id === activityId)
+
+const toggleFavorite = async (activityId) => {
+  try {
+    await favoriteStore.toggleFavorite(activityId)
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+const handleLogout = () => {
+  authStore.logout()
+  router.push('/login')
 }
 </script>
 
 <style scoped>
-.activity-list-page {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: calc(100vh - 80px);
-}
-
-/* Page Header */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.page-title {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.page-subtitle {
-  margin: 0.25rem 0 0 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.create-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background-color: #111827;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: background-color 0.2s;
-}
-
-.create-btn:hover {
-  background-color: #374151;
-}
-
-/* Loading State */
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  color: #6b7280;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #111827;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Empty State */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  color: #6b7280;
-}
-
-.empty-state svg {
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
-  color: #374151;
-}
-
-.empty-state p {
-  margin: 0 0 1.5rem 0;
-  font-size: 0.875rem;
-}
-
-.empty-state-btn {
-  padding: 0.75rem 1.5rem;
-  background-color: #111827;
-  color: white;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.empty-state-btn:hover {
-  background-color: #374151;
-}
-
-/* Activities Grid */
 .activities-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
 }
 
-/* Activity Card */
-.activity-card {
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-
-.activity-card:hover {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
-.card-header {
-  padding: 1rem 1.25rem 0;
-}
-
-.card-mood {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  border-radius: 9999px;
-  text-transform: capitalize;
-}
-
-.mood-calm {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.mood-energetic {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.mood-festive {
-  background-color: #fce7f3;
-  color: #9d174d;
-}
-
-.mood-romantic {
-  background-color: #ffe4e6;
-  color: #be123c;
-}
-
-.mood-adventure {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.mood-default {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.card-body {
-  padding: 1rem 1.25rem;
-}
-
-.card-title {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.card-description {
-  margin: 0 0 1rem 0;
-  font-size: 0.875rem;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
-.card-location {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.card-location svg {
-  flex-shrink: 0;
-  color: #9ca3af;
-}
-
-.card-footer {
-  padding: 1rem 1.25rem;
-  border-top: 1px solid #f3f4f6;
-  background-color: #fafafa;
-}
-
-.detail-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #111827;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.detail-link:hover {
-  color: #4b5563;
-}
-
-.detail-link svg {
-  transition: transform 0.2s;
-}
-
-.detail-link:hover svg {
-  transform: translateX(4px);
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .activity-list-page {
-    padding: 1rem;
-  }
-
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .create-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .activities-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  .card-title {
-    font-size: 1rem;
-  }
+.location,
+.mood {
+  font-size: var(--font-size-sm);
 }
 </style>

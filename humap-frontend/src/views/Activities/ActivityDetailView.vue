@@ -1,178 +1,167 @@
 <template>
-  <div class="activity-detail-container">
-    <button @click="goBack" class="back-btn">← Retour</button>
+  <div class="container">
+    <AppButton variant="secondary" @click="goBack">← Retour</AppButton>
 
     <ErrorMessage :message="activityStore.error" />
 
-    <div v-if="activityStore.isLoading" class="loading">Chargement de l'activité...</div>
+    <div v-if="activityStore.isLoading" class="loading text-tertiary">Chargement de l'activité...</div>
 
-    <div v-else-if="activityStore.currentActivity" class="activity-detail">
-      <h1>{{ activityStore.currentActivity.title }}</h1>
-      <p class="description">{{ activityStore.currentActivity.description }}</p>
-      <div class="details">
-        <p><strong>📍 Lieu :</strong> {{ activityStore.currentActivity.location }}</p>
-        <p><strong>🎭 Ambiance :</strong> {{ activityStore.currentActivity.mood }}</p>
-        <p><strong>💰 Budget :</strong> {{ activityStore.currentActivity.price_range }}</p>
-        <p><strong>👥 Nombre de personnes :</strong> {{ activityStore.currentActivity.nb_people }}</p>
-      </div>
-
-      <div class="actions">
-        <router-link :to="`/reviews/${activityStore.currentActivity._id}`" class="action-link">
-          Ajouter un avis
-        </router-link>
-        <button @click="addToFavorites" class="action-link">⭐ Ajouter aux favoris</button>
-      </div>
-
-      <div class="reviews-section">
-        <h2>Avis</h2>
-        <div v-if="reviews.length === 0" class="no-reviews">Aucun avis pour cette activité</div>
-        <div v-else class="reviews-list">
-          <div v-for="review in reviews" :key="review._id" class="review">
-            <p><strong>{{ review.user_id.username }}</strong> - ⭐ {{ review.rating }}/5</p>
-            <p>{{ review.comment }}</p>
-          </div>
+    <div v-else-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-md)">
+      <div class="flex-between">
+        <div>
+          <h1 class="text-2xl font-semibold">{{ activityStore.currentActivity.title }}</h1>
+          <p class="text-secondary" style="margin-top:8px">{{ activityStore.currentActivity.description }}</p>
+        </div>
+        <div class="flex-col" style="gap:8px">
+          <AppButton v-if="isOwner" variant="secondary" @click="() => $router.push(`/activities/${activityStore.currentActivity._id}/edit`)">✏️ Modifier</AppButton>
+          <AppButton :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">{{ isLiked ? '★ Favori' : '☆ Favoris' }}</AppButton>
         </div>
       </div>
     </div>
+
+    <section v-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-lg)">
+      <div class="flex-between" style="margin-bottom:var(--spacing-md)">
+        <div>
+          <h2 class="text-xl font-semibold">Avis</h2>
+          <p class="text-tertiary">
+            {{ reviewCount }} avis
+            <span v-if="reviewCount > 0">• Note moyenne {{ averageRating }}</span>
+          </p>
+        </div>
+        <AppButton variant="primary" @click="goToAddReview">Ajouter un avis</AppButton>
+      </div>
+
+      <div v-if="reviewStore.isLoading" class="loading text-tertiary">Chargement des avis...</div>
+      <div v-else-if="reviews.length === 0" class="no-activities">Aucun avis pour le moment.</div>
+      <div v-else class="reviews-list">
+        <div v-for="review in reviews" :key="review._id" class="review-item">
+          <div class="review-header">
+            <div class="review-author">
+              {{ review.user?.username || 'Utilisateur' }}
+            </div>
+            <div class="review-rating">
+              <span v-for="n in 5" :key="n">{{ n <= review.ranking ? '★' : '☆' }}</span>
+            </div>
+          </div>
+          <p class="review-comment">{{ review.comment || 'Aucun commentaire.' }}</p>
+          <div class="review-actions" v-if="canDeleteReview(review)">
+            <AppButton variant="secondary" @click="deleteReview(review._id)">Supprimer</AppButton>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useReviewStore } from '../../store/review.store'
-import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import { useAuthStore } from '../../store/auth.store'
+import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
+import { useFavoriteStore } from '../../store/favorite.store'
 
 const router = useRouter()
 const route = useRoute()
 const activityStore = useActivityStore()
 const reviewStore = useReviewStore()
-const reviews = ref([])
+const { reviews } = storeToRefs(reviewStore)
+const authStore = useAuthStore()
+
+// expose modern components to template by importing them
+const AppButton = AppButtonModern
+const ErrorMessage = ErrorMessageModern
+
+const isOwner = computed(() => {
+  const ownerId = activityStore.currentActivity?.user_id || activityStore.currentActivity?.owner
+  return !!(authStore.user && ownerId && authStore.user._id === ownerId)
+})
+
+const reviewCount = computed(() => reviews.value.length)
+const averageRating = computed(() => {
+  if (!reviews.value.length) return '0.0'
+  const total = reviews.value.reduce((sum, review) => sum + (Number(review.ranking) || 0), 0)
+  return (total / reviews.value.length).toFixed(1)
+})
 
 onMounted(async () => {
-  await activityStore.fetchActivityById(route.params.id)
-  await reviewStore.fetchReviewsByActivity(route.params.id)
-  reviews.value = reviewStore.reviews
+  try {
+    await activityStore.fetchActivityById(route.params.id)
+    await reviewStore.fetchReviewsByActivity(route.params.id)
+    // determine whether current user has liked this activity via favoriteStore
+    if (authStore.user) {
+      try {
+        await favoriteStore.loadFavorites()
+        isLiked.value = favoriteStore.favorites.some(f => f._id === route.params.id)
+      } catch (e) {
+        console.warn('Could not load favorites to determine liked state', e)
+      }
+    }
+  } catch (e) {
+    console.error('ActivityDetail load failed', e)
+    // leave activityStore.error populated by the store and avoid unhandled rejection
+  }
 })
+
+const refreshReviews = async () => {
+  try {
+    await reviewStore.fetchReviewsByActivity(route.params.id)
+  } catch (e) {
+    console.error('refreshReviews failed', e)
+  }
+}
 
 const goBack = () => {
   router.back()
 }
 
-const addToFavorites = () => {
-  alert('Ajouté aux favoris !')
+const goToAddReview = () => {
+  router.push(`/reviews/${route.params.id}`)
+}
+
+const addToFavorites = async () => {
+  if (!authStore.user) {
+    router.push('/login')
+    return
+  }
+  try {
+    await favoriteStore.toggleFavorite(activityStore.currentActivity._id)
+    // reload favorites and update local flag
+    await favoriteStore.loadFavorites()
+    isLiked.value = favoriteStore.favorites.some(f => f._id === activityStore.currentActivity._id)
+  } catch (e) {
+    console.error('addToFavorites failed', e)
+  }
+}
+
+const isLiked = ref(false)
+const favoriteStore = useFavoriteStore()
+
+const handleDelete = async () => {
+  if (!activityStore.currentActivity) return
+  try {
+    await activityStore.deleteActivity(activityStore.currentActivity._id)
+    router.push('/')
+  } catch (e) {
+    console.error('delete failed', e)
+  }
+}
+
+const canDeleteReview = (review) => {
+  if (!authStore.user) return false
+  return review.user_id === authStore.user._id || review.user?.id === authStore.user._id || authStore.user.role === 'admin'
+}
+
+const deleteReview = async (reviewId) => {
+  const shouldDelete = window.confirm('Supprimer cet avis ?')
+  if (!shouldDelete) return
+  try {
+    await reviewStore.deleteReview(reviewId)
+  } catch (e) {
+    console.error('deleteReview failed', e)
+  }
 }
 </script>
-
-<style scoped>
-.activity-detail-container {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.back-btn {
-  padding: 0.5rem 1rem;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  margin-bottom: 1rem;
-}
-
-.back-btn:hover {
-  background-color: #545b62;
-}
-
-.activity-detail {
-  background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-  margin-top: 0;
-  color: #333;
-}
-
-.description {
-  font-size: 1.1rem;
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-}
-
-.details {
-  background-color: #f8f9fa;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.details p {
-  margin: 0.5rem 0;
-}
-
-.actions {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.action-link {
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.action-link:hover {
-  background-color: #0056b3;
-}
-
-.reviews-section {
-  margin-top: 2rem;
-  border-top: 1px solid #ddd;
-  padding-top: 1.5rem;
-}
-
-.reviews-section h2 {
-  margin-top: 0;
-}
-
-.no-reviews {
-  color: #999;
-  text-align: center;
-  padding: 1rem;
-}
-
-.reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.review {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-radius: 0.5rem;
-}
-
-.review p {
-  margin: 0.5rem 0;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #666;
-}
-</style>

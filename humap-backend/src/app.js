@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/users.routes.js";
 import activityRoutes from "./routes/activities.routes.js";
 import reviewRoutes from "./routes/reviews.routes.js";
+import reviewByIdRoutes from "./routes/reviewById.routes.js";
 import listRoutes from "./routes/lists.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { swaggerUi, swaggerSpec } from "./utils/swagger.js";
@@ -34,6 +35,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/activities", activityRoutes);
 app.use("/activities/:activityId/reviews", reviewRoutes);
+app.use("/reviews", reviewByIdRoutes);
 app.use("/lists", listRoutes);
 
 app.use((req, res, next) => {

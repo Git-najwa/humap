@@ -56,6 +56,7 @@ describe("Activity routes", () => {
         await Activity.create({
           title: `Activity ${i}`,
           location: "Lausanne",
+          coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
           mood: i % 2 === 0 ? "calm" : "social",
           price_range: i % 2,
           user_id: user._id,
@@ -67,13 +68,13 @@ describe("Activity routes", () => {
         .expect(200)
         .expect("Content-Type", /json/);
 
-      expect(res.body).toHaveProperty("data");
+      expect(res.body).toHaveProperty("items");
       expect(res.body).toHaveProperty("pagination");
-      expect(res.body.data).toHaveLength(10); // Default limit
+      expect(res.body.items).toHaveLength(10); // Default limit
       expect(res.body.pagination.page).toBe(1);
       expect(res.body.pagination.limit).toBe(10);
       expect(res.body.pagination.total).toBe(15);
-      expect(res.body.pagination.pages).toBe(2);
+      expect(res.body.pagination.totalPages).toBe(2);
     });
 
     test("should support custom page and limit", async () => {
@@ -81,6 +82,7 @@ describe("Activity routes", () => {
         await Activity.create({
           title: `Activity ${i}`,
           location: "Lausanne",
+          coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
           user_id: user._id,
         });
       }
@@ -89,7 +91,7 @@ describe("Activity routes", () => {
         .get("/activities?page=2&limit=5")
         .expect(200);
 
-      expect(res.body.data).toHaveLength(5);
+      expect(res.body.items).toHaveLength(5);
       expect(res.body.pagination.page).toBe(2);
       expect(res.body.pagination.limit).toBe(5);
     });
@@ -98,12 +100,14 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Yoga",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         user_id: user._id,
       });
       await Activity.create({
         title: "Party",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "social",
         user_id: user._id,
       });
@@ -112,8 +116,8 @@ describe("Activity routes", () => {
         .get("/activities?mood=calm")
         .expect(200);
 
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].mood).toBe("calm");
+      expect(res.body.items).toHaveLength(1);
+      expect(res.body.items[0].mood).toBe("calm");
       expect(res.body.pagination.total).toBe(1);
     });
 
@@ -121,12 +125,14 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Free Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         price_range: 0,
         user_id: user._id,
       });
       await Activity.create({
         title: "Expensive Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         price_range: 3,
         user_id: user._id,
       });
@@ -135,14 +141,15 @@ describe("Activity routes", () => {
         .get("/activities?price_range=1")
         .expect(200);
 
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].price_range).toBe(0);
+      expect(res.body.items).toHaveLength(1);
+      expect(res.body.items[0].price_range).toBe(0);
     });
 
     test("should filter with multiple parameters", async () => {
       await Activity.create({
         title: "Calm Free",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         price_range: 0,
         user_id: user._id,
@@ -150,6 +157,7 @@ describe("Activity routes", () => {
       await Activity.create({
         title: "Calm Expensive",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         price_range: 3,
         user_id: user._id,
@@ -159,14 +167,15 @@ describe("Activity routes", () => {
         .get("/activities?mood=calm&price_range=1")
         .expect(200);
 
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].title).toBe("Calm Free");
+      expect(res.body.items).toHaveLength(1);
+      expect(res.body.items[0].title).toBe("Calm Free");
     });
 
     test("should return empty list when no matches", async () => {
       await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         mood: "calm",
         user_id: user._id,
       });
@@ -175,7 +184,7 @@ describe("Activity routes", () => {
         .get("/activities?mood=energetic")
         .expect(200);
 
-      expect(res.body.data).toHaveLength(0);
+      expect(res.body.items).toHaveLength(0);
       expect(res.body.pagination.total).toBe(0);
     });
   });
@@ -189,6 +198,7 @@ describe("Activity routes", () => {
         .send({
           title: "Yoga Class",
           location: "Lausanne",
+          coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
           mood: "calm",
           price_range: 1,
         })
@@ -221,7 +231,7 @@ describe("Activity routes", () => {
         .send({
           location: "Lausanne",
         })
-        .expect(422);
+        .expect(400);
 
       expect(res.body).toHaveProperty("errors");
     });
@@ -233,7 +243,7 @@ describe("Activity routes", () => {
         .send({
           title: "Yoga Class",
         })
-        .expect(422);
+        .expect(400);
 
       expect(res.body).toHaveProperty("errors");
     });
@@ -245,6 +255,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Yoga",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -277,6 +288,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Old Title",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -296,6 +308,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Alice's Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -312,6 +325,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -342,6 +356,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity to Delete",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -358,6 +373,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Alice's Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -375,6 +391,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -399,6 +416,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 
@@ -423,6 +441,7 @@ describe("Activity routes", () => {
       const activity = await Activity.create({
         title: "Activity",
         location: "Lausanne",
+        coordinates: { type: "Point", coordinates: [6.6323, 46.5197] },
         user_id: user._id,
       });
 

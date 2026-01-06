@@ -8,12 +8,25 @@ const activitySchema = new Schema(
     description: { type: String, trim: true },
     location: { type: String, required: true, trim: true },
     coordinates: {
-      type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number], index: "2dsphere" },
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: true,
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // [lng, lat]
+        required: true,
+        validate: {
+          validator: (arr) => Array.isArray(arr) && arr.length === 2,
+          message: "coordinates.coordinates must be [lng, lat]",
+        },
+      },
     },
     mood: { type: String, trim: true },
     nb_people: { type: Number },
-    price_range: { type: Number, min: 0, max: 3 },
+    // Budget libre côté frontend : aucune restriction maximale côté modèle
+    price_range: { type: Number, min: 0 },
     age_range: { type: String, trim: true },
     hours: { type: Number },
     day: { type: String, trim: true },
@@ -23,6 +36,10 @@ const activitySchema = new Schema(
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }
 );
 
+// Index texte pour recherche
 activitySchema.index({ title: "text", description: "text" });
+
+// Index géospatial pour les recherches "near"
+activitySchema.index({ coordinates: "2dsphere" });
 
 export default mongoose.model("Activity", activitySchema);

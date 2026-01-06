@@ -5,6 +5,7 @@ import RegisterView from '../views/Auth/RegisterView.vue'
 import ActivityListView from '../views/Home/ActivityListView.vue'
 import ActivityDetailView from '../views/Activities/ActivityDetailView.vue'
 import CreateActivityView from '../views/Activities/CreateActivityView.vue'
+import EditActivityView from '../views/Activities/EditActivityView.vue'
 import AddReviewView from '../views/Reviews/AddReviewView.vue'
 import MyListsView from '../views/Lists/MyListsView.vue'
 import ProfileView from '../views/Profile/ProfileView.vue'
@@ -38,6 +39,12 @@ const routes = [
     path: '/activities/create',
     name: 'CreateActivity',
     component: CreateActivityView,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/activities/:id/edit',
+    name: 'EditActivity',
+    component: EditActivityView,
     meta: { requiresAuth: true },
   },
   {

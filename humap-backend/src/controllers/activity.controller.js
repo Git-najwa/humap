@@ -49,14 +49,14 @@ export async function listActivities(req, res, next) {
     const activities = await Activity.find(query).skip(skip).limit(limit);
     const total = await Activity.countDocuments(query);
 
-    // 📊 Retourner avec métadonnées
+    // 📊 Retourner avec métadonnées (contrat stable attendu par le frontend)
     return ok(res, {
-      data: activities,
+      items: activities,
       pagination: {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error) {
@@ -69,6 +69,14 @@ export async function createActivity(req, res, next) {
     const activity = await Activity.create({ ...req.body, user_id: req.currentUserId });
     return created(res, activity);
   } catch (error) {
+    // Return a 400 with validation details for Mongoose validation errors
+    if (error && error.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Validation error",
+        errors: Object.values(error.errors || {}).map((e) => e.message),
+      });
+    }
+
     next(error);
   }
 }
@@ -556,7 +564,7 @@ export async function nearbyActivities(req, res, next) {
       { $limit: 20 },
     ]);
 
-    return ok(res, { data: nearby });
+    return ok(res, { items: nearby });
   } catch (error) {
     next(error);
   }

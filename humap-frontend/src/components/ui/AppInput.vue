@@ -54,6 +54,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  rows: {
+    type: [Number, String],
+    default: null,
+  },
   disabled: {
     type: Boolean,
     default: false,
@@ -81,7 +85,7 @@ defineEmits(['update:modelValue', 'blur', 'focus'])
 .app-input-wrapper {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-lg);
 }
 
 .app-input-label {
