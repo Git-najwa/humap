@@ -9,16 +9,31 @@
     <div v-else-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-md)">
       <div class="flex-between">
         <div>
-          <img
-            class="activity-hero"
-            :src="getActivityImage(activityStore.currentActivity)"
-            :alt="activityStore.currentActivity.title"
-            loading="lazy"
-          />
+          <div class="activity-gallery">
+            <img
+              class="activity-hero"
+              :src="activeGalleryImage"
+              :alt="activityStore.currentActivity.title"
+              loading="lazy"
+            />
+            <div v-if="galleryImages.length > 1" class="gallery-thumbs">
+              <button
+                v-for="(url, idx) in galleryImages"
+                :key="`${url}-${idx}`"
+                type="button"
+                class="gallery-thumb"
+                :class="{ active: idx === selectedPhotoIndex }"
+                @click="selectedPhotoIndex = idx"
+                aria-label="Voir photo"
+              >
+                <img :src="url" :alt="`Photo ${idx + 1}`" loading="lazy" />
+              </button>
+            </div>
+          </div>
           <h1 class="text-2xl font-semibold">{{ activityStore.currentActivity.title }}</h1>
           <p class="text-secondary" style="margin-top:8px">{{ activityStore.currentActivity.description }}</p>
         </div>
-        <div class="flex-col" style="gap:8px">
+        <div class="action-row">
           <AppButton
             v-if="isOwner"
             variant="secondary"
@@ -27,7 +42,9 @@
             ✏️ Modifier
           </AppButton>
           <AppButton v-if="isOwner" variant="danger" @click="handleDelete">🗑️ Supprimer</AppButton>
-          <AppButton :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">{{ isLiked ? '★ Favori' : '☆ Favoris' }}</AppButton>
+          <AppButton class="favorite-button" :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">
+            {{ isLiked ? '★ Favori' : '☆ Favoris' }}
+          </AppButton>
         </div>
       </div>
 
@@ -98,7 +115,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
@@ -128,26 +145,52 @@ const isOwner = computed(() => {
   return !!(ownerId && userId && ownerId.toString() === userId.toString())
 })
 
-const DEFAULT_ACTIVITY_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
+const buildPlaceholder = (seed = 'humap') => {
+  let hash = 0
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  }
+  const palettes = [
+    ['#f5e7d7', '#f0d9c7', '#e9bfa1', '#d9a887'],
+    ['#e6f1f8', '#d7e6f3', '#b9d3ea', '#8fb7dd'],
+    ['#f8efe6', '#f4e2d1', '#e3c1a5', '#cf9f82'],
+    ['#eef5ea', '#dfe9d6', '#b9cfae', '#9ab88f'],
+  ]
+  const palette = palettes[hash % palettes.length]
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="900" height="520" viewBox="0 0 900 520">
     <defs>
       <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#f5e7d7"/>
-        <stop offset="100%" stop-color="#f0d9c7"/>
+        <stop offset="0%" stop-color="${palette[0]}"/>
+        <stop offset="100%" stop-color="${palette[1]}"/>
       </linearGradient>
     </defs>
     <rect width="900" height="520" fill="url(#bg)"/>
-    <circle cx="720" cy="150" r="110" fill="#f7c58f" opacity="0.7"/>
-    <path d="M0 420 L200 300 L360 420 L520 300 L720 420 L900 360 L900 520 L0 520 Z" fill="#e9bfa1"/>
-    <path d="M0 350 L150 250 L300 330 L420 250 L600 350 L900 300 L900 520 L0 520 Z" fill="#d9a887"/>
+    <circle cx="720" cy="150" r="110" fill="${palette[2]}" opacity="0.7"/>
+    <path d="M0 420 L200 300 L360 420 L520 300 L720 420 L900 360 L900 520 L0 520 Z" fill="${palette[2]}"/>
+    <path d="M0 350 L150 250 L300 330 L420 250 L600 350 L900 300 L900 520 L0 520 Z" fill="${palette[3]}"/>
     <text x="70" y="140" font-family="Georgia, serif" font-size="38" fill="#7a4f3a">HUMAP</text>
     <text x="70" y="185" font-family="Georgia, serif" font-size="22" fill="#7a4f3a">Activité locale</text>
   </svg>`
-)}`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
 
 const getActivityImage = (activity) => {
-  return activity?.photos?.[0] || activity?.image || activity?.photo || activity?.pictures?.[0] || DEFAULT_ACTIVITY_IMAGE
+  const seed = activity?._id || activity?.title || 'humap'
+  return activity?.photos?.[0] || activity?.image || activity?.photo || activity?.pictures?.[0] || buildPlaceholder(seed)
 }
+
+const galleryImages = computed(() => {
+  const photos = activityStore.currentActivity?.photos || []
+  if (photos.length) return photos
+  return [getActivityImage(activityStore.currentActivity)]
+})
+
+const selectedPhotoIndex = ref(0)
+
+const activeGalleryImage = computed(() => {
+  return galleryImages.value[selectedPhotoIndex.value] || galleryImages.value[0]
+})
 
 const customLists = computed(() => {
   const map = new Map()
@@ -202,6 +245,13 @@ onMounted(async () => {
     // leave activityStore.error populated by the store and avoid unhandled rejection
   }
 })
+
+watch(
+  () => activityStore.currentActivity?._id,
+  () => {
+    selectedPhotoIndex.value = 0
+  }
+)
 
 const refreshReviews = async () => {
   try {
@@ -324,5 +374,49 @@ const deleteReview = async (reviewId) => {
   border-radius: 14px;
   border: 1px solid #e5e7eb;
   margin-bottom: 12px;
+}
+
+.activity-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gallery-thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.gallery-thumb {
+  border: 1px solid #e5e7eb;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+}
+
+.gallery-thumb img {
+  width: 100%;
+  height: 64px;
+  object-fit: cover;
+  display: block;
+}
+
+.gallery-thumb.active {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.action-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.favorite-button {
+  margin-top: -4px;
 }
 </style>

@@ -9,17 +9,6 @@
       </div>
     </header>
 
-    <section class="map-section container card">
-      <div class="map-header">
-        <div>
-          <h2 class="text-xl font-semibold">Carte des activités</h2>
-          <p class="text-tertiary">Explorez les activités proches.</p>
-        </div>
-        <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
-      </div>
-      <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
-    </section>
-
     <!-- Error Message -->
     <ErrorMessage :message="activityStore.error" />
 
@@ -35,6 +24,17 @@
       <AppInputModern v-model.number="nb_people" type="number" placeholder="Nb personnes" style="width:120px" />
       <AppButtonModern variant="primary" @click="applyFilters">Filtrer</AppButtonModern>
       <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
+    </section>
+
+    <section class="map-section container card">
+      <div class="map-header">
+        <div>
+          <h2 class="text-xl font-semibold">Carte des activités</h2>
+          <p class="text-tertiary">Explorez les activités proches.</p>
+        </div>
+        <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
+      </div>
+      <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
     </section>
 
     <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
@@ -200,6 +200,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (mapInstance.value) {
+    mapInstance.value.closePopup()
     mapInstance.value.remove()
     mapInstance.value = null
   }
@@ -262,25 +263,39 @@ const addToCustomList = async (activityId) => {
   }
 }
 
-const DEFAULT_ACTIVITY_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520" viewBox="0 0 800 520">
+const buildPlaceholder = (seed = 'humap') => {
+  let hash = 0
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  }
+  const palettes = [
+    ['#f5e7d7', '#f0d9c7', '#e9bfa1', '#d9a887'],
+    ['#e6f1f8', '#d7e6f3', '#b9d3ea', '#8fb7dd'],
+    ['#f8efe6', '#f4e2d1', '#e3c1a5', '#cf9f82'],
+    ['#eef5ea', '#dfe9d6', '#b9cfae', '#9ab88f'],
+  ]
+  const palette = palettes[hash % palettes.length]
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="800" height="520" viewBox="0 0 800 520">
     <defs>
       <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stop-color="#f5e7d7"/>
-        <stop offset="100%" stop-color="#f0d9c7"/>
+        <stop offset="0%" stop-color="${palette[0]}"/>
+        <stop offset="100%" stop-color="${palette[1]}"/>
       </linearGradient>
     </defs>
     <rect width="800" height="520" fill="url(#bg)"/>
-    <circle cx="640" cy="140" r="90" fill="#f7c58f" opacity="0.7"/>
-    <path d="M0 420 L180 280 L340 400 L480 300 L680 420 L800 360 L800 520 L0 520 Z" fill="#e9bfa1"/>
-    <path d="M0 360 L130 260 L260 340 L380 260 L560 360 L800 300 L800 520 L0 520 Z" fill="#d9a887"/>
+    <circle cx="640" cy="140" r="90" fill="${palette[2]}" opacity="0.7"/>
+    <path d="M0 420 L180 280 L340 400 L480 300 L680 420 L800 360 L800 520 L0 520 Z" fill="${palette[2]}"/>
+    <path d="M0 360 L130 260 L260 340 L380 260 L560 360 L800 300 L800 520 L0 520 Z" fill="${palette[3]}"/>
     <text x="60" y="120" font-family="Georgia, serif" font-size="36" fill="#7a4f3a">HUMAP</text>
     <text x="60" y="165" font-family="Georgia, serif" font-size="20" fill="#7a4f3a">Activité locale</text>
   </svg>`
-)}`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
 
 const getActivityImage = (activity) => {
-  return activity?.photos?.[0] || activity?.image || activity?.photo || activity?.pictures?.[0] || DEFAULT_ACTIVITY_IMAGE
+  const seed = activity?._id || activity?.title || 'humap'
+  return activity?.photos?.[0] || activity?.image || activity?.photo || activity?.pictures?.[0] || buildPlaceholder(seed)
 }
 
 const initMap = () => {
@@ -302,6 +317,7 @@ const initMap = () => {
 const refreshMapMarkers = () => {
   const { L } = window
   if (!L || !mapInstance.value || !markerLayer.value) return
+  mapInstance.value.closePopup()
   markerLayer.value.clearLayers()
 
   const points = activityStore.activities
@@ -337,9 +353,9 @@ const refreshMapMarkers = () => {
   })
 
   if (bounds.length === 1) {
-    mapInstance.value.setView(bounds[0], 13)
+    mapInstance.value.setView(bounds[0], 13, { animate: false })
   } else {
-    mapInstance.value.fitBounds(bounds, { padding: [32, 32] })
+    mapInstance.value.fitBounds(bounds, { padding: [32, 32], animate: false })
   }
 }
 </script>
