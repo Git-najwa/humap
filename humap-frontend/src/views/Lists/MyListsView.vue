@@ -4,36 +4,41 @@
       <h1>Mes listes</h1>
       <button @click="showCreateForm = true" class="create-btn">+ Nouvelle liste</button>
     </header>
+<template>
+  <div class="lists-container container">
+    <header class="header">
+      <h1 class="text-2xl font-semibold">Mes listes</h1>
+      <AppButton-modern variant="primary" @click="() => showCreateForm = true">+ Nouvelle liste</AppButton-modern>
+    </header>
 
     <ErrorMessage :message="listStore.error" />
 
-    <section class="favorites-section" v-if="likedActivities.length">
-      <h2>Favoris</h2>
-      <div class="lists-grid">
-        <div v-for="act in likedActivities" :key="act._id" class="list-card">
-          <h3>{{ act.title }}</h3>
-          <p class="count">{{ act.location }}</p>
-          <router-link :to="`/activities/${act._id}`" class="open-link">Voir</router-link>
-          <button @click="toggleFavorite(act._id)" class="delete-btn">Retirer</button>
-        </div>
+    <div v-if="showCreateForm" class="create-form-container card">
+      <AppInput-modern v-model="newListName" placeholder="Nom de la liste" />
+      <div style="display:flex;gap:12px;margin-top:var(--spacing-sm)">
+        <AppButton-modern variant="primary" @click="handleCreateList">Créer</AppButton-modern>
+        <AppButton-modern variant="secondary" @click="() => showCreateForm = false">Annuler</AppButton-modern>
       </div>
-    </section>
-
-    <div v-if="showCreateForm" class="create-form-container">
-      <input v-model="newListName" type="text" placeholder="Nom de la liste" class="input" />
-      <button @click="handleCreateList" class="save-btn">Créer</button>
-      <button @click="showCreateForm = false" class="cancel-btn">Annuler</button>
     </div>
 
     <div v-if="listStore.isLoading" class="loading">Chargement des listes...</div>
 
-    <div v-else-if="listStore.lists.length === 0" class="no-lists">
+    <div v-else-if="listStore.lists.length === 0" class="no-lists card">
       Aucune liste créée
     </div>
 
     <div v-else class="lists-grid">
-      <div v-for="list in listStore.lists" :key="list._id" class="list-card">
-        <h3>{{ list.name }}</h3>
+      <div v-for="list in listStore.lists" :key="list._id" class="list-card card">
+        <h3 class="font-semibold">{{ list.name }}</h3>
+        <p class="count text-tertiary">{{ list.activities?.length || 0 }} activité(s)</p>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <AppButton-modern variant="secondary" @click="() => $router.push(`/lists/${list._id}`)">Ouvrir</AppButton-modern>
+          <AppButton-modern variant="danger" @click="deleteList(list._id)">Supprimer</AppButton-modern>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
         <p class="count">{{ list.activities?.length || 0 }} activité(s)</p>
         <button @click="deleteList(list._id)" class="delete-btn">Supprimer</button>
       </div>
@@ -45,26 +50,20 @@
 import { ref, onMounted } from 'vue'
 import { useListStore } from '../../store/list.store'
 import { useActivityStore } from '../../store/activity.store'
-import ErrorMessage from '../../components/ui/ErrorMessage.vue'
+import ErrorMessage from '../../components/ui/ErrorMessage-modern.vue'
+import AppInputModern from '../../components/ui/AppInput-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
+import { useRouter } from 'vue-router'
 
 const listStore = useListStore()
 const activityStore = useActivityStore()
+const router = useRouter()
 const showCreateForm = ref(false)
 const newListName = ref('')
-const likedActivities = ref([])
 
 onMounted(async () => {
   try {
     await listStore.fetchAllLists()
-    // load liked activities details
-    const likedEntries = listStore.lists.filter(l => l.list_type === 'liked')
-    if (likedEntries.length) {
-      const promises = likedEntries.map(e => activityStore.fetchActivityById(e.activity_id))
-      const results = await Promise.allSettled(promises)
-      likedActivities.value = results
-        .filter(r => r.status === 'fulfilled')
-        .map(r => r.value)
-    }
   } catch (err) {
     console.error(err)
   }
