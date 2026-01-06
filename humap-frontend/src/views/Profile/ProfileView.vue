@@ -1,15 +1,15 @@
 <template>
-  <div class="profile-container">
-    <button @click="goBack" class="back-btn">← Retour</button>
+  <div class="profile-container container">
+    <AppButton-modern variant="secondary" @click="goBack">← Retour</AppButton-modern>
 
-    <div v-if="authStore.user" class="profile-card">
-      <h1>Profil</h1>
-      <div class="profile-info">
+    <div v-if="authStore.user" class="card" style="margin-top:var(--spacing-md)">
+      <h1 class="text-2xl font-semibold">Profil</h1>
+      <div class="profile-info" style="margin-top:var(--spacing-sm)">
         <p><strong>Nom d'utilisateur :</strong> {{ authStore.user.username }}</p>
         <p><strong>Email :</strong> {{ authStore.user.email }}</p>
       </div>
 
-      <button @click="handleLogout" class="logout-btn">Déconnexion</button>
+      <AppButton-modern variant="danger" @click="handleLogout" style="margin-top:var(--spacing-md);width:100%">Déconnexion</AppButton-modern>
     </div>
 
     <div v-else class="loading">
@@ -21,6 +21,9 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth.store'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
+
+const AppButton = AppButtonModern
 
 const router = useRouter()
 const authStore = useAuthStore()
