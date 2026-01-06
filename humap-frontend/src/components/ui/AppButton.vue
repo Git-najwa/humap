@@ -1,10 +1,19 @@
 <template>
   <button
-    :class="['app-button', `app-button--${variant}`]"
-    :disabled="disabled"
+    :class="[
+      'app-button',
+      `app-button--${variant}`,
+      `app-button--${size}`,
+      { 'app-button--loading': loading, 'app-button--full-width': fullWidth }
+    ]"
+    :disabled="disabled || loading"
+    :type="type"
     @click="$emit('click')"
   >
-    <slot></slot>
+    <span v-if="loading" class="app-button__spinner"></span>
+    <span :class="{ 'app-button__content--hidden': loading }">
+      <slot></slot>
+    </span>
   </button>
 </template>
 
@@ -13,9 +22,26 @@ defineProps({
   variant: {
     type: String,
     default: 'primary',
-    validator: (value) => ['primary', 'secondary', 'danger'].includes(value),
+    validator: (value) => ['primary', 'secondary', 'danger', 'ghost', 'outline'].includes(value),
+  },
+  size: {
+    type: String,
+    default: 'medium',
+    validator: (value) => ['small', 'medium', 'large'].includes(value),
+  },
+  type: {
+    type: String,
+    default: 'button',
   },
   disabled: {
+    type: Boolean,
+    default: false,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  fullWidth: {
     type: Boolean,
     default: false,
   },
@@ -45,6 +71,23 @@ defineEmits(['click'])
   cursor: not-allowed;
 }
 
+/* Sizes */
+.app-button--small {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.app-button--medium {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+.app-button--large {
+  padding: 1rem 1.75rem;
+  font-size: 1rem;
+}
+
+/* Variants */
 .app-button--primary {
   background: linear-gradient(135deg, #0E7490 0%, #0B4C5F 100%);
   color: white;
@@ -73,13 +116,54 @@ defineEmits(['click'])
 }
 
 .app-button--danger:hover:not(:disabled) {
-  background-color: #BE123C;
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  background-color: #b91c1c;
 }
 
-.app-button:focus-visible {
-  outline: 2px solid rgba(14, 116, 144, 0.35);
-  outline-offset: 2px;
+.app-button--ghost {
+  background-color: transparent;
+  color: #374151;
+}
+
+.app-button--ghost:hover:not(:disabled) {
+  background-color: #f3f4f6;
+}
+
+.app-button--outline {
+  background-color: transparent;
+  color: #111827;
+  border: 1px solid #d1d5db;
+}
+
+.app-button--outline:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Full Width */
+.app-button--full-width {
+  width: 100%;
+}
+
+/* Loading */
+.app-button--loading {
+  position: relative;
+}
+
+.app-button__spinner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.app-button__content--hidden {
+  visibility: hidden;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 </style>

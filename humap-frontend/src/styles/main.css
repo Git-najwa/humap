@@ -303,3 +303,10 @@ main, .container {
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* Mobile bottom navigation spacing */
+@media (max-width: 768px) {
+  #app {
+    padding-bottom: 70px;
+  }
+}

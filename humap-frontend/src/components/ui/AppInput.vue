@@ -1,26 +1,35 @@
 <template>
-  <div class="app-input-wrapper">
-    <label v-if="label" :for="id" class="app-input-label">{{ label }}</label>
-    <textarea
-      v-if="rows"
-      :id="id"
-      :value="modelValue"
-      :placeholder="placeholder"
-      :disabled="disabled"
-      :rows="rows"
-      class="app-input"
-      @input="$emit('update:modelValue', $event.target.value)"
-    />
-    <input
-      v-else
-      :id="id"
-      :type="type"
-      :value="modelValue"
-      :placeholder="placeholder"
-      :disabled="disabled"
-      class="app-input"
-      @input="$emit('update:modelValue', $event.target.value)"
-    />
+  <div :class="['app-input-wrapper', { 'app-input-wrapper--error': error }]">
+    <label v-if="label" :for="id" class="app-input-label">
+      {{ label }}
+      <span v-if="required" class="app-input-required">*</span>
+    </label>
+    <div class="app-input-container">
+      <span v-if="$slots.prefix" class="app-input-prefix">
+        <slot name="prefix"></slot>
+      </span>
+      <input
+        :id="id"
+        :type="type"
+        :value="modelValue"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :required="required"
+        :class="[
+          'app-input',
+          { 'app-input--with-prefix': $slots.prefix },
+          { 'app-input--with-suffix': $slots.suffix }
+        ]"
+        @input="$emit('update:modelValue', $event.target.value)"
+        @blur="$emit('blur')"
+        @focus="$emit('focus')"
+      />
+      <span v-if="$slots.suffix" class="app-input-suffix">
+        <slot name="suffix"></slot>
+      </span>
+    </div>
+    <p v-if="error" class="app-input-error">{{ error }}</p>
+    <p v-else-if="hint" class="app-input-hint">{{ hint }}</p>
   </div>
 </template>
 
@@ -39,7 +48,7 @@ const props = defineProps({
   type: {
     type: String,
     default: 'text',
-    validator: (value) => ['text', 'email', 'password', 'number', 'tel', 'url'].includes(value),
+    validator: (value) => ['text', 'email', 'password', 'number', 'tel', 'url', 'search'].includes(value),
   },
   placeholder: {
     type: String,
@@ -53,11 +62,23 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  required: {
+    type: Boolean,
+    default: false,
+  },
+  error: {
+    type: String,
+    default: '',
+  },
+  hint: {
+    type: String,
+    default: '',
+  },
 })
 
 const id = computed(() => `input-${Math.random().toString(36).substr(2, 9)}`)
 
-defineEmits(['update:modelValue'])
+defineEmits(['update:modelValue', 'blur', 'focus'])
 </script>
 
 <style scoped>
@@ -68,29 +89,97 @@ defineEmits(['update:modelValue'])
 }
 
 .app-input-label {
-  margin-bottom: var(--spacing-sm);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.app-input-required {
+  color: #dc2626;
+}
+
+.app-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.app-input-prefix,
+.app-input-suffix {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.app-input-prefix {
+  left: 0.875rem;
+}
+
+.app-input-suffix {
+  right: 0.875rem;
 }
 
 .app-input {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid rgba(230, 221, 210, 0.9);
-  border-radius: var(--radius-lg);
-  font-size: var(--font-size-base);
-  background-color: rgba(255, 252, 248, 0.9);
-  transition: all var(--transition-fast);
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: #111827;
+  background-color: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.app-input::placeholder {
+  color: #9ca3af;
 }
 
 .app-input:focus {
   outline: none;
-  border-color: rgba(14, 116, 144, 0.7);
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
 }
 
 .app-input:disabled {
-  background-color: var(--color-bg-alt);
+  background-color: #f9fafb;
+  color: #9ca3af;
   cursor: not-allowed;
+}
+
+.app-input--with-prefix {
+  padding-left: 2.5rem;
+}
+
+.app-input--with-suffix {
+  padding-right: 2.5rem;
+}
+
+/* Error State */
+.app-input-wrapper--error .app-input {
+  border-color: #dc2626;
+}
+
+.app-input-wrapper--error .app-input:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.app-input-error {
+  margin: 0.375rem 0 0 0;
+  font-size: 0.8125rem;
+  color: #dc2626;
+}
+
+.app-input-hint {
+  margin: 0.375rem 0 0 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
 }
 </style>

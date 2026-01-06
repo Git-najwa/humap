@@ -13,6 +13,7 @@
       </div>
     </header>
 
+    <!-- Error Message -->
     <ErrorMessage :message="activityStore.error" />
 
     <section class="filters container card" style="display:flex;gap:12px;align-items:center;margin-bottom:var(--spacing-lg)">
@@ -31,8 +32,15 @@
 
     <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
 
-    <div v-else-if="activityStore.activities.length === 0" class="no-activities">
-      Aucune activité trouvée
+    <!-- Empty State -->
+    <div v-else-if="activityStore.activities.length === 0" class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M8 12h8"></path>
+      </svg>
+      <h3>Aucune activité</h3>
+      <p>Soyez le premier à créer une activité</p>
+      <router-link to="/activities/create" class="empty-state-btn">Créer une activité</router-link>
     </div>
 
     <div v-else class="activities-grid container grid grid-cols-3">
@@ -84,7 +92,6 @@ import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 
-const router = useRouter()
 const activityStore = useActivityStore()
 const authStore = useAuthStore()
 const favoriteStore = useFavoriteStore()

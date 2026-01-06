@@ -1,13 +1,15 @@
 import api from './api'
 
 export const reviewService = {
+  // Récupérer les avis d'une activité
   getByActivityId: (activityId) => api.get(`/activities/${activityId}/reviews`),
-  // create expects data with activity_id field
-  create: (data) => {
-    const activityId = data.activity_id || data.activityId
-    if (!activityId) return Promise.reject(new Error('activity_id is required'))
-    return api.post(`/activities/${activityId}/reviews`, data)
-  },
-  update: (id, data) => api.put(`/reviews/${id}`, data),
-  delete: (id) => api.delete(`/reviews/${id}`),
+  
+  // Créer un avis pour une activité
+  create: (activityId, data) => api.post(`/activities/${activityId}/reviews`, data),
+  
+  // Récupérer un avis par ID
+  getById: (activityId, reviewId) => api.get(`/activities/${activityId}/reviews/${reviewId}`),
+  
+  // Supprimer un avis
+  delete: (activityId, reviewId) => api.delete(`/activities/${activityId}/reviews/${reviewId}`),
 }
