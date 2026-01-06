@@ -36,7 +36,11 @@
     </div>
 
     <div v-else class="activities-grid container grid grid-cols-3">
-      <div v-for="activity in activityStore.activities" :key="activity._id" class="card">
+      <div v-for="activity in activityStore.activities" :key="activity._id" class="card activity-card" style="position:relative;">
+        <button class="favorite-badge" @click.prevent="toggleFavorite(activity._id)">
+          <span v-if="isFavorited(activity._id)">★</span>
+          <span v-else>☆</span>
+        </button>
         <h3 class="text-lg font-semibold">{{ activity.title }}</h3>
         <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
@@ -151,6 +155,22 @@ const handleLogout = () => {
   authStore.logout()
   router.push('/login')
 }
+
+const isFavorited = (id) => {
+  return favoriteStore.favorites.some(f => f._id === id)
+}
+
+const toggleFavorite = async (id) => {
+  if (!authStore.user) {
+    router.push('/login')
+    return
+  }
+  try {
+    await favoriteStore.toggleFavorite(id)
+  } catch (e) {
+    console.error('toggleFavorite failed', e)
+  }
+}
 </script>
 
 <style scoped>
@@ -221,6 +241,19 @@ h1 {
   transform: translateY(-5px);
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
 }
+
+.favorite-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--accent-color, #ffb400);
+}
+
+.favorite-badge span { display:inline-block }
 
 .activity-card h3 {
   margin: 0 0 0.5rem 0;
