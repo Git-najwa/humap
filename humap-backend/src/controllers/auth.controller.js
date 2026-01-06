@@ -12,9 +12,26 @@ export async function register(req, res, next) {
   try {
     const { username, email, password, gender, avatar } = req.body;
 
-    // Validation
+    // Validation des champs requis
     if (!username || !email || !password) {
       throw new BadRequestError("username, email and password are required");
+    }
+
+    // Validation du mot de passe (min 8 caractères, 1 majuscule, 1 chiffre)
+    if (password.length < 8) {
+      throw new BadRequestError("Password must be at least 8 characters long");
+    }
+    if (!/[A-Z]/.test(password)) {
+      throw new BadRequestError("Password must contain at least one uppercase letter");
+    }
+    if (!/[0-9]/.test(password)) {
+      throw new BadRequestError("Password must contain at least one number");
+    }
+
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new BadRequestError("Invalid email format");
     }
 
     // Vérifier si email existe

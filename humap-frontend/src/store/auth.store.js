@@ -13,6 +13,10 @@ const translateError = (message) => {
     'username, email and password are required': 'Le nom d\'utilisateur, l\'email et le mot de passe sont requis',
     'User not found': 'Utilisateur introuvable',
     'Unauthorized': 'Non autorisé',
+    'Password must be at least 8 characters long': 'Le mot de passe doit contenir au moins 8 caractères',
+    'Password must contain at least one uppercase letter': 'Le mot de passe doit contenir au moins une majuscule',
+    'Password must contain at least one number': 'Le mot de passe doit contenir au moins un chiffre',
+    'Invalid email format': 'Format d\'email invalide',
   }
   return translations[message] || message
 }
