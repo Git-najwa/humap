@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 import Activity from "../models/Activity.js";
+import User from "../models/User.js";
 import UserActivityList from "../models/UserActivityList.js";
 import { created, ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError } from "../utils/errors.js";
+import { getIO } from "../server.js";
 
 export async function listActivities(req, res, next) {
   try {
@@ -67,6 +69,13 @@ export async function listActivities(req, res, next) {
 export async function createActivity(req, res, next) {
   try {
     const activity = await Activity.create({ ...req.body, user_id: req.currentUserId });
+    
+    // Émettre l'événement temps réel à tous les clients
+    const io = getIO();
+    if (io) {
+      io.emit("activity:created", activity);
+    }
+    
     return created(res, activity);
   } catch (error) {
     // Return a 400 with validation details for Mongoose validation errors
@@ -113,6 +122,13 @@ export async function updateActivity(req, res, next) {
       req.body,
       { new: true, runValidators: true }
     );
+    
+    // Émettre l'événement temps réel
+    const io = getIO();
+    if (io) {
+      io.emit("activity:updated", updatedActivity);
+    }
+    
     return ok(res, updatedActivity);
   } catch (error) {
     next(error);
@@ -135,6 +151,13 @@ export async function deleteActivity(req, res, next) {
     }
 
     await Activity.findByIdAndDelete(req.params.id);
+    
+    // Émettre l'événement temps réel
+    const io = getIO();
+    if (io) {
+      io.emit("activity:deleted", { _id: req.params.id });
+    }
+    
     return res.status(204).send();
   } catch (error) {
     next(error);
@@ -169,6 +192,18 @@ export async function toggleLike(req, res, next) {
         list_type: "liked",
       });
       liked = true;
+
+      // Notifier le créateur de l'activité (si ce n'est pas lui-même qui like)
+      const activityOwnerId = activity.user_id?.toString();
+      if (activityOwnerId && activityOwnerId !== req.currentUserId) {
+        const liker = await User.findById(req.currentUserId);
+        const io = getIO();
+        io.to(`user:${activityOwnerId}`).emit("notification:like", {
+          activityId: activity._id,
+          activityTitle: activity.title,
+          likerUsername: liker?.username || "Quelqu'un",
+        });
+      }
     }
 
     return ok(res, { liked });

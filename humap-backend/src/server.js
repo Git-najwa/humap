@@ -1,6 +1,7 @@
 import "dotenv/config";
 import createDebugger from "debug";
 import http from "node:http";
+import { Server } from "socket.io";
 
 import app from "./app.js";
 import { connectDb } from "./config/db.js";
@@ -8,16 +9,51 @@ import { connectDb } from "./config/db.js";
 const debug = createDebugger("humap:server");
 const port = normalizePort(process.env.PORT || 3000);
 
+// Variable globale pour Socket.io
+let io = null;
+
+// Exporter une fonction pour récupérer l'instance io
+export function getIO() {
+  return io;
+}
+
 async function start() {
   await connectDb();
 
   const server = http.createServer(app);
+  
+  // Initialiser Socket.io
+  io = new Server(server, {
+    cors: {
+      origin: ["http://localhost:5173", "http://localhost:3000"],
+      methods: ["GET", "POST"],
+    },
+  });
+
+  // Gérer les connexions
+  io.on("connection", (socket) => {
+    debug(`Client connecté: ${socket.id}`);
+    
+    // Permettre à un utilisateur de rejoindre sa room personnelle
+    socket.on("join:user", (userId) => {
+      if (userId) {
+        socket.join(`user:${userId}`);
+        debug(`Socket ${socket.id} a rejoint la room user:${userId}`);
+      }
+    });
+    
+    socket.on("disconnect", () => {
+      debug(`Client déconnecté: ${socket.id}`);
+    });
+  });
+
   server.listen(port);
   server.on("error", onError);
   server.on("listening", () => {
     const addr = server.address();
     const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
     debug(`Listening on ${bind}`);
+    debug(`WebSocket prêt`);
   });
 }
 

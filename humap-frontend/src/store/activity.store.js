@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { activityService } from '../services/activity.service'
+import { socket } from '../services/socket.service'
+import { useToast } from '../composables/useToast'
 
 export const useActivityStore = defineStore('activity', () => {
   const activities = ref([])
@@ -160,6 +162,54 @@ export const useActivityStore = defineStore('activity', () => {
     }
   }
 
+  // Ajouter une activité reçue en temps réel
+  const addActivityRealtime = (activity) => {
+    // Éviter les doublons
+    const exists = activities.value.some(a => a._id === activity._id)
+    if (!exists) {
+      activities.value.unshift(activity)
+      pagination.value.total += 1
+      
+      // Afficher une notification toast
+      const { info } = useToast()
+      info('🆕 Nouvelle activité', activity.title)
+      
+      console.log('📡 Nouvelle activité reçue:', activity.title)
+    }
+  }
+
+  // Mettre à jour une activité en temps réel
+  const updateActivityRealtime = (activity) => {
+    const index = activities.value.findIndex(a => a._id === activity._id)
+    if (index !== -1) {
+      activities.value[index] = activity
+      console.log('📡 Activité mise à jour:', activity.title)
+    }
+    // Mettre à jour aussi si c'est l'activité courante
+    if (currentActivity.value?._id === activity._id) {
+      currentActivity.value = activity
+    }
+  }
+
+  // Supprimer une activité en temps réel
+  const deleteActivityRealtime = (data) => {
+    const index = activities.value.findIndex(a => a._id === data._id)
+    if (index !== -1) {
+      const deleted = activities.value.splice(index, 1)[0]
+      pagination.value.total -= 1
+      
+      const { info } = useToast()
+      info('🗑️ Activité supprimée', deleted?.title || 'Une activité a été supprimée')
+      
+      console.log('📡 Activité supprimée:', data._id)
+    }
+  }
+
+  // Écouter les événements Socket.io
+  socket.on('activity:created', addActivityRealtime)
+  socket.on('activity:updated', updateActivityRealtime)
+  socket.on('activity:deleted', deleteActivityRealtime)
+
   return {
     activities,
     currentActivity,
@@ -176,5 +226,8 @@ export const useActivityStore = defineStore('activity', () => {
     updateActivity,
     deleteActivity,
     toggleLike,
+    addActivityRealtime,
+    updateActivityRealtime,
+    deleteActivityRealtime,
   }
 })

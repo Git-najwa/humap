@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { reviewService } from '../services/review.service'
+import { socket } from '../services/socket.service'
+import { useToast } from '../composables/useToast'
 
 export const useReviewStore = defineStore('review', () => {
   const reviews = ref([])
@@ -70,6 +72,24 @@ export const useReviewStore = defineStore('review', () => {
     }
   }
 
+  // Ajouter un review en temps réel
+  const addReviewRealtime = (review) => {
+    // Éviter les doublons
+    const exists = reviews.value.some(r => r._id === review._id)
+    if (!exists) {
+      reviews.value.unshift(review)
+      
+      const { info } = useToast()
+      const username = review.user?.username || 'Quelqu\'un'
+      info('⭐ Nouvel avis', `${username} a laissé un avis`)
+      
+      console.log('📡 Nouvel avis reçu:', review._id)
+    }
+  }
+
+  // Écouter les événements Socket.io
+  socket.on('review:created', addReviewRealtime)
+
   return {
     reviews,
     isLoading,
@@ -78,5 +98,6 @@ export const useReviewStore = defineStore('review', () => {
     createReview,
     updateReview,
     deleteReview,
+    addReviewRealtime,
   }
 })
