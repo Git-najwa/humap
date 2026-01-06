@@ -177,6 +177,44 @@ main, .container {
   gap: var(--spacing-lg);
 }
 
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.review-item {
+  padding: var(--spacing-md);
+  border: 1px solid rgba(230, 221, 210, 0.7);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.review-author {
+  font-weight: var(--font-weight-semibold);
+}
+
+.review-rating {
+  color: var(--color-accent-orange);
+  letter-spacing: 0.1em;
+}
+
+.review-comment {
+  margin-top: var(--spacing-sm);
+  color: var(--color-text-secondary);
+}
+
+.review-actions {
+  margin-top: var(--spacing-sm);
+}
+
 .create-form-container {
   border: 1px dashed rgba(230, 221, 210, 0.9);
   background: rgba(255, 255, 255, 0.75);

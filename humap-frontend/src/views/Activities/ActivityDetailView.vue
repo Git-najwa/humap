@@ -18,11 +18,44 @@
         </div>
       </div>
     </div>
+
+    <section v-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-lg)">
+      <div class="flex-between" style="margin-bottom:var(--spacing-md)">
+        <div>
+          <h2 class="text-xl font-semibold">Avis</h2>
+          <p class="text-tertiary">
+            {{ reviewCount }} avis
+            <span v-if="reviewCount > 0">• Note moyenne {{ averageRating }}</span>
+          </p>
+        </div>
+        <AppButton variant="primary" @click="goToAddReview">Ajouter un avis</AppButton>
+      </div>
+
+      <div v-if="reviewStore.isLoading" class="loading text-tertiary">Chargement des avis...</div>
+      <div v-else-if="reviews.length === 0" class="no-activities">Aucun avis pour le moment.</div>
+      <div v-else class="reviews-list">
+        <div v-for="review in reviews" :key="review._id" class="review-item">
+          <div class="review-header">
+            <div class="review-author">
+              {{ review.user?.username || 'Utilisateur' }}
+            </div>
+            <div class="review-rating">
+              <span v-for="n in 5" :key="n">{{ n <= review.ranking ? '★' : '☆' }}</span>
+            </div>
+          </div>
+          <p class="review-comment">{{ review.comment || 'Aucun commentaire.' }}</p>
+          <div class="review-actions" v-if="canDeleteReview(review)">
+            <AppButton variant="secondary" @click="deleteReview(review._id)">Supprimer</AppButton>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
 import { useReviewStore } from '../../store/review.store'
@@ -35,8 +68,7 @@ const router = useRouter()
 const route = useRoute()
 const activityStore = useActivityStore()
 const reviewStore = useReviewStore()
-// keep reviews reactive directly from the store
-const reviews = reviewStore.reviews
+const { reviews } = storeToRefs(reviewStore)
 const authStore = useAuthStore()
 
 // expose modern components to template by importing them
@@ -46,6 +78,13 @@ const ErrorMessage = ErrorMessageModern
 const isOwner = computed(() => {
   const ownerId = activityStore.currentActivity?.user_id || activityStore.currentActivity?.owner
   return !!(authStore.user && ownerId && authStore.user._id === ownerId)
+})
+
+const reviewCount = computed(() => reviews.value.length)
+const averageRating = computed(() => {
+  if (!reviews.value.length) return '0.0'
+  const total = reviews.value.reduce((sum, review) => sum + (Number(review.ranking) || 0), 0)
+  return (total / reviews.value.length).toFixed(1)
 })
 
 onMounted(async () => {
@@ -79,6 +118,10 @@ const goBack = () => {
   router.back()
 }
 
+const goToAddReview = () => {
+  router.push(`/reviews/${route.params.id}`)
+}
+
 const addToFavorites = async () => {
   if (!authStore.user) {
     router.push('/login')
@@ -104,6 +147,21 @@ const handleDelete = async () => {
     router.push('/')
   } catch (e) {
     console.error('delete failed', e)
+  }
+}
+
+const canDeleteReview = (review) => {
+  if (!authStore.user) return false
+  return review.user_id === authStore.user._id || review.user?.id === authStore.user._id || authStore.user.role === 'admin'
+}
+
+const deleteReview = async (reviewId) => {
+  const shouldDelete = window.confirm('Supprimer cet avis ?')
+  if (!shouldDelete) return
+  try {
+    await reviewStore.deleteReview(reviewId)
+  } catch (e) {
+    console.error('deleteReview failed', e)
   }
 }
 </script>

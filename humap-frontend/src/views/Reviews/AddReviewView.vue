@@ -70,7 +70,7 @@ const handleAddReview = async () => {
       return
     }
     await reviewStore.createReview(form.value)
-    router.back()
+    router.push(`/activities/${route.params.activityId}`)
   } catch (err) {
     console.error(err)
     reviewStore.error = err.response?.data?.message || err.message || 'Impossible de poster l\'avis'
