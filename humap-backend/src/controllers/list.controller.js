@@ -1,6 +1,6 @@
 import UserActivityList from "../models/UserActivityList.js";
 import { created, ok } from "../utils/responses.js";
-import { NotFoundError, ForbiddenError } from "../utils/errors.js";
+import { NotFoundError, ForbiddenError, BadRequestError } from "../utils/errors.js";
 
 export async function listUserActivities(req, res, next) {
   try {
@@ -29,6 +29,20 @@ export async function getListEntry(req, res, next) {
 
 export async function addToList(req, res, next) {
   try {
+    const { list_type, activity_id, custom_name } = req.body;
+
+    if (!list_type) {
+      throw new BadRequestError("list_type is required");
+    }
+
+    if (list_type !== "custom" && !activity_id) {
+      throw new BadRequestError("activity_id is required");
+    }
+
+    if (list_type === "custom" && !custom_name) {
+      throw new BadRequestError("custom_name is required for custom lists");
+    }
+
     const entry = await UserActivityList.create({
       ...req.body,
       user_id: req.currentUserId,

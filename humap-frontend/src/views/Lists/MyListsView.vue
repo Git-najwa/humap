@@ -86,7 +86,9 @@ const customLists = computed(() => {
         map.set(name, { name, count: 0, entries: [] })
       }
       const current = map.get(name)
-      current.count += 1
+      if (entry.activity_id) {
+        current.count += 1
+      }
       current.entries.push(entry)
     })
   return Array.from(map.values())
@@ -104,7 +106,7 @@ onMounted(async () => {
 const handleCreateList = async () => {
   if (newListName.value.trim()) {
     try {
-      await listStore.createList({ name: newListName.value })
+      await listStore.createList({ list_type: 'custom', custom_name: newListName.value })
       newListName.value = ''
       showCreateForm.value = false
     } catch (err) {
