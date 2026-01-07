@@ -1,7 +1,9 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import createDebugger from "debug";
 import http from "node:http";
 import { Server } from "socket.io";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import app from "./app.js";
 import { connectDb } from "./config/db.js";
@@ -9,6 +11,11 @@ import { setIO } from "./utils/socket.js";
 
 const debug = createDebugger("humap:server");
 const port = normalizePort(process.env.PORT || 3000);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config();
 
 async function start() {
   await connectDb();

@@ -12,6 +12,7 @@ import reviewRoutes from "./routes/reviews.routes.js";
 import reviewByIdRoutes from "./routes/reviewById.routes.js";
 import listRoutes from "./routes/lists.routes.js";
 import uploadRoutes from "./routes/uploads.routes.js";
+import externalActivitiesRoutes from "./routes/externalActivities.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { swaggerUi, swaggerSpec } from "./utils/swagger.js";
 
@@ -46,6 +47,7 @@ app.use("/reviews", reviewByIdRoutes);
 app.use("/lists", listRoutes);
 app.use("/uploads", uploadRoutes);
 app.use("/uploads", express.static(uploadDir));
+app.use("/external-activities", externalActivitiesRoutes);
 
 app.use((req, res, next) => {
   next(createError(404, "Not Found"));

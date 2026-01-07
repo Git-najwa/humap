@@ -30,6 +30,10 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/activities',
+    redirect: '/',
+  },
+  {
     path: '/activities/:id',
     name: 'ActivityDetail',
     component: ActivityDetailView,

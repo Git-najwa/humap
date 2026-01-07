@@ -9,6 +9,10 @@
       </div>
     </header>
 
+    <div v-if="importError" class="container" style="margin-bottom:var(--spacing-md);color:#dc2626">
+      {{ importError }}
+    </div>
+
     <!-- Error Message -->
     <ErrorMessage :message="activityStore.error" />
 
@@ -116,6 +120,7 @@
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
+import api from '../../services/api'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
 import { useFavoriteStore } from '../../store/favorite.store'
@@ -143,6 +148,7 @@ const nb_people = ref(null)
 const mapEl = ref(null)
 const mapInstance = ref(null)
 const markerLayer = ref(null)
+const importError = ref('')
 
 const hasMapData = computed(() => {
   return activityStore.activities.some(activity => {
@@ -191,6 +197,8 @@ onMounted(async () => {
     await favoriteStore.loadFavorites()
     if (authStore.user) {
       await listStore.fetchAllLists()
+      await runAutoImport()
+      await activityStore.fetchActivities()
     }
     initMap()
     refreshMapMarkers()
@@ -261,6 +269,45 @@ const addToCustomList = async (activityId) => {
     selectedListByActivity.value[activityId] = ''
   } catch (err) {
     console.error('addToCustomList failed', err)
+  }
+}
+
+const runAutoImport = async () => {
+  const key = 'humap:external-import'
+  const today = new Date().toISOString().slice(0, 10)
+  if (localStorage.getItem(key) === today) return
+
+  const defaultLat = 46.5197
+  const defaultLon = 6.6323
+
+  const coords = await new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve({ lat: defaultLat, lon: defaultLon })
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      () => resolve({ lat: defaultLat, lon: defaultLon }),
+      { enableHighAccuracy: true, timeout: 5000 }
+    )
+  })
+
+  try {
+    await api.get('/external-activities/opentripmap', {
+      params: {
+        lat: coords.lat,
+        lon: coords.lon,
+        radius: 2000,
+        limit: 25,
+        save: true,
+      },
+    })
+    localStorage.setItem(key, today)
+  } catch (err) {
+    const status = err.response?.status
+    const message = err.response?.data?.message || err.message || 'Import impossible'
+    importError.value = `Import OpenTripMap échoué (${status || 'erreur'}): ${message}`
+    console.warn('auto import failed', status, message)
   }
 }
 
