@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client'
 import { useToast } from '../composables/useToast'
 
-const URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 // Créer la connexion socket
 const socket = io(URL, {

@@ -1,21 +1,15 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import createDebugger from "debug";
 import http from "node:http";
 import { Server } from "socket.io";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import app from "./app.js";
 import { connectDb } from "./config/db.js";
 import { setIO } from "./utils/socket.js";
 
 const debug = createDebugger("humap:server");
+let io;
 const port = normalizePort(process.env.PORT || 3000);
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
-dotenv.config();
 
 async function start() {
   await connectDb();
@@ -23,9 +17,12 @@ async function start() {
   const server = http.createServer(app);
   
   // Initialiser Socket.io
-  const io = new Server(server, {
+  const allowedOrigins = ["http://localhost:5173", "http://localhost:3000"];
+  if (process.env.FRONTEND_URL) allowedOrigins.push(process.env.FRONTEND_URL);
+
+  io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173", "http://localhost:3000"],
+      origin: allowedOrigins,
       methods: ["GET", "POST"],
     },
   });
