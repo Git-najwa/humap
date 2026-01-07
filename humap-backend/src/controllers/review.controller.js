@@ -1,7 +1,9 @@
 import Review from "../models/Review.js";
 import User from "../models/User.js";
+import Activity from "../models/Activity.js";
 import { created, ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError } from "../utils/errors.js";
+import { getIO } from "../server.js";
 
 export async function listReviews(req, res, next) {
   try {
@@ -60,6 +62,24 @@ export async function createReview(req, res, next) {
         user_id: populated.user_id?._id || populated.user_id,
       }
       : review;
+    
+    // Notifier le créateur de l'activité (si ce n'est pas lui-même qui commente)
+    const io = getIO();
+    if (io) {
+      const activity = await Activity.findById(req.params.activityId);
+      const activityOwnerId = activity?.user_id?.toString();
+      
+      if (activityOwnerId && activityOwnerId !== req.currentUserId) {
+        const reviewer = await User.findById(req.currentUserId);
+        io.to(`user:${activityOwnerId}`).emit("notification:comment", {
+          activityId: activity._id,
+          activityTitle: activity.title,
+          reviewerUsername: reviewer?.username || "Quelqu'un",
+          reviewId: review._id,
+        });
+      }
+    }
+    
     return created(res, payload);
   } catch (error) {
     next(error);
