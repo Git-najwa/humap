@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import UserActivityList from "../models/UserActivityList.js";
 import { created, ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError } from "../utils/errors.js";
-import { getIO } from "../server.js";
+import { getIO } from "../utils/socket.js";
 
 export async function listActivities(req, res, next) {
   try {

@@ -3,7 +3,7 @@ import User from "../models/User.js";
 import Activity from "../models/Activity.js";
 import { created, ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError } from "../utils/errors.js";
-import { getIO } from "../server.js";
+import { getIO } from "../utils/socket.js";
 
 export async function listReviews(req, res, next) {
   try {
