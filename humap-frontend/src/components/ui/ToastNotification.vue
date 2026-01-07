@@ -7,12 +7,17 @@
           :key="toast.id"
           :class="['toast', `toast-${toast.type}`]"
         >
-          <span class="toast-icon">{{ toast.type === 'success' ? '✓' : 'ℹ' }}</span>
+          <span class="toast-icon">
+            <CheckIcon v-if="toast.type === 'success'" :size="18" color="#10b981" />
+            <InfoIcon v-else :size="18" color="#6366f1" />
+          </span>
           <div class="toast-content">
             <p class="toast-title">{{ toast.title }}</p>
             <p v-if="toast.message" class="toast-message">{{ toast.message }}</p>
           </div>
-          <button class="toast-close" @click="removeToast(toast.id)">×</button>
+          <button class="toast-close" @click="removeToast(toast.id)">
+            <CloseIcon :size="16" />
+          </button>
         </div>
       </TransitionGroup>
     </div>
@@ -21,6 +26,7 @@
 
 <script setup>
 import { useToast } from '../../composables/useToast'
+import { CheckIcon, InfoIcon, CloseIcon } from '../icons'
 
 const { toasts, removeToast } = useToast()
 </script>

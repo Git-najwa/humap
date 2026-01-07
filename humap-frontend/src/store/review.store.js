@@ -81,9 +81,9 @@ export const useReviewStore = defineStore('review', () => {
       
       const { info } = useToast()
       const username = review.user?.username || 'Quelqu\'un'
-      info('⭐ Nouvel avis', `${username} a laissé un avis`)
+      info('Nouvel avis', `${username} a laissé un avis`)
       
-      console.log('📡 Nouvel avis reçu:', review._id)
+      console.log('Nouvel avis reçu:', review._id)
     }
   }
 

@@ -36,7 +36,7 @@
           />
           <h3 class="font-semibold">{{ activity.title }}</h3>
           <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
-          <p class="text-tertiary" style="margin-top:8px">📍 {{ activity.location }}</p>
+          <p class="text-tertiary location-line" style="margin-top:8px"><LocationIcon :size="14" /> {{ activity.location }}</p>
           <div style="margin-top:12px;display:flex;gap:8px">
             <AppButtonModern variant="secondary" @click="() => router.push(`/activities/${activity._id}`)">Voir</AppButtonModern>
             <AppButtonModern variant="danger" @click="removeFavorite(activity._id)">Retirer</AppButtonModern>
@@ -83,7 +83,7 @@
           />
           <h3 class="font-semibold">{{ activity.title }}</h3>
           <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
-          <p class="text-tertiary" style="margin-top:8px">📍 {{ activity.location }}</p>
+          <p class="text-tertiary location-line" style="margin-top:8px"><LocationIcon :size="14" /> {{ activity.location }}</p>
           <div style="margin-top:12px;display:flex;gap:8px">
             <AppButtonModern variant="secondary" @click="() => router.push(`/activities/${activity._id}`)">Voir</AppButtonModern>
             <AppButtonModern variant="danger" @click="removeFromCustomList(activity._id)">Retirer</AppButtonModern>
@@ -104,6 +104,7 @@ import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import { useRouter } from 'vue-router'
 import { activityService } from '../../services/activity.service'
+import { LocationIcon } from '../../components/icons'
 
 const listStore = useListStore()
 const favoriteStore = useFavoriteStore()

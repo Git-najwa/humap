@@ -70,9 +70,9 @@
         </div>
 
         <div class="actions-section">
-          <AppButton @click="startEditing" variant="primary">
+          <AppButtonModern @click="startEditing" variant="primary">
             Modifier le profil
-          </AppButton>
+          </AppButtonModern>
         </div>
       </div>
 
@@ -80,7 +80,7 @@
       <form v-else @submit.prevent="handleSave" class="edit-form">
         <h2 class="section-title">Modifier le profil</h2>
         
-        <AppInput
+        <AppInputModern
           v-model="form.username"
           type="text"
           label="Nom d'utilisateur"
@@ -97,7 +97,7 @@
           </select>
         </div>
         
-        <AppInput
+        <AppInputModern
           ref="avatarInput"
           v-model="form.avatar"
           type="url"
@@ -123,12 +123,12 @@
         </div>
 
         <div class="form-actions">
-          <AppButton type="button" variant="secondary" @click="cancelEditing">
+          <AppButtonModern type="button" variant="secondary" @click="cancelEditing">
             Annuler
-          </AppButton>
-          <AppButton type="submit" variant="primary" :disabled="authStore.isLoading">
+          </AppButtonModern>
+          <AppButtonModern type="submit" variant="primary" :disabled="authStore.isLoading">
             {{ authStore.isLoading ? 'Enregistrement...' : 'Enregistrer' }}
-          </AppButton>
+          </AppButtonModern>
         </div>
       </form>
 
@@ -138,13 +138,13 @@
         <p class="danger-text">
           La suppression de votre compte est définitive. Toutes vos données seront effacées.
         </p>
-        <AppButton 
+        <AppButtonModern 
           variant="danger" 
           @click="confirmDelete"
           :disabled="authStore.isLoading"
         >
           Supprimer mon compte
-        </AppButton>
+        </AppButtonModern>
       </div>
     </div>
   </div>
@@ -154,8 +154,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth.store'
-import AppInput from '../../components/ui/AppInput.vue'
-import AppButton from '../../components/ui/AppButton.vue'
+import AppInputModern from '../../components/ui/AppInput-modern.vue'
+import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import ErrorMessage from '../../components/ui/ErrorMessage.vue'
 import { uploadService } from '../../services/upload.service'
 
@@ -289,11 +289,12 @@ onMounted(() => {
 }
 
 /* Header */
+
 .profile-header {
   padding: 2rem;
   text-align: center;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
+  background: var(--color-bg-alt);
+  color: var(--color-text);
 }
 
 .avatar-wrapper {
@@ -345,7 +346,7 @@ onMounted(() => {
 .avatar-edit-btn svg {
   width: 16px;
   height: 16px;
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .profile-name {
@@ -371,26 +372,34 @@ onMounted(() => {
   color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin: 0 0 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
 }
 
-.info-section {
-  margin-bottom: 2rem;
-}
+  .info-section {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-tertiary);
+    font-size: var(--font-size-sm);
+  }
 
-.info-grid {
-  display: grid;
-  gap: 1rem;
-}
+  .info-grid {
+    display: grid;
+    gap: 1rem;
+  }
 
-.info-item {
+  .info-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #f3f4f6;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .info-item:last-child {
@@ -431,7 +440,7 @@ onMounted(() => {
   display: block;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .stat-label {
@@ -448,7 +457,7 @@ onMounted(() => {
 
 /* Edit form */
 .edit-form {
-  padding: 1.5rem;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
 }
 
 .form-group {
@@ -476,20 +485,21 @@ onMounted(() => {
 
 .form-select:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
 }
 
 .form-actions {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
   justify-content: flex-end;
+  align-items: center;
 }
 
 /* Danger zone */
 .danger-section {
-  padding: 1.5rem;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
   background: #fef2f2;
   border-top: 1px solid #fecaca;
 }
@@ -527,34 +537,54 @@ onMounted(() => {
 /* Responsive */
 @media (max-width: 640px) {
   .profile-container {
-    padding: 1rem 0.5rem;
+    padding: 0.75rem 0.5rem;
   }
 
   .profile-header {
-    padding: 1.5rem 1rem;
+    padding: 1rem 0.75rem;
+    text-align: left;
   }
 
   .avatar {
-    width: 80px;
-    height: 80px;
+    width: 72px;
+    height: 72px;
   }
 
   .avatar-initial {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
 
   .profile-content,
   .edit-form,
   .danger-section {
-    padding: 1rem;
+    padding: 0.75rem 0.75rem 1rem 0.75rem;
   }
 
   .form-actions {
     flex-direction: column;
+    gap: var(--spacing-sm);
   }
 
   .form-actions button {
     width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .stat-card {
+    padding: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .profile-header .profile-name,
+  .profile-header .profile-email {
+    text-align: left;
   }
 }
 </style>

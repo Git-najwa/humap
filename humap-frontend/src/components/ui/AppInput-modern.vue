@@ -3,6 +3,7 @@
     <label v-if="label" class="input-label">{{ label }}</label>
     <textarea
       v-if="rows"
+      ref="inputEl"
       :value="modelValue"
       :placeholder="placeholder"
       :required="required"
@@ -12,6 +13,7 @@
     />
     <input
       v-else
+      ref="inputEl"
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
@@ -23,6 +25,8 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
 defineProps({
   modelValue: { type: [String, Number], default: '' },
   type: { type: String, default: 'text' },
@@ -33,32 +37,41 @@ defineProps({
 })
 
 defineEmits(['update:modelValue'])
+
+const inputEl = ref(null)
+
+const focus = () => {
+  inputEl.value?.focus()
+}
+
+defineExpose({ focus })
 </script>
 
 <style scoped>
 .input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
+  gap: 0.375rem;
+  margin-bottom: var(--spacing-md);
 }
 
 .input-label {
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
 }
 
 .modern-input {
   width: 100%;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid rgba(230, 221, 210, 0.9);
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-family: inherit;
-  background-color: rgba(255, 252, 248, 0.9);
+  background-color: #ffffff;
   color: var(--color-text);
   transition: all var(--transition-fast);
+  line-height: 1.5;
 }
 
 .modern-input::placeholder {
@@ -67,9 +80,8 @@ defineEmits(['update:modelValue'])
 
 .modern-input:focus {
   outline: none;
-  border-color: rgba(14, 116, 144, 0.7);
-  background-color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
 }
 
 .modern-input:disabled {
