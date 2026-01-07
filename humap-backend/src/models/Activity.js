@@ -31,6 +31,7 @@ const activitySchema = new Schema(
     hours: { type: Number },
     day: { type: String, trim: true },
     photos: [{ type: String }],
+    categories: [{ type: String, trim: true }],
     user_id: { type: Schema.Types.ObjectId, ref: "User" },
     source: { type: String, enum: ["user", "google", "opentripmap", "geoapify"], default: "user" },
     external_id: { type: String, trim: true },

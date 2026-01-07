@@ -48,25 +48,80 @@ router.get("/geoapify", auth, async (req, res, next) => {
     const data = await response.json();
     const features = Array.isArray(data?.features) ? data.features : [];
 
-    const mapped = features.map((feature) => ({
-      external_id: feature?.properties?.place_id || null,
-      source: "geoapify",
-      title: feature?.properties?.name || "Lieu sans nom",
-      description: Array.isArray(feature?.properties?.categories)
-        ? feature.properties.categories.join(", ")
-        : "Activité importée",
-      location:
-        feature?.properties?.address_line1 ||
-        feature?.properties?.formatted ||
-        "Lieu",
-      coordinates: {
-        type: "Point",
-        coordinates: [
-          feature?.geometry?.coordinates?.[0],
-          feature?.geometry?.coordinates?.[1],
-        ],
-      },
-    }));
+    const toLabel = (value) => {
+      const last = String(value || "").split(".").pop() || "";
+      return last.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+    };
+    const pickBudget = (rawCategories) => {
+      const haystack = rawCategories.join(" ").toLowerCase();
+      if (haystack.includes("no_fee") || haystack.includes("free")) return 0;
+      if (haystack.includes("accommodation") || haystack.includes("hotel")) return 3;
+      if (
+        haystack.includes("catering") ||
+        haystack.includes("restaurant") ||
+        haystack.includes("bar") ||
+        haystack.includes("cafe")
+      ) {
+        return 2;
+      }
+      if (
+        haystack.includes("museum") ||
+        haystack.includes("gallery") ||
+        haystack.includes("theatre") ||
+        haystack.includes("cinema") ||
+        haystack.includes("entertainment")
+      ) {
+        return 1;
+      }
+      if (haystack.includes("shopping") || haystack.includes("commercial")) return 2;
+      return 1;
+    };
+    const pickMood = (rawCategories) => {
+      const haystack = rawCategories.join(" ").toLowerCase();
+      if (haystack.includes("natural") || haystack.includes("park") || haystack.includes("beach")) return "calm";
+      if (haystack.includes("sport") || haystack.includes("fitness")) return "energetic";
+      if (haystack.includes("entertainment") || haystack.includes("bar") || haystack.includes("restaurant")) return "social";
+      return null;
+    };
+
+    const mapped = features.map((feature) => {
+      const rawCategories = Array.isArray(feature?.properties?.categories)
+        ? feature.properties.categories
+        : [];
+      const cleanCategories = rawCategories
+        .map(toLabel)
+        .filter(Boolean)
+        .filter((value, index, arr) => arr.indexOf(value) === index)
+        .slice(0, 3);
+
+      const image =
+        feature?.properties?.wiki_and_media?.image ||
+        feature?.properties?.datasource?.raw?.image ||
+        feature?.properties?.datasource?.raw?.image_thumbnail ||
+        null;
+
+      return {
+        external_id: feature?.properties?.place_id || null,
+        source: "geoapify",
+        title: feature?.properties?.name || "Lieu sans nom",
+        description: feature?.properties?.description || null,
+        location:
+          feature?.properties?.address_line1 ||
+          feature?.properties?.formatted ||
+          "Lieu",
+        mood: pickMood(rawCategories),
+        price_range: pickBudget(rawCategories),
+        categories: cleanCategories,
+        photos: image ? [image] : [],
+        coordinates: {
+          type: "Point",
+          coordinates: [
+            feature?.geometry?.coordinates?.[0],
+            feature?.geometry?.coordinates?.[1],
+          ],
+        },
+      };
+    });
 
     const shouldSave = String(save).toLowerCase() === "true";
     if (!shouldSave) {
@@ -83,6 +138,30 @@ router.get("/geoapify", auth, async (req, res, next) => {
         source: "geoapify",
       });
       if (existing) {
+        let changed = false;
+        if ((!existing.categories || existing.categories.length === 0) && item.categories?.length) {
+          existing.categories = item.categories;
+          changed = true;
+        }
+        if (existing.price_range === undefined || existing.price_range === null) {
+          existing.price_range = item.price_range;
+          changed = true;
+        }
+        if (!existing.mood && item.mood) {
+          existing.mood = item.mood;
+          changed = true;
+        }
+        if ((!existing.photos || existing.photos.length === 0) && item.photos?.length) {
+          existing.photos = item.photos;
+          changed = true;
+        }
+        if ((!existing.description || existing.description.trim() === "") && item.description) {
+          existing.description = item.description;
+          changed = true;
+        }
+        if (changed) {
+          await existing.save();
+        }
         created.push(existing);
         continue;
       }

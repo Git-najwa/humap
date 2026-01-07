@@ -31,7 +31,26 @@
             </div>
           </div>
           <h1 class="text-2xl font-semibold">{{ activityStore.currentActivity.title }}</h1>
-          <p class="text-secondary" style="margin-top:8px">{{ activityStore.currentActivity.description }}</p>
+          <div class="category-tags" v-if="getCategoryTags(activityStore.currentActivity).length">
+            <span
+              v-for="tag in getCategoryTags(activityStore.currentActivity)"
+              :key="`detail-${activityStore.currentActivity._id}-${tag}`"
+              class="category-tag"
+            >
+              {{ tag }}
+            </span>
+          </div>
+          <p v-else-if="activityStore.currentActivity.description" class="text-secondary" style="margin-top:8px">
+            {{ activityStore.currentActivity.description }}
+          </p>
+          <div class="detail-meta">
+            <p v-if="activityStore.currentActivity.mood" class="text-tertiary">
+              Ambiance : {{ activityStore.currentActivity.mood }}
+            </p>
+            <p v-if="getBudgetLabel(activityStore.currentActivity.price_range)" class="text-tertiary">
+              Budget : {{ getBudgetLabel(activityStore.currentActivity.price_range) }}
+            </p>
+          </div>
         </div>
         <div class="action-row">
           <AppButton
@@ -150,7 +169,7 @@ const isOwner = computed(() => {
   return !!(ownerId && userId && ownerId.toString() === userId.toString())
 })
 
-const buildPlaceholder = (seed = 'humap') => {
+const buildPlaceholder = (seed = 'humap', label = 'Activité locale') => {
   let hash = 0
   for (let i = 0; i < seed.length; i += 1) {
     hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
@@ -175,14 +194,40 @@ const buildPlaceholder = (seed = 'humap') => {
     <path d="M0 420 L200 300 L360 420 L520 300 L720 420 L900 360 L900 520 L0 520 Z" fill="${palette[2]}"/>
     <path d="M0 350 L150 250 L300 330 L420 250 L600 350 L900 300 L900 520 L0 520 Z" fill="${palette[3]}"/>
     <text x="70" y="140" font-family="Georgia, serif" font-size="38" fill="#7a4f3a">HUMAP</text>
-    <text x="70" y="185" font-family="Georgia, serif" font-size="22" fill="#7a4f3a">Activité locale</text>
+    <text x="70" y="185" font-family="Georgia, serif" font-size="22" fill="#7a4f3a">${label}</text>
   </svg>`
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
 }
 
+const hashString = (value = '') => {
+  let hash = 0
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0
+  }
+  return hash
+}
+
+const getExternalPhoto = (activity) => {
+  if (activity?.photos?.length) return ''
+  if (activity?.source !== 'geoapify') return ''
+  const tags = getCategoryTags(activity)
+  const query = encodeURIComponent([activity?.title, tags[0], tags[1]].filter(Boolean).join(','))
+  if (!query) return ''
+  const sig = hashString(activity?._id || activity?.title || query) % 1000
+  return `https://source.unsplash.com/featured/900x520?${query}&sig=${sig}`
+}
+
 const getActivityImage = (activity) => {
   const seed = activity?._id || activity?.title || 'humap'
-  return activity?.photos?.[0] || activity?.image || activity?.photo || activity?.pictures?.[0] || buildPlaceholder(seed)
+  const label = getCategoryTags(activity)[0] || activity?.title || 'Activité locale'
+  return (
+    activity?.photos?.[0] ||
+    activity?.image ||
+    activity?.photo ||
+    activity?.pictures?.[0] ||
+    getExternalPhoto(activity) ||
+    buildPlaceholder(seed, label)
+  )
 }
 
 const galleryImages = computed(() => {
@@ -190,6 +235,28 @@ const galleryImages = computed(() => {
   if (photos.length) return photos
   return [getActivityImage(activityStore.currentActivity)]
 })
+
+const getCategoryTags = (activity) => {
+  const categories = Array.isArray(activity?.categories) ? activity.categories : []
+  if (categories.length) return categories.slice(0, 5)
+  const description = activity?.description || ''
+  if (!description || (!description.includes('.') && !description.includes('_'))) return []
+  return description
+    .split(',')
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map((chunk) => chunk.split('.').pop().replace(/_/g, ' '))
+    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+    .filter((value, index, arr) => arr.indexOf(value) === index)
+    .slice(0, 5)
+}
+
+const getBudgetLabel = (priceRange) => {
+  if (priceRange === null || priceRange === undefined) return ''
+  if (priceRange === 0) return 'Gratuit'
+  const level = Math.max(1, Math.min(3, Number(priceRange)))
+  return '€'.repeat(level)
+}
 
 const selectedPhotoIndex = ref(0)
 
@@ -412,6 +479,26 @@ const deleteReview = async (reviewId) => {
 .gallery-thumb.active {
   border-color: #6366f1;
   box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.detail-meta {
+  margin-top: 8px;
+}
+
+.category-tags {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.category-tag {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: #f1e6db;
+  color: #7a4f3a;
+  border: 1px solid rgba(122, 79, 58, 0.2);
 }
 
 .action-row {
