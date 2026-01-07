@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import { notFound, ok } from "../utils/responses.js";
+import { ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError, BadRequestError } from "../utils/errors.js";
 
 export async function getUser(req, res, next) {
@@ -15,7 +15,11 @@ export async function getUser(req, res, next) {
 export async function updateUser(req, res, next) {
   try {
     // Vérifier que l'utilisateur modifie son propre profil
-    if (req.params.id !== req.currentUserId) {
+    const currentUser = await User.findById(req.currentUserId);
+    if (!currentUser) {
+      throw new NotFoundError("User");
+    }
+    if (req.params.id !== req.currentUserId && currentUser.role !== "admin") {
       throw new ForbiddenError("You can only update your own profile");
     }
 
@@ -51,9 +55,12 @@ export async function updateUser(req, res, next) {
 
 export async function deleteUser(req, res, next) {
   try {
-    // Vérifier que l'utilisateur supprime son propre compte
-    if (req.params.id !== req.currentUserId) {
-      throw new ForbiddenError("You can only delete your own account");
+    const currentUser = await User.findById(req.currentUserId);
+    if (!currentUser) {
+      throw new NotFoundError("User");
+    }
+    if (currentUser.role !== "admin") {
+      throw new ForbiddenError("You can only delete users as admin");
     }
 
     const user = await User.findById(req.params.id);

@@ -110,10 +110,14 @@ export async function updateActivity(req, res, next) {
     }
 
     // Vérifier que l'utilisateur est propriétaire ou admin
+    const currentUser = await User.findById(req.currentUserId);
+    if (!currentUser) {
+      throw new ForbiddenError("You can only update your own activities");
+    }
     if (!activity.user_id) {
       throw new ForbiddenError("You can only update your own activities");
     }
-    if (activity.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
+    if (activity.user_id.toString() !== req.currentUserId && currentUser.role !== "admin") {
       throw new ForbiddenError("You can only update your own activities");
     }
 
@@ -143,10 +147,14 @@ export async function deleteActivity(req, res, next) {
     }
 
     // Vérifier que l'utilisateur est propriétaire ou admin
+    const currentUser = await User.findById(req.currentUserId);
+    if (!currentUser) {
+      throw new ForbiddenError("You can only delete your own activities");
+    }
     if (!activity.user_id) {
       throw new ForbiddenError("You can only delete your own activities");
     }
-    if (activity.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
+    if (activity.user_id.toString() !== req.currentUserId && currentUser.role !== "admin") {
       throw new ForbiddenError("You can only delete your own activities");
     }
 
@@ -207,6 +215,31 @@ export async function toggleLike(req, res, next) {
     }
 
     return ok(res, { liked });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function removeLike(req, res, next) {
+  try {
+    const { id } = req.params;
+    const activity = await Activity.findById(id);
+    if (!activity) {
+      throw new NotFoundError("Activity");
+    }
+
+    const existingLike = await UserActivityList.findOne({
+      user_id: req.currentUserId,
+      activity_id: id,
+      list_type: "liked",
+    });
+
+    if (!existingLike) {
+      throw new NotFoundError("Liked activity");
+    }
+
+    await UserActivityList.findByIdAndDelete(existingLike._id);
+    return res.status(204).send();
   } catch (error) {
     next(error);
   }
@@ -542,16 +575,48 @@ export async function getUserStats(req, res, next) {
   }
 }
 
+export async function statsByUser(req, res, next) {
+  try {
+    const stats = await Activity.aggregate([
+      { $match: { user_id: { $ne: null } } },
+      { $group: { _id: "$user_id", count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          username: "$user.username",
+          count: 1,
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    return ok(res, { stats });
+  } catch (error) {
+    next(error);
+  }
+}
+
 // 5️⃣ NEARBY ACTIVITIES (GEOSPATIAL)
 export async function nearbyActivities(req, res, next) {
   try {
-    const { lat, lng, distance } = req.query;
+    const { lat, lng, radius, limit, distance } = req.query;
 
     if (!lat || !lng) {
       return res.status(400).json({ error: "lat and lng are required" });
     }
 
-    const maxDistance = parseInt(distance) || 5;
+    const fallbackKm = parseInt(distance, 10) || 5;
+    const maxDistanceMeters = radius ? parseInt(radius, 10) : fallbackKm * 1000;
+    const maxResults = Math.min(parseInt(limit, 10) || 10, 100);
     const longitude = parseFloat(lng);
     const latitude = parseFloat(lat);
 
@@ -563,7 +628,7 @@ export async function nearbyActivities(req, res, next) {
             coordinates: [longitude, latitude],
           },
           distanceField: "distance",
-          maxDistance: maxDistance * 1000, // Convert km to meters
+          maxDistance: maxDistanceMeters,
           spherical: true,
         },
       },
@@ -585,7 +650,6 @@ export async function nearbyActivities(req, res, next) {
             ],
           },
           nbReviews: { $size: "$reviews" },
-          distanceKm: { $divide: ["$distance", 1000] },
         },
       },
       {
@@ -596,16 +660,114 @@ export async function nearbyActivities(req, res, next) {
           location: 1,
           mood: 1,
           price_range: 1,
-          distanceKm: { $round: ["$distanceKm", 2] },
+          distance: { $round: ["$distance", 1] },
           avgRating: { $round: ["$avgRating", 1] },
           nbReviews: 1,
           source: 1,
         },
       },
-      { $limit: 20 },
+      { $limit: maxResults },
     ]);
 
     return ok(res, { items: nearby });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function recommendations(req, res, next) {
+  try {
+    const { lat, lng, mood, nb_people, price_max, hours, day, radius = "5000" } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ error: "lat and lng are required" });
+    }
+
+    const maxDistance = Math.min(parseInt(radius, 10) || 5000, 50000);
+    const longitude = parseFloat(lng);
+    const latitude = parseFloat(lat);
+
+    const match = {};
+    if (mood) match.mood = mood;
+    if (nb_people) match.nb_people = parseInt(nb_people, 10);
+    if (price_max) match.price_range = { $lte: parseInt(price_max, 10) };
+    if (hours) match.hours = { $lte: parseInt(hours, 10) };
+    if (day) match.day = { $regex: day, $options: "i" };
+
+    const results = await Activity.aggregate([
+      {
+        $geoNear: {
+          near: { type: "Point", coordinates: [longitude, latitude] },
+          distanceField: "distance",
+          maxDistance,
+          spherical: true,
+        },
+      },
+      { $match: match },
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "activity_id",
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          nb_reviews: { $size: "$reviews" },
+          avg_ranking: {
+            $cond: [
+              { $gt: [{ $size: "$reviews" }, 0] },
+              { $avg: "$reviews.ranking" },
+              0,
+            ],
+          },
+        },
+      },
+      {
+        $project: {
+          title: 1,
+          mood: 1,
+          price_range: 1,
+          distance: 1,
+          nb_reviews: 1,
+          avg_ranking: 1,
+        },
+      },
+      { $limit: 50 },
+    ]);
+
+    const recommendations = results.map((item) => {
+      let score = 100;
+      const reasons = [];
+      const distanceScore = Math.max(0, 1 - item.distance / maxDistance);
+      score += Math.round(distanceScore * 30);
+      if (mood && item.mood === mood) {
+        score += 10;
+        reasons.push("mood_match");
+      }
+      if (price_max && item.price_range <= parseInt(price_max, 10)) {
+        score += 8;
+        reasons.push("budget_match");
+      }
+      if (item.distance <= maxDistance) {
+        reasons.push("proximity");
+      }
+
+      return {
+        id: item._id,
+        title: item.title,
+        score,
+        distance: item.distance,
+        mood: item.mood,
+        price_range: item.price_range,
+        avg_ranking: item.avg_ranking,
+        nb_reviews: item.nb_reviews,
+        match_reasons: reasons,
+      };
+    });
+
+    return ok(res, { recommendations });
   } catch (error) {
     next(error);
   }

@@ -1,6 +1,51 @@
 import UserActivityList from "../models/UserActivityList.js";
+import Activity from "../models/Activity.js";
 import { created, ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError, BadRequestError } from "../utils/errors.js";
+
+const normalizePagination = (req) => {
+  const page = Math.max(parseInt(req.query.page || "1", 10), 1);
+  const limit = Math.min(parseInt(req.query.limit || "10", 10), 100);
+  const skip = (page - 1) * limit;
+  return { page, limit, skip };
+};
+
+const buildListResponse = async ({ userId, listType, customName }, req) => {
+  const { page, limit, skip } = normalizePagination(req);
+  const match = { user_id: userId, list_type: listType };
+  if (customName) {
+    match.custom_name = customName;
+  }
+
+  const total = await UserActivityList.countDocuments(match);
+  const entries = await UserActivityList.find(match)
+    .sort({ created_at: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const activityIds = entries.map((entry) => entry.activity_id).filter(Boolean);
+  const activities = await Activity.find({ _id: { $in: activityIds } })
+    .select("title")
+    .lean();
+  const activityMap = new Map(activities.map((activity) => [activity._id.toString(), activity]));
+
+  const items = entries
+    .map((entry) => {
+      const activity = activityMap.get(entry.activity_id?.toString());
+      if (!activity) return null;
+      return {
+        id: activity._id,
+        title: activity.title,
+        added_at: entry.created_at,
+        liked_at: entry.created_at,
+        viewed_at: entry.created_at,
+      };
+    })
+    .filter(Boolean);
+
+  return { page, limit, total, items };
+};
 
 export async function listUserActivities(req, res, next) {
   try {
@@ -159,6 +204,46 @@ export async function removeActivityFromList(req, res, next) {
 
     await UserActivityList.findByIdAndDelete(entry._id);
     return res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function listHistory(req, res, next) {
+  try {
+    const payload = await buildListResponse(
+      { userId: req.currentUserId, listType: "history" },
+      req
+    );
+    return ok(res, payload);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function listLiked(req, res, next) {
+  try {
+    const payload = await buildListResponse(
+      { userId: req.currentUserId, listType: "liked" },
+      req
+    );
+    return ok(res, payload);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function listCustom(req, res, next) {
+  try {
+    const { name } = req.query;
+    if (!name) {
+      throw new BadRequestError("name is required");
+    }
+    const payload = await buildListResponse(
+      { userId: req.currentUserId, listType: "custom", customName: name },
+      req
+    );
+    return ok(res, { list_name: name, ...payload });
   } catch (error) {
     next(error);
   }

@@ -13,6 +13,7 @@ import reviewByIdRoutes from "./routes/reviewById.routes.js";
 import listRoutes from "./routes/lists.routes.js";
 import uploadRoutes from "./routes/uploads.routes.js";
 import externalActivitiesRoutes from "./routes/externalActivities.routes.js";
+import meRoutes from "./routes/me.routes.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { swaggerUi, swaggerSpec } from "./utils/swagger.js";
 
@@ -45,6 +46,7 @@ app.use("/activities", activityRoutes);
 app.use("/activities/:activityId/reviews", reviewRoutes);
 app.use("/reviews", reviewByIdRoutes);
 app.use("/lists", listRoutes);
+app.use("/me", meRoutes);
 app.use("/uploads", uploadRoutes);
 app.use("/uploads", express.static(uploadDir));
 app.use("/external-activities", externalActivitiesRoutes);
