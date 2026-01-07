@@ -1,9 +1,11 @@
 <template>
   <div class="input-wrapper">
-    <label v-if="label" class="input-label">{{ label }}</label>
+    <label v-if="label" class="input-label" :for="inputId">{{ label }}</label>
     <textarea
       v-if="rows"
       ref="inputEl"
+      :id="inputId"
+      :name="inputName"
       :value="modelValue"
       :placeholder="placeholder"
       :required="required"
@@ -14,6 +16,8 @@
     <input
       v-else
       ref="inputEl"
+      :id="inputId"
+      :name="inputName"
       :type="type"
       :value="modelValue"
       :placeholder="placeholder"
@@ -25,20 +29,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
-defineProps({
+const props = defineProps({
   modelValue: { type: [String, Number], default: '' },
   type: { type: String, default: 'text' },
   label: { type: String, default: '' },
   placeholder: { type: String, default: '' },
   rows: { type: [Number, String], default: null },
   required: { type: Boolean, default: false },
+  name: { type: String, default: '' },
 })
 
 defineEmits(['update:modelValue'])
 
 const inputEl = ref(null)
+const inputId = computed(() => `input-${Math.random().toString(36).slice(2, 9)}`)
+const inputName = computed(() => props.name || inputId.value)
 
 const focus = () => {
   inputEl.value?.focus()

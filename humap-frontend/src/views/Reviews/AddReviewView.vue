@@ -8,7 +8,7 @@
       <form @submit.prevent="handleAddReview" class="review-form">
         <div class="form-group">
           <label for="ranking" class="font-medium">Note (1-5)</label>
-          <select v-model.number="form.ranking" id="ranking" class="input" required>
+          <select v-model.number="form.ranking" id="ranking" name="ranking" class="input" required>
             <option value="">-- Choisir une note --</option>
             <option value="1">1 - Mauvais</option>
             <option value="2">2 - Moyen</option>
@@ -34,6 +34,8 @@
               accept="image/*"
               multiple
               @change="handlePhotoUpload"
+              name="review-photos"
+              id="review-photos"
             />
           </div>
           <div v-if="uploadError" class="text-tertiary" style="margin-top:6px;color:#dc2626">

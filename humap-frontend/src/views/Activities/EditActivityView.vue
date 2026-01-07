@@ -27,6 +27,8 @@
               accept="image/*"
               multiple
               @change="handlePhotoUpload"
+              name="activity-photos"
+              id="edit-activity-photos"
             />
           </div>
           <div v-if="uploadError" class="text-tertiary" style="margin-top:6px;color:#dc2626">

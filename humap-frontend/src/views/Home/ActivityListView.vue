@@ -6,11 +6,22 @@
         <router-link to="/activities/create">
           <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
         </router-link>
+        <AppButtonModern
+          v-if="authStore.user"
+          variant="secondary"
+          :disabled="isImporting"
+          @click="handleManualImport"
+        >
+          {{ isImporting ? 'Import...' : 'Importer' }}
+        </AppButtonModern>
       </div>
     </header>
 
     <div v-if="importError" class="container" style="margin-bottom:var(--spacing-md);color:#dc2626">
       {{ importError }}
+    </div>
+    <div v-else-if="importNotice" class="container" style="margin-bottom:var(--spacing-md);color:#0f766e">
+      {{ importNotice }}
     </div>
 
     <!-- Error Message -->
@@ -18,7 +29,7 @@
 
     <section class="filters container card" style="display:flex;gap:12px;align-items:center;margin-bottom:var(--spacing-lg)">
       <AppInputModern v-model="q" placeholder="Recherche..." />
-      <select v-model="mood" class="input" style="width:180px">
+      <select v-model="mood" class="input" style="width:180px" id="filter-mood" name="mood">
         <option value="">Tous les moods</option>
         <option value="calm">calm</option>
         <option value="social">social</option>
@@ -81,6 +92,8 @@
           <select
             v-model="selectedListByActivity[activity._id]"
             class="input"
+            :id="`list-select-${activity._id}`"
+            :name="`list-select-${activity._id}`"
           >
             <option value="">Ajouter à une liste</option>
             <option v-for="list in customLists" :key="list._id" :value="list._id">
@@ -149,6 +162,8 @@ const mapEl = ref(null)
 const mapInstance = ref(null)
 const markerLayer = ref(null)
 const importError = ref('')
+const importNotice = ref('')
+const isImporting = ref(false)
 
 const hasMapData = computed(() => {
   return activityStore.activities.some(activity => {
@@ -272,10 +287,39 @@ const addToCustomList = async (activityId) => {
   }
 }
 
+const handleManualImport = async () => {
+  if (isImporting.value) return
+  isImporting.value = true
+  importError.value = ''
+  importNotice.value = ''
+  try {
+    console.log('manual import: start')
+    const importedCount = await runAutoImport()
+    console.log('manual import: done')
+    await activityStore.fetchActivities()
+    if (importedCount === -1) {
+      importNotice.value = 'Import déjà effectué aujourd\'hui.'
+    } else if (importedCount === 0) {
+      importError.value = 'Aucune activité trouvée via Geoapify.'
+    } else if (typeof importedCount === 'number') {
+      importNotice.value = `Import réussi : ${importedCount} activité(s).`
+    }
+  } catch (err) {
+    console.error('manual import failed', err)
+  } finally {
+    isImporting.value = false
+  }
+}
+
 const runAutoImport = async () => {
   const key = 'humap:external-import'
   const today = new Date().toISOString().slice(0, 10)
-  if (localStorage.getItem(key) === today) return
+  if (localStorage.getItem(key) === today) return -1
+  const token = localStorage.getItem('token')
+  if (!token) {
+    importError.value = 'Connecte-toi pour importer des activités.'
+    return 0
+  }
 
   const defaultLat = 46.5197
   const defaultLon = 6.6323
@@ -293,21 +337,29 @@ const runAutoImport = async () => {
   })
 
   try {
-    await api.get('/external-activities/opentripmap', {
+    const response = await api.get('/external-activities/geoapify', {
       params: {
         lat: coords.lat,
         lon: coords.lon,
         radius: 2000,
-        limit: 25,
+        limit: 50,
         save: true,
       },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
-    localStorage.setItem(key, today)
+    const items = Array.isArray(response.data?.items) ? response.data.items : []
+    if (items.length > 0) {
+      localStorage.setItem(key, today)
+    }
+    return items.length
   } catch (err) {
     const status = err.response?.status
     const message = err.response?.data?.message || err.message || 'Import impossible'
-    importError.value = `Import OpenTripMap échoué (${status || 'erreur'}): ${message}`
+    importError.value = `Import Geoapify échoué (${status || 'erreur'}): ${message}`
     console.warn('auto import failed', status, message)
+    return 0
   }
 }
 

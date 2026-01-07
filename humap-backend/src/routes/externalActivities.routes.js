@@ -11,34 +11,35 @@ const normalizeLimit = (value) => {
 };
 
 router.get("/opentripmap", auth, async (req, res, next) => {
+  return res.status(410).json({ message: "OpenTripMap import is deprecated. Use /external-activities/geoapify instead." });
+});
+
+router.get("/geoapify", auth, async (req, res, next) => {
   try {
-    const { lat, lon, radius = "1000", kinds = "", limit, save = "false" } = req.query;
+    const {
+      lat,
+      lon,
+      radius = "2000",
+      categories = "tourism.sights,natural,leisure,entertainment",
+      limit,
+      save = "false",
+    } = req.query;
 
     if (!lat || !lon) {
       return res.status(400).json({ message: "lat and lon are required" });
     }
 
-    if (!process.env.RAPIDAPI_KEY || !process.env.RAPIDAPI_HOST) {
-      return res.status(500).json({ message: "RapidAPI credentials are not configured" });
+    if (!process.env.GEOAPIFY_API_KEY) {
+      return res.status(500).json({ message: "Geoapify API key is not configured" });
     }
 
-    const baseUrl = process.env.RAPIDAPI_BASE_URL || "https://places1.p.rapidapi.com";
-    const path = process.env.RAPIDAPI_PATH || "/en/places/radius";
-    const url = new URL(`${baseUrl}${path}`);
-    url.searchParams.set("lat", lat);
-    url.searchParams.set("lon", lon);
-    url.searchParams.set("radius", radius);
+    const url = new URL("https://api.geoapify.com/v2/places");
+    url.searchParams.set("categories", categories);
+    url.searchParams.set("filter", `circle:${lon},${lat},${radius}`);
     url.searchParams.set("limit", normalizeLimit(limit).toString());
-    if (kinds) url.searchParams.set("kinds", kinds);
+    url.searchParams.set("apiKey", process.env.GEOAPIFY_API_KEY);
 
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
-        "X-RapidAPI-Host": process.env.RAPIDAPI_HOST,
-      },
-    });
-
+    const response = await fetch(url.toString(), { method: "GET" });
     if (!response.ok) {
       const text = await response.text();
       return res.status(response.status).json({ message: text });
@@ -48,11 +49,16 @@ router.get("/opentripmap", auth, async (req, res, next) => {
     const features = Array.isArray(data?.features) ? data.features : [];
 
     const mapped = features.map((feature) => ({
-      external_id: feature?.properties?.xid || null,
-      source: "opentripmap",
+      external_id: feature?.properties?.place_id || null,
+      source: "geoapify",
       title: feature?.properties?.name || "Lieu sans nom",
-      description: feature?.properties?.kinds || "Activité importée",
-      location: feature?.properties?.name || "Lieu",
+      description: Array.isArray(feature?.properties?.categories)
+        ? feature.properties.categories.join(", ")
+        : "Activité importée",
+      location:
+        feature?.properties?.address_line1 ||
+        feature?.properties?.formatted ||
+        "Lieu",
       coordinates: {
         type: "Point",
         coordinates: [
@@ -74,7 +80,7 @@ router.get("/opentripmap", auth, async (req, res, next) => {
       }
       const existing = await Activity.findOne({
         external_id: item.external_id,
-        source: "opentripmap",
+        source: "geoapify",
       });
       if (existing) {
         created.push(existing);

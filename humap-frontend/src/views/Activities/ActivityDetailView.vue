@@ -52,7 +52,7 @@
       <div class="list-actions" v-if="authStore.user">
         <div v-if="customLists.length" class="list-actions-row">
           <label class="text-tertiary" for="listSelect">Ajouter à une liste</label>
-          <select id="listSelect" v-model="selectedListId" class="input" style="min-width:220px">
+          <select id="listSelect" v-model="selectedListId" name="listSelect" class="input" style="min-width:220px">
             <option value="">Choisir une liste</option>
             <option v-for="list in customLists" :key="list._id" :value="list._id">
               {{ list.custom_name || 'Sans nom' }}

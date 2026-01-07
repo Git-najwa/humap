@@ -32,7 +32,7 @@ const activitySchema = new Schema(
     day: { type: String, trim: true },
     photos: [{ type: String }],
     user_id: { type: Schema.Types.ObjectId, ref: "User" },
-    source: { type: String, enum: ["user", "google", "opentripmap"], default: "user" },
+    source: { type: String, enum: ["user", "google", "opentripmap", "geoapify"], default: "user" },
     external_id: { type: String, trim: true },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } }

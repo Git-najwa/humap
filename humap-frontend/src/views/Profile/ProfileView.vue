@@ -89,7 +89,7 @@
         
         <div class="form-group">
           <label class="form-label">Genre</label>
-          <select v-model="form.gender" class="form-select">
+          <select v-model="form.gender" class="form-select" id="profile-gender" name="gender">
             <option value="">Non renseigné</option>
             <option value="male">Homme</option>
             <option value="female">Femme</option>
@@ -112,6 +112,8 @@
               type="file"
               accept="image/*"
               @change="handleAvatarUpload"
+              name="avatar-upload"
+              id="avatar-upload"
             />
           </div>
           <div v-if="isUploadingAvatar" class="text-tertiary" style="margin-top:6px">

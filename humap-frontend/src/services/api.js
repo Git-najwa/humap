@@ -27,8 +27,9 @@ api.interceptors.response.use(
     // Ne pas rediriger si on est déjà sur login/register ou si c'est une erreur de login
     const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register'
     const isAuthEndpoint = error.config?.url?.includes('/auth/')
+    const isExternalImport = error.config?.url?.includes('/external-activities/')
     
-    if (error.response?.status === 401 && !isAuthPage && !isAuthEndpoint) {
+    if (error.response?.status === 401 && !isAuthPage && !isAuthEndpoint && !isExternalImport) {
       localStorage.removeItem('token')
       window.location.href = '/login'
     }

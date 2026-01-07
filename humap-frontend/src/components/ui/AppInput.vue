@@ -11,6 +11,7 @@
       <input
         ref="inputEl"
         :id="id"
+        :name="inputName"
         :type="type"
         :value="modelValue"
         :placeholder="placeholder"
@@ -75,10 +76,15 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  name: {
+    type: String,
+    default: '',
+  },
 })
 
 const id = computed(() => `input-${Math.random().toString(36).substr(2, 9)}`)
 const inputEl = ref(null)
+const inputName = computed(() => props.name || id.value)
 
 defineEmits(['update:modelValue', 'blur', 'focus'])
 

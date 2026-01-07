@@ -83,14 +83,15 @@ export const useAuthStore = defineStore('auth', () => {
 
   const fetchCurrentUser = async () => {
     if (!token.value) return null
-    
+
+    const tokenAtRequest = token.value
     try {
       const response = await userService.getCurrentUser()
       user.value = response.data
       return response.data
     } catch (err) {
       // Si le token est invalide, déconnecter
-      if (err.response?.status === 401) {
+      if (err.response?.status === 401 && token.value === tokenAtRequest) {
         logout()
       }
       return null
