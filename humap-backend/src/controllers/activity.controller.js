@@ -5,6 +5,7 @@ import UserActivityList from "../models/UserActivityList.js";
 import { created, ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 import { getIO } from "../utils/socket.js";
+import { halResource, halCollection, buildQueryString } from "../utils/hal.js";
 
 export async function listActivities(req, res, next) {
   try {
@@ -50,16 +51,15 @@ export async function listActivities(req, res, next) {
     // ⚡ Exécuter la query
     const activities = await Activity.find(query).skip(skip).limit(limit);
     const total = await Activity.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
 
-    // 📊 Retourner avec métadonnées (contrat stable attendu par le frontend)
+    // 📊 Retourner avec métadonnées HAL+JSON (hypermedia)
+    const queryString = buildQueryString(req.query);
     return ok(res, {
+      ...halCollection(activities, 'activities', { page, limit, total, totalPages }, queryString),
+      // Backward compatibility
       items: activities,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, totalPages },
     });
   } catch (error) {
     next(error);
@@ -76,7 +76,7 @@ export async function createActivity(req, res, next) {
       io.emit("activity:created", activity);
     }
     
-    return created(res, activity);
+    return created(res, halResource(activity, 'activities'));
   } catch (error) {
     // Return a 400 with validation details for Mongoose validation errors
     if (error && error.name === "ValidationError") {
@@ -96,7 +96,7 @@ export async function getActivity(req, res, next) {
     if (!activity) {
       throw new NotFoundError("Activity");
     }
-    return ok(res, activity);
+    return ok(res, halResource(activity, 'activities'));
   } catch (error) {
     next(error);
   }

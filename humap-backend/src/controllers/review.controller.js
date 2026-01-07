@@ -4,6 +4,7 @@ import Activity from "../models/Activity.js";
 import { created, ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 import { getIO } from "../utils/socket.js";
+import { halResource, halCollection } from "../utils/hal.js";
 
 export async function listReviews(req, res, next) {
   try {
@@ -34,7 +35,17 @@ export async function listReviews(req, res, next) {
       user_id: review.user_id?._id || review.user_id,
     }));
 
-    return ok(res, { page, limit, total, items: normalized });
+    const totalPages = Math.ceil(total / limit);
+    
+    // HAL+JSON format with backward compatibility
+    return ok(res, {
+      ...halCollection(normalized, 'reviews', { page, limit, total, totalPages }),
+      // Backward compatibility
+      items: normalized,
+      page,
+      limit,
+      total,
+    });
   } catch (error) {
     next(error);
   }
