@@ -31,9 +31,9 @@
       <AppInputModern v-model="q" placeholder="Recherche..." />
       <select v-model="mood" class="input" style="width:180px" id="filter-mood" name="mood">
         <option value="">Tous les moods</option>
-        <option value="calm">calm</option>
-        <option value="social">social</option>
-        <option value="energetic">energetic</option>
+        <option v-for="option in moodOptions" :key="option.value" :value="option.value">
+          {{ option.label }}
+        </option>
       </select>
       <AppInputModern v-model.number="price_max" type="number" placeholder="Prix max" style="width:120px" />
       <AppInputModern v-model.number="nb_people" type="number" placeholder="Nb personnes" style="width:120px" />
@@ -76,6 +76,7 @@
           :src="getActivityImage(activity)"
           :alt="activity.title"
           loading="lazy"
+          @error="handleImageError($event, activity)"
         />
         <h3 class="text-lg font-semibold">{{ activity.title }}</h3>
         <div class="category-tags" v-if="getCategoryTags(activity).length">
@@ -196,6 +197,19 @@ const customLists = computed(() => {
 })
 const selectedListByActivity = ref({})
 
+const moodOptions = computed(() => {
+  const base = ['calm', 'social', 'energetic']
+  const fromActivities = activityStore.activities
+    .map((activity) => activity?.mood)
+    .filter(Boolean)
+    .map((value) => value.toString().trim().toLowerCase())
+  const merged = Array.from(new Set([...base, ...fromActivities])).filter(Boolean)
+  return merged.map((value) => ({
+    value,
+    label: value.charAt(0).toUpperCase() + value.slice(1),
+  }))
+})
+
 const isActivityInList = (activityId, listId) => {
   const baseEntry = listStore.lists.find(entry => entry._id === listId)
   if (!baseEntry) return false
@@ -211,7 +225,7 @@ const buildFilters = () => {
   const filters = {}
   if (q.value) filters.q = q.value
   if (mood.value) filters.mood = mood.value
-  if (price_max.value !== null && price_max.value !== '') filters.price_max = price_max.value
+  if (price_max.value !== null && price_max.value !== '') filters.price_range = price_max.value
   if (nb_people.value !== null && nb_people.value !== '') filters.nb_people = nb_people.value
   return filters
 }
@@ -454,6 +468,10 @@ const getBudgetLabel = (priceRange) => {
   if (priceRange === 0) return 'Gratuit'
   const level = Math.max(1, Math.min(3, Number(priceRange)))
   return '€'.repeat(level)
+}
+
+const handleImageError = (event, activity) => {
+  event.target.src = buildPlaceholder(activity?._id || activity?.title || 'humap', getCategoryTags(activity)[0] || activity?.title || 'Activité locale')
 }
 
 const initMap = () => {

@@ -15,6 +15,7 @@
               :src="activeGalleryImage"
               :alt="activityStore.currentActivity.title"
               loading="lazy"
+              @error="handleImageError($event, activityStore.currentActivity)"
             />
             <div v-if="galleryImages.length > 1" class="gallery-thumbs">
               <button
@@ -26,7 +27,7 @@
                 @click="selectedPhotoIndex = idx"
                 aria-label="Voir photo"
               >
-                <img :src="url" :alt="`Photo ${idx + 1}`" loading="lazy" />
+                <img :src="url" :alt="`Photo ${idx + 1}`" loading="lazy" @error="handleImageError($event, activityStore.currentActivity)" />
               </button>
             </div>
           </div>
@@ -228,6 +229,10 @@ const getActivityImage = (activity) => {
     getExternalPhoto(activity) ||
     buildPlaceholder(seed, label)
   )
+}
+
+const handleImageError = (event, activity) => {
+  event.target.src = buildPlaceholder(activity?._id || activity?.title || 'humap', getCategoryTags(activity)[0] || activity?.title || 'Activité locale')
 }
 
 const galleryImages = computed(() => {

@@ -33,6 +33,7 @@
             :src="getActivityImage(activity)"
             :alt="activity.title"
             loading="lazy"
+            @error="handleImageError($event, activity)"
           />
           <h3 class="font-semibold">{{ activity.title }}</h3>
           <div class="category-tags" v-if="getCategoryTags(activity).length">
@@ -88,6 +89,7 @@
             :src="getActivityImage(activity)"
             :alt="activity.title"
             loading="lazy"
+            @error="handleImageError($event, activity)"
           />
           <h3 class="font-semibold">{{ activity.title }}</h3>
           <div class="category-tags" v-if="getCategoryTags(activity).length">
@@ -193,6 +195,10 @@ const getActivityImage = (activity) => {
     getExternalPhoto(activity) ||
     buildPlaceholder(seed, label)
   )
+}
+
+const handleImageError = (event, activity) => {
+  event.target.src = buildPlaceholder(activity?._id || activity?.title || 'humap', getCategoryTags(activity)[0] || activity?.title || 'Activité locale')
 }
 
 const getCategoryTags = (activity) => {
