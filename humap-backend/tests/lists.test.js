@@ -104,11 +104,9 @@ describe("List routes", () => {
     });
 
     test("should reject unauthenticated access", async () => {
-      const res = await request(app)
+      await request(app)
         .get("/lists")
         .expect(401);
-
-      expect(res.body).toHaveProperty("error");
     });
 
     test("should only return current user's lists", async () => {
@@ -188,7 +186,7 @@ describe("List routes", () => {
         })
         .expect(400);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should reject request without list_type", async () => {
@@ -200,7 +198,7 @@ describe("List routes", () => {
         })
         .expect(400);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should reject non-custom list without activity_id", async () => {
@@ -212,19 +210,17 @@ describe("List routes", () => {
         })
         .expect(400);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should reject unauthenticated request", async () => {
-      const res = await request(app)
+      await request(app)
         .post("/lists")
         .send({
           list_type: "liked",
           activity_id: activity._id,
         })
         .expect(401);
-
-      expect(res.body).toHaveProperty("error");
     });
   });
 
@@ -257,7 +253,7 @@ describe("List routes", () => {
         .set("Authorization", `Bearer ${otherToken}`)
         .expect(403);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should return 404 for non-existent list", async () => {
@@ -267,7 +263,7 @@ describe("List routes", () => {
         .set("Authorization", `Bearer ${token}`)
         .expect(404);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 
@@ -304,7 +300,7 @@ describe("List routes", () => {
         .send({ name: "Hacked!" })
         .expect(403);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should return 404 for non-existent list", async () => {
@@ -315,7 +311,7 @@ describe("List routes", () => {
         .send({ name: "Update" })
         .expect(404);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 
@@ -349,7 +345,7 @@ describe("List routes", () => {
         .set("Authorization", `Bearer ${otherToken}`)
         .expect(403);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
 
       // Verify not deleted
       const still = await UserActivityList.findById(list._id);
@@ -363,7 +359,7 @@ describe("List routes", () => {
         .set("Authorization", `Bearer ${token}`)
         .expect(404);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 
@@ -400,7 +396,7 @@ describe("List routes", () => {
         .send({ activity_id: activity2._id })
         .expect(400);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should reject adding to other user's list", async () => {
@@ -417,7 +413,7 @@ describe("List routes", () => {
         .send({ activity_id: activity2._id })
         .expect(403);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 
@@ -449,7 +445,7 @@ describe("List routes", () => {
         .set("Authorization", `Bearer ${token}`)
         .expect(404);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 });

@@ -21,57 +21,54 @@ defineEmits(['click'])
 
 <style scoped>
 .modern-btn {
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: 0.5rem 1rem;
   border-radius: var(--radius-lg);
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   border: none;
   cursor: pointer;
   transition: all var(--transition-fast);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--spacing-sm);
+  gap: 0.375rem;
   white-space: nowrap;
-  box-shadow: var(--shadow-sm);
 }
 
 .modern-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .modern-btn:focus-visible {
-  outline: 2px solid rgba(14, 116, 144, 0.35);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 .modern-btn-primary {
-  background: linear-gradient(135deg, #0E7490 0%, #0B4C5F 100%);
+  background-color: var(--color-primary);
   color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 .modern-btn-primary:hover:not(:disabled) {
   background-color: var(--color-primary-dark);
   box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
 }
 
 .modern-btn-primary:active:not(:disabled) {
-  transform: translateY(0);
   box-shadow: var(--shadow-sm);
 }
 
 .modern-btn-secondary {
-  background-color: var(--color-bg-elevated);
+  background-color: #ffffff;
   color: var(--color-text);
   border: 1px solid var(--color-border);
-  box-shadow: none;
 }
 
 .modern-btn-secondary:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.9);
-  border-color: rgba(124, 139, 154, 0.4);
+  background-color: var(--color-bg-alt);
+  border-color: var(--color-text-tertiary);
 }
 
 .modern-btn-danger {
@@ -80,13 +77,7 @@ defineEmits(['click'])
 }
 
 .modern-btn-danger:hover:not(:disabled) {
-  background-color: #E63946;
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+  background-color: #b91c1c;
 }
 
-.modern-btn-danger:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: var(--shadow-sm);
-}
 </style>

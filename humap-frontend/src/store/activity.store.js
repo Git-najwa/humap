@@ -199,9 +199,9 @@ export const useActivityStore = defineStore('activity', () => {
       pagination.value.total -= 1
       
       const { info } = useToast()
-      info('🗑️ Activité supprimée', deleted?.title || 'Une activité a été supprimée')
+      info('Activité supprimée', deleted?.title || 'Une activité a été supprimée')
       
-      console.log('📡 Activité supprimée:', data._id)
+      console.log('Activité supprimée:', data._id)
     }
   }
 

@@ -75,102 +75,103 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
+
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   padding: 1rem;
-  background: #f9fafb;
+  background: var(--color-bg-alt);
 }
 
 .auth-card {
-  background: #ffffff;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 2rem 1.5rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
   width: 100%;
-  max-width: 400px;
+  max-width: 370px;
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
+  width: 40px;
+  height: 40px;
+  background-color: var(--color-primary);
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
 }
 
 .logo-icon {
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
 }
 
 .auth-header h1 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
 }
 
 .subtitle {
   margin: 0.5rem 0 0;
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .submit-btn {
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   width: 100%;
 }
 
 .auth-footer {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
   text-align: center;
 }
 
 .auth-footer p {
   margin: 0;
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
 }
 
 .auth-link {
   display: inline-block;
   margin-top: 0.5rem;
-  color: #6366f1;
+  color: var(--color-primary);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: var(--font-size-sm);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color 0.15s;
 }
 
 .auth-link:hover {
-  color: #4f46e5;
+  color: var(--color-primary-dark);
   text-decoration: underline;
 }
 
 @media (max-width: 480px) {
   .auth-card {
-    padding: 1.5rem;
+    padding: 1rem;
   }
 }
 </style>

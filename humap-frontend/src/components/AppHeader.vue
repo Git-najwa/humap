@@ -126,56 +126,55 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 2rem;
-  height: 64px;
+  padding: 0 1.5rem;
+  height: 60px;
   background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .header-left .logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.625rem;
   text-decoration: none;
 }
 
 .logo-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  background-color: var(--color-primary);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .logo-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
   letter-spacing: -0.025em;
 }
 
 .header-nav {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.875rem;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.875rem;
   border-radius: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .nav-button {
@@ -186,13 +185,13 @@ onMounted(async () => {
 }
 
 .nav-link:hover {
-  color: #6366f1;
-  background-color: #f3f4f6;
+  color: var(--color-primary);
+  background-color: var(--color-bg-alt);
 }
 
 .nav-link.router-link-active {
-  color: #6366f1;
-  background-color: #eef2ff;
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
 }
 
 .nav-icon {
@@ -209,26 +208,26 @@ onMounted(async () => {
 .profile-btn {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.375rem 0.75rem 0.375rem 0.375rem;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
-  color: #374151;
+  gap: 0.625rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
   text-decoration: none;
   border-radius: 9999px;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .profile-btn:hover {
-  background-color: #f3f4f6;
-  border-color: #d1d5db;
+  background-color: var(--color-bg-alt);
+  border-color: var(--color-text-tertiary);
 }
 
 .profile-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background-color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,13 +243,13 @@ onMounted(async () => {
 .avatar-initial {
   color: white;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 
 .profile-name {
   font-weight: 500;
-  font-size: 0.875rem;
-  max-width: 120px;
+  font-size: 0.8125rem;
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -264,11 +263,10 @@ onMounted(async () => {
   left: 0;
   right: 0;
   background: #ffffff;
-  border-top: 1px solid #e5e7eb;
-  padding: 0.5rem 0;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  padding: 0.375rem 0;
+  padding-bottom: calc(0.375rem + env(safe-area-inset-bottom));
   z-index: 1000;
-  box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.05);
 }
 
 .mobile-nav-item {
@@ -276,25 +274,25 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.1875rem;
   flex: 1;
-  padding: 0.5rem;
-  color: #6b7280;
+  padding: 0.375rem;
+  color: var(--color-text-tertiary);
   text-decoration: none;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 500;
-  transition: color 0.2s;
+  transition: color 0.15s;
   background: none;
   border: none;
   cursor: pointer;
 }
 
 .mobile-nav-item:hover {
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .mobile-nav-item.router-link-active {
-  color: #6366f1;
+  color: var(--color-primary);
 }
 
 .mobile-nav-button {
@@ -302,28 +300,28 @@ onMounted(async () => {
 }
 
 .mobile-nav-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 /* Mobile Profile Avatar */
 .mobile-profile-avatar {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background-color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   border: 2px solid transparent;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s;
 }
 
 .mobile-nav-profile.router-link-active .mobile-profile-avatar {
-  border-color: #6366f1;
+  border-color: var(--color-primary);
 }
 
 .mobile-profile-avatar img {
@@ -335,14 +333,20 @@ onMounted(async () => {
 .mobile-avatar-initial {
   color: white;
   font-weight: 600;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .app-header {
     padding: 0 1rem;
-    height: 56px;
+    height: 52px;
+  }
+
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 0.875rem;
   }
 
   .logo-text {
@@ -363,7 +367,7 @@ onMounted(async () => {
   }
 
   .profile-btn {
-    padding: 0.25rem;
+    padding: 0.125rem;
     border: none;
     background: transparent;
   }
@@ -375,7 +379,7 @@ onMounted(async () => {
 
   /* Add padding to body for bottom nav */
   :global(body) {
-    padding-bottom: 70px;
+    padding-bottom: 60px;
   }
 }
 

@@ -39,11 +39,12 @@
             variant="secondary"
             @click="() => $router.push(`/activities/${activityStore.currentActivity._id}/edit`)"
           >
-            ✏️ Modifier
+            <EditIcon :size="16" /> Modifier
           </AppButton>
-          <AppButton v-if="isOwner" variant="danger" @click="handleDelete">🗑️ Supprimer</AppButton>
+          <AppButton v-if="isOwner" variant="danger" @click="handleDelete"><DeleteIcon :size="16" /> Supprimer</AppButton>
           <AppButton class="favorite-button" :variant="isLiked ? 'primary' : 'secondary'" @click="addToFavorites">
-            {{ isLiked ? '★ Favori' : '☆ Favoris' }}
+            <StarFilledIcon v-if="isLiked" :size="16" color="#ffffff" /> {{ isLiked ? 'Favori' : 'Favoris' }}
+            <StarEmptyIcon v-if="!isLiked" :size="16" />
           </AppButton>
         </div>
       </div>
@@ -92,7 +93,10 @@
               {{ review.user?.username || 'Utilisateur' }}
             </div>
             <div class="review-rating">
-              <span v-for="n in 5" :key="n">{{ n <= review.ranking ? '★' : '☆' }}</span>
+              <template v-for="n in 5" :key="n">
+                <StarFilledIcon v-if="n <= review.ranking" :size="16" color="#F59E0B" />
+                <StarEmptyIcon v-else :size="16" color="#D1D5DB" />
+              </template>
             </div>
           </div>
           <p class="review-comment">{{ review.comment || 'Aucun commentaire.' }}</p>
@@ -125,6 +129,7 @@ import { useListStore } from '../../store/list.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
 import { useFavoriteStore } from '../../store/favorite.store'
+import { EditIcon, DeleteIcon, StarFilledIcon, StarEmptyIcon } from '../../components/icons'
 
 const router = useRouter()
 const route = useRoute()

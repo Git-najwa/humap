@@ -18,19 +18,19 @@ socket.on('disconnect', (reason) => {
 })
 
 socket.on('connect_error', (error) => {
-  console.error('🔌 Erreur de connexion:', error.message)
+  console.error('Erreur de connexion socket:', error.message)
 })
 
 // Écouter les notifications de like
 socket.on('notification:like', (data) => {
-  console.log('❤️ Notification like reçue:', data)
+  console.log('Notification like reçue:', data)
   const toast = useToast()
   toast.info(`${data.likerUsername} a aimé votre activité "${data.activityTitle}"`)
 })
 
 // Écouter les notifications de commentaire
 socket.on('notification:comment', (data) => {
-  console.log('💬 Notification commentaire reçue:', data)
+  console.log('Notification commentaire reçue:', data)
   const toast = useToast()
   toast.info(`${data.reviewerUsername} a commenté votre activité "${data.activityTitle}"`)
 })

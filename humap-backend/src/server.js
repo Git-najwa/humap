@@ -5,17 +5,10 @@ import { Server } from "socket.io";
 
 import app from "./app.js";
 import { connectDb } from "./config/db.js";
+import { setIO } from "./utils/socket.js";
 
 const debug = createDebugger("humap:server");
 const port = normalizePort(process.env.PORT || 3000);
-
-// Variable globale pour Socket.io
-let io = null;
-
-// Exporter une fonction pour récupérer l'instance io
-export function getIO() {
-  return io;
-}
 
 async function start() {
   await connectDb();
@@ -23,12 +16,15 @@ async function start() {
   const server = http.createServer(app);
   
   // Initialiser Socket.io
-  io = new Server(server, {
+  const io = new Server(server, {
     cors: {
       origin: ["http://localhost:5173", "http://localhost:3000"],
       methods: ["GET", "POST"],
     },
   });
+  
+  // Stocker l'instance io dans le module partagé
+  setIO(io);
 
   // Gérer les connexions
   io.on("connection", (socket) => {

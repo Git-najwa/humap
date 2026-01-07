@@ -53,8 +53,8 @@
     <div v-else class="activities-grid container grid grid-cols-3">
       <div v-for="activity in activityStore.activities" :key="activity._id" class="card activity-card" style="position:relative;">
         <button class="favorite-badge" @click.prevent="toggleFavorite(activity._id)">
-          <span v-if="isFavorited(activity._id)">★</span>
-          <span v-else>☆</span>
+          <StarFilledIcon v-if="isFavorited(activity._id)" :size="20" color="#F59E0B" />
+          <StarEmptyIcon v-else :size="20" color="#6B7280" />
         </button>
         <img
           class="activity-image"
@@ -66,7 +66,7 @@
         <p class="text-secondary" style="margin-top:8px">{{ activity.description }}</p>
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
-            <p class="location text-tertiary">📍 {{ activity.location }}</p>
+            <p class="location text-tertiary"><LocationIcon :size="14" /> {{ activity.location }}</p>
             <p class="mood text-tertiary">Ambiance : {{ activity.mood }}</p>
           </div>
           <router-link :to="`/activities/${activity._id}`">
@@ -123,6 +123,7 @@ import { useListStore } from '../../store/list.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
+import { LocationIcon, StarFilledIcon, StarEmptyIcon } from '../../components/icons'
 
 const activityStore = useActivityStore()
 const router = useRouter()

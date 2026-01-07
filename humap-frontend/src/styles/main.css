@@ -7,7 +7,7 @@
 }
 
 body {
-  font-family: var(--font-family, "Avenir Next", "Avenir", "Trebuchet MS", "Segoe UI", sans-serif);
+  font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-alt);
@@ -17,6 +17,7 @@ body {
     linear-gradient(180deg, rgba(255, 252, 248, 0.8) 0%, rgba(244, 238, 230, 0.95) 100%);
   color: var(--color-text);
   font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
 }
 
 #app {
@@ -27,10 +28,11 @@ body {
 a {
   color: var(--color-primary);
   text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
 a:hover {
-  text-decoration: underline;
+  color: var(--color-primary-dark);
 }
 
 button {
@@ -42,8 +44,22 @@ input, select, textarea {
 }
 
 h1, h2, h3 {
-  font-family: var(--font-family-display, "Iowan Old Style", "Palatino Linotype", "Bookman Old Style", "Georgia", serif);
-  letter-spacing: -0.01em;
+  font-family: var(--font-family);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
+}
+
+h1 {
+  font-size: var(--font-size-3xl);
+}
+
+h2 {
+  font-size: var(--font-size-2xl);
+}
+
+h3 {
+  font-size: var(--font-size-xl);
 }
 
 main, .container {
@@ -59,7 +75,8 @@ main, .container {
 }
 
 .header h1 {
-  font-size: var(--font-size-3xl);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
 }
 
 .loading,
@@ -68,6 +85,7 @@ main, .container {
   text-align: center;
   padding: var(--spacing-2xl);
   color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
 }
 
 .activity-list-container,
@@ -76,21 +94,41 @@ main, .container {
 .container {
   padding-top: var(--spacing-lg);
   padding-bottom: var(--spacing-2xl);
-  animation: pageFade 350ms ease-out;
+  animation: pageFade 250ms ease-out;
 }
 
 .activity-card {
-  border: 1px solid rgba(230, 221, 210, 0.7);
-  background: linear-gradient(180deg, rgba(255, 252, 248, 0.95), rgba(255, 248, 240, 0.95));
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
 }
 
 .activity-card h3 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
+  margin-top: var(--spacing-md);
+}
+
+.activity-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-xs);
+}
+
+.location-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.location-line svg {
+  flex-shrink: 0;
 }
 
 .filters {
-  border: 1px solid rgba(230, 221, 210, 0.7);
-  background: rgba(255, 255, 255, 0.7);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
   backdrop-filter: blur(8px);
 }
 
@@ -102,12 +140,33 @@ main, .container {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-xs);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  z-index: 10;
+}
+
+.favorite-badge:hover {
+  background: #ffffff;
+  box-shadow: var(--shadow-md);
+  transform: scale(1.05);
+}
+
+.favorite-badge:active {
+  transform: scale(0.95);
+}
+
+.favorite-badge svg {
+  width: 20px;
+  height: 20px;
 }
 
 .login-container,
@@ -170,8 +229,8 @@ main, .container {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-  border: 1px solid rgba(230, 221, 210, 0.7);
-  background: linear-gradient(180deg, rgba(255, 252, 248, 0.98), rgba(255, 248, 240, 0.92));
+  background: #ffffff;
+  border: 1px solid var(--color-border);
 }
 
 .lists-grid {
@@ -187,10 +246,10 @@ main, .container {
 }
 
 .review-item {
-  padding: var(--spacing-md);
-  border: 1px solid rgba(230, 221, 210, 0.7);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.8);
+  background: #ffffff;
 }
 
 .review-header {
@@ -198,15 +257,25 @@ main, .container {
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
 }
 
 .review-author {
   font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
 }
 
 .review-rating {
-  color: var(--color-accent-orange);
-  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.review-comment {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
 }
 
 .review-comment {

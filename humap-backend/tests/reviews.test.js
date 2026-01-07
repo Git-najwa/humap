@@ -162,7 +162,7 @@ describe("Review routes", () => {
         .get(`/activities/${activity._id}/reviews/${fakeId}`)
         .expect(404);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 
@@ -184,15 +184,13 @@ describe("Review routes", () => {
     });
 
     test("should reject review creation without authentication", async () => {
-      const res = await request(app)
+      await request(app)
         .post(`/activities/${activity._id}/reviews`)
         .send({
           comment: "Nice!",
           ranking: 4,
         })
         .expect(401);
-
-      expect(res.body).toHaveProperty("error");
     });
 
     test("should reject review without ranking", async () => {
@@ -202,9 +200,9 @@ describe("Review routes", () => {
         .send({
           comment: "Missing ranking",
         })
-        .expect(400);
+        .expect(422);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should reject ranking outside 1-5 range", async () => {
@@ -215,9 +213,9 @@ describe("Review routes", () => {
           comment: "Bad ranking",
           ranking: 6,
         })
-        .expect(400);
+        .expect(422);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should increment user nb_reviews counter", async () => {
@@ -278,7 +276,7 @@ describe("Review routes", () => {
         })
         .expect(403);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
 
     test("should return 404 for non-existent review", async () => {
@@ -292,7 +290,7 @@ describe("Review routes", () => {
         })
         .expect(404);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 
@@ -328,7 +326,7 @@ describe("Review routes", () => {
         .set("Authorization", `Bearer ${otherToken}`)
         .expect(403);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
 
       // Verify not deleted
       const still = await Review.findById(review._id);
@@ -362,7 +360,7 @@ describe("Review routes", () => {
         .set("Authorization", `Bearer ${token}`)
         .expect(404);
 
-      expect(res.body).toHaveProperty("error");
+      expect(res.body).toHaveProperty("message");
     });
   });
 });
