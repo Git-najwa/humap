@@ -1,4 +1,5 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "node:path";
 import createDebugger from "debug";
 import http from "node:http";
 import { Server } from "socket.io";
@@ -12,6 +13,12 @@ let io;
 const port = normalizePort(process.env.PORT || 3000);
 
 async function start() {
+  const rootEnvPath = path.resolve(process.cwd(), "../.env");
+  dotenv.config({ path: rootEnvPath });
+  dotenv.config();
+  // Use console log so it's visible even if DEBUG is not enabled.
+  // eslint-disable-next-line no-console
+  console.log(`Geoapify key loaded: ${process.env.GEOAPIFY_API_KEY ? "yes" : "no"}`);
   await connectDb();
 
   const server = http.createServer(app);

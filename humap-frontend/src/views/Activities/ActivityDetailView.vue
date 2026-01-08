@@ -45,8 +45,8 @@
             {{ activityStore.currentActivity.description }}
           </p>
           <div class="detail-meta">
-            <p v-if="activityStore.currentActivity.mood" class="text-tertiary">
-              Ambiance : {{ activityStore.currentActivity.mood }}
+            <p v-if="getMoodLabel(activityStore.currentActivity)" class="text-tertiary">
+              Ambiance : {{ getMoodLabel(activityStore.currentActivity) }}
             </p>
             <p v-if="getBudgetLabel(activityStore.currentActivity.price_range)" class="text-tertiary">
               Budget : {{ getBudgetLabel(activityStore.currentActivity.price_range) }}
@@ -261,6 +261,31 @@ const getBudgetLabel = (priceRange) => {
   if (priceRange === 0) return 'Gratuit'
   const level = Math.max(1, Math.min(3, Number(priceRange)))
   return '€'.repeat(level)
+}
+
+const deriveMoodFromCategories = (activity) => {
+  const categories = Array.isArray(activity?.categories) ? activity.categories : []
+  const haystack = categories.join(' ').toLowerCase()
+  if (!haystack) return ''
+  if (haystack.includes('natural') || haystack.includes('park') || haystack.includes('garden') || haystack.includes('beach')) {
+    return 'calm'
+  }
+  if (haystack.includes('sport') || haystack.includes('fitness') || haystack.includes('adventure')) {
+    return 'energetic'
+  }
+  if (haystack.includes('catering') || haystack.includes('restaurant') || haystack.includes('bar') || haystack.includes('cafe') || haystack.includes('entertainment')) {
+    return 'social'
+  }
+  if (haystack.includes('culture') || haystack.includes('museum') || haystack.includes('gallery')) {
+    return 'calm'
+  }
+  return ''
+}
+
+const getMoodLabel = (activity) => {
+  const value = activity?.mood || deriveMoodFromCategories(activity)
+  if (!value) return ''
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 const selectedPhotoIndex = ref(0)

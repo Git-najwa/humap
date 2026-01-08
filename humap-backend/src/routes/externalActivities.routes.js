@@ -78,9 +78,41 @@ router.get("/geoapify", auth, async (req, res, next) => {
     };
     const pickMood = (rawCategories) => {
       const haystack = rawCategories.join(" ").toLowerCase();
-      if (haystack.includes("natural") || haystack.includes("park") || haystack.includes("beach")) return "calm";
-      if (haystack.includes("sport") || haystack.includes("fitness")) return "energetic";
-      if (haystack.includes("entertainment") || haystack.includes("bar") || haystack.includes("restaurant")) return "social";
+      if (
+        haystack.includes("natural") ||
+        haystack.includes("park") ||
+        haystack.includes("garden") ||
+        haystack.includes("beach") ||
+        haystack.includes("forest") ||
+        haystack.includes("mountain") ||
+        haystack.includes("camp")
+      ) {
+        return "calm";
+      }
+      if (
+        haystack.includes("sport") ||
+        haystack.includes("fitness") ||
+        haystack.includes("adventure") ||
+        haystack.includes("hiking") ||
+        haystack.includes("climbing") ||
+        haystack.includes("water")
+      ) {
+        return "energetic";
+      }
+      if (
+        haystack.includes("catering") ||
+        haystack.includes("restaurant") ||
+        haystack.includes("bar") ||
+        haystack.includes("cafe") ||
+        haystack.includes("nightlife") ||
+        haystack.includes("entertainment") ||
+        haystack.includes("cinema") ||
+        haystack.includes("theatre") ||
+        haystack.includes("music")
+      ) {
+        return "social";
+      }
+      if (haystack.includes("culture") || haystack.includes("museum") || haystack.includes("gallery")) return "calm";
       return null;
     };
 

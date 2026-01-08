@@ -66,7 +66,7 @@
     </div>
 
     <div v-else class="activities-grid container grid grid-cols-3">
-      <div v-for="activity in activityStore.activities" :key="activity._id" class="card activity-card" style="position:relative;">
+      <div v-for="activity in sortedActivities" :key="activity._id" class="card activity-card" style="position:relative;">
         <button class="favorite-badge" @click.prevent="toggleFavorite(activity._id)">
           <StarFilledIcon v-if="isFavorited(activity._id)" :size="20" color="#F59E0B" />
           <StarEmptyIcon v-else :size="20" color="#6B7280" />
@@ -90,7 +90,7 @@
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
             <p class="location text-tertiary"><LocationIcon :size="14" /> {{ activity.location }}</p>
-            <p v-if="activity.mood" class="mood text-tertiary">Ambiance : {{ activity.mood }}</p>
+            <p v-if="getMoodLabel(activity)" class="mood text-tertiary">Ambiance : {{ getMoodLabel(activity) }}</p>
             <p v-if="getBudgetLabel(activity.price_range)" class="mood text-tertiary">
               Budget : {{ getBudgetLabel(activity.price_range) }}
             </p>
@@ -196,11 +196,13 @@ const customLists = computed(() => {
   return Array.from(map.values())
 })
 const selectedListByActivity = ref({})
+const userCoords = ref(null)
+const usingNearby = ref(false)
 
 const moodOptions = computed(() => {
   const base = ['calm', 'social', 'energetic']
   const fromActivities = activityStore.activities
-    .map((activity) => activity?.mood)
+    .map((activity) => deriveMoodFromCategories(activity) || activity?.mood)
     .filter(Boolean)
     .map((value) => value.toString().trim().toLowerCase())
   const merged = Array.from(new Set([...base, ...fromActivities])).filter(Boolean)
@@ -239,6 +241,21 @@ onMounted(async () => {
       await runAutoImport()
       await activityStore.fetchActivities()
     }
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          userCoords.value = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+          if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people.value === null || nb_people.value === '')) {
+            usingNearby.value = true
+            await activityStore.fetchNearby(userCoords.value.lat, userCoords.value.lon, 15000, 50)
+          }
+        },
+        () => {
+          userCoords.value = null
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      )
+    }
     initMap()
     refreshMapMarkers()
   } catch (err) {
@@ -264,6 +281,7 @@ watch(
 
 const applyFilters = async () => {
   try {
+    usingNearby.value = false
     await activityStore.applyFilters(buildFilters())
   } catch (err) {
     console.error(err)
@@ -276,7 +294,13 @@ const resetFilters = async () => {
   price_max.value = null
   nb_people.value = null
   try {
-    await activityStore.applyFilters({})
+    if (userCoords.value) {
+      usingNearby.value = true
+      await activityStore.fetchNearby(userCoords.value.lat, userCoords.value.lon, 15000, 50)
+    } else {
+      usingNearby.value = false
+      await activityStore.applyFilters({})
+    }
   } catch (err) {
     console.error(err)
   }
@@ -470,9 +494,59 @@ const getBudgetLabel = (priceRange) => {
   return '€'.repeat(level)
 }
 
+const deriveMoodFromCategories = (activity) => {
+  const categories = Array.isArray(activity?.categories) ? activity.categories : []
+  const haystack = categories.join(' ').toLowerCase()
+  if (!haystack) return ''
+  if (haystack.includes('natural') || haystack.includes('park') || haystack.includes('garden') || haystack.includes('beach')) {
+    return 'calm'
+  }
+  if (haystack.includes('sport') || haystack.includes('fitness') || haystack.includes('adventure')) {
+    return 'energetic'
+  }
+  if (haystack.includes('catering') || haystack.includes('restaurant') || haystack.includes('bar') || haystack.includes('cafe') || haystack.includes('entertainment')) {
+    return 'social'
+  }
+  if (haystack.includes('culture') || haystack.includes('museum') || haystack.includes('gallery')) {
+    return 'calm'
+  }
+  return ''
+}
+
+const getMoodLabel = (activity) => {
+  const value = activity?.mood || deriveMoodFromCategories(activity)
+  if (!value) return ''
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 const handleImageError = (event, activity) => {
   event.target.src = buildPlaceholder(activity?._id || activity?.title || 'humap', getCategoryTags(activity)[0] || activity?.title || 'Activité locale')
 }
+
+const haversineKm = (lat1, lon1, lat2, lon2) => {
+  const toRad = (value) => (value * Math.PI) / 180
+  const R = 6371
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(a))
+}
+
+const sortedActivities = computed(() => {
+  const base = activityStore.activities || []
+  if (!userCoords.value) return base
+  const { lat, lon } = userCoords.value
+  return [...base].sort((a, b) => {
+    const aCoords = a.coordinates?.coordinates
+    const bCoords = b.coordinates?.coordinates
+    if (!Array.isArray(aCoords) || !Array.isArray(bCoords)) return 0
+    const aDist = haversineKm(lat, lon, aCoords[1], aCoords[0])
+    const bDist = haversineKm(lat, lon, bCoords[1], bCoords[0])
+    return aDist - bDist
+  })
+})
 
 const initMap = () => {
   if (!mapEl.value || mapInstance.value) return
@@ -495,6 +569,17 @@ const refreshMapMarkers = () => {
   if (!L || !mapInstance.value || !markerLayer.value) return
   mapInstance.value.closePopup()
   markerLayer.value.clearLayers()
+
+  if (userCoords.value) {
+    const userMarker = L.circleMarker([userCoords.value.lat, userCoords.value.lon], {
+      radius: 6,
+      color: '#0f766e',
+      fillColor: '#14b8a6',
+      fillOpacity: 0.9,
+    }).addTo(markerLayer.value)
+    userMarker.bindPopup('Vous êtes ici')
+    mapInstance.value.setView([userCoords.value.lat, userCoords.value.lon], 12, { animate: false })
+  }
 
   const points = activityStore.activities
     .map(activity => {
@@ -528,10 +613,12 @@ const refreshMapMarkers = () => {
     bounds.push([point.lat, point.lng])
   })
 
-  if (bounds.length === 1) {
-    mapInstance.value.setView(bounds[0], 13, { animate: false })
-  } else {
-    mapInstance.value.fitBounds(bounds, { padding: [32, 32], animate: false })
+  if (!userCoords.value) {
+    if (bounds.length === 1) {
+      mapInstance.value.setView(bounds[0], 13, { animate: false })
+    } else {
+      mapInstance.value.fitBounds(bounds, { padding: [32, 32], animate: false })
+    }
   }
 }
 </script>

@@ -11,12 +11,12 @@ export const useActivityStore = defineStore('activity', () => {
   const error = ref(null)
   const pagination = ref({
     page: 1,
-    limit: 10,
+    limit: 50,
     total: 0,
   })
   const filters = ref({})
 
-  const fetchActivities = async (page = 1, limit = 10, filterParams = {}) => {
+  const fetchActivities = async (page = 1, limit = 50, filterParams = {}) => {
     isLoading.value = true
     error.value = null
     try {
@@ -42,12 +42,12 @@ export const useActivityStore = defineStore('activity', () => {
 
   const applyFilters = async (filterParams = {}) => {
     filters.value = filterParams
-    return await fetchActivities(1, pagination.value.limit || 10, filters.value)
+    return await fetchActivities(1, pagination.value.limit || 50, filters.value)
   }
 
   const goToPage = async (page) => {
     const p = Math.max(1, page)
-    return await fetchActivities(p, pagination.value.limit || 10, filters.value)
+    return await fetchActivities(p, pagination.value.limit || 50, filters.value)
   }
 
   const setLimit = async (limit) => {
@@ -64,6 +64,28 @@ export const useActivityStore = defineStore('activity', () => {
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'Erreur lors de la récupération de l\'activité'
+      throw error.value
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const fetchNearby = async (lat, lng, radius = 15000, limit = 50) => {
+    isLoading.value = true
+    error.value = null
+    try {
+      const response = await activityService.getNearby(lat, lng, radius, limit)
+      activities.value = response.data.items || []
+      pagination.value = {
+        page: 1,
+        limit,
+        total: activities.value.length,
+        totalPages: 1,
+      }
+      filters.value = {}
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Erreur lors de la récupération des activités proches'
       throw error.value
     } finally {
       isLoading.value = false
@@ -218,6 +240,7 @@ export const useActivityStore = defineStore('activity', () => {
     pagination,
     filters,
     fetchActivities,
+    fetchNearby,
     applyFilters,
     goToPage,
     setLimit,
