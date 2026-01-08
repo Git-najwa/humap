@@ -142,13 +142,14 @@ defineExpose({ focus })
 .app-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   font-size: 0.9375rem;
   font-family: inherit;
   color: #111827;
-  background-color: white;
+  background-color: var(--glass-bg-strong);
   transition: border-color 0.2s, box-shadow 0.2s;
+  backdrop-filter: blur(20px) saturate(140%);
 }
 
 .app-input::placeholder {
@@ -157,8 +158,8 @@ defineExpose({ focus })
 
 .app-input:focus {
   outline: none;
-  border-color: #111827;
-  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
 }
 
 .app-input:disabled {

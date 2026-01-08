@@ -128,8 +128,10 @@ onMounted(async () => {
   align-items: center;
   padding: 0 1.5rem;
   height: 60px;
-  background: #ffffff;
-  border-bottom: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(26px) saturate(140%);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-left .logo {
@@ -186,12 +188,12 @@ onMounted(async () => {
 
 .nav-link:hover {
   color: var(--color-primary);
-  background-color: var(--color-bg-alt);
+  background-color: rgba(255, 255, 255, 0.22);
 }
 
 .nav-link.router-link-active {
   color: var(--color-primary);
-  background-color: var(--color-primary-light);
+  background-color: rgba(15, 118, 110, 0.18);
 }
 
 .nav-icon {
@@ -211,7 +213,8 @@ onMounted(async () => {
   gap: 0.625rem;
   padding: 0.25rem 0.75rem 0.25rem 0.25rem;
   background-color: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px) saturate(120%);
   color: var(--color-text);
   text-decoration: none;
   border-radius: 9999px;
@@ -219,7 +222,7 @@ onMounted(async () => {
 }
 
 .profile-btn:hover {
-  background-color: var(--color-bg-alt);
+  background-color: rgba(255, 255, 255, 0.2);
   border-color: var(--color-text-tertiary);
 }
 
@@ -262,8 +265,10 @@ onMounted(async () => {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
-  border-top: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.22);
+  border-top: 1px solid var(--glass-border);
+  backdrop-filter: blur(26px) saturate(140%);
+  box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.12);
   padding: 0.375rem 0;
   padding-bottom: calc(0.375rem + env(safe-area-inset-bottom));
   z-index: 1000;

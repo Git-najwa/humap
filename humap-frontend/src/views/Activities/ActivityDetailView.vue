@@ -41,8 +41,8 @@
               {{ tag }}
             </span>
           </div>
-          <p v-else-if="activityStore.currentActivity.description" class="text-secondary" style="margin-top:8px">
-            {{ activityStore.currentActivity.description }}
+          <p class="text-secondary" style="margin-top:8px">
+            {{ descriptionText }}
           </p>
           <div class="detail-meta">
             <p v-if="getMoodLabel(activityStore.currentActivity)" class="text-tertiary">
@@ -91,6 +91,16 @@
           Aucune liste personnalisée. <a class="link" @click.prevent="router.push('/lists')">Créer une liste</a>
         </div>
       </div>
+
+      <section class="card map-card" v-if="hasCoordinates">
+        <div class="flex-between" style="margin-bottom:var(--spacing-md)">
+          <div>
+            <h2 class="text-xl font-semibold">Localisation</h2>
+            <p class="text-tertiary">{{ activityStore.currentActivity.location }}</p>
+          </div>
+        </div>
+        <div ref="mapEl" class="detail-map" aria-label="Carte de l'activité"></div>
+      </section>
     </div>
 
     <section v-if="activityStore.currentActivity" class="card" style="margin-top:var(--spacing-lg)">
@@ -140,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter, useRoute } from 'vue-router'
 import { useActivityStore } from '../../store/activity.store'
@@ -308,6 +318,9 @@ const customLists = computed(() => {
   return Array.from(map.values())
 })
 const selectedListId = ref('')
+const mapEl = ref(null)
+const mapInstance = ref(null)
+const mapMarker = ref(null)
 
 const isActivityInList = (activityId, listId) => {
   const baseEntry = listStore.lists.find(entry => entry._id === listId)
@@ -327,6 +340,47 @@ const averageRating = computed(() => {
   return (total / reviews.value.length).toFixed(1)
 })
 
+const hasCoordinates = computed(() => {
+  const coords = activityStore.currentActivity?.coordinates?.coordinates
+  return Array.isArray(coords) && coords.length === 2
+})
+
+const descriptionText = computed(() => {
+  const description = activityStore.currentActivity?.description?.trim()
+  if (description) return description
+  const categories = getCategoryTags(activityStore.currentActivity)
+  if (categories.length) return categories.join(' • ')
+  return 'Description non disponible.'
+})
+
+const initDetailMap = () => {
+  if (!mapEl.value) return
+  const { L } = window
+  if (!L) return
+  const coords = activityStore.currentActivity?.coordinates?.coordinates
+  if (!Array.isArray(coords) || coords.length !== 2) return
+  const lat = coords[1]
+  const lng = coords[0]
+
+  if (!mapInstance.value) {
+    mapInstance.value = L.map(mapEl.value, {
+      zoomControl: true,
+      scrollWheelZoom: false,
+    }).setView([lat, lng], 14)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(mapInstance.value)
+  } else {
+    mapInstance.value.setView([lat, lng], 14, { animate: false })
+  }
+
+  if (mapMarker.value) {
+    mapMarker.value.remove()
+  }
+  mapMarker.value = L.marker([lat, lng]).addTo(mapInstance.value)
+}
+
 onMounted(async () => {
   try {
     await activityStore.fetchActivityById(route.params.id)
@@ -343,6 +397,7 @@ onMounted(async () => {
         console.warn('Could not load favorites to determine liked state', e)
       }
     }
+    initDetailMap()
   } catch (e) {
     console.error('ActivityDetail load failed', e)
     // leave activityStore.error populated by the store and avoid unhandled rejection
@@ -353,8 +408,17 @@ watch(
   () => activityStore.currentActivity?._id,
   () => {
     selectedPhotoIndex.value = 0
+    initDetailMap()
   }
 )
+
+onBeforeUnmount(() => {
+  if (mapInstance.value) {
+    mapInstance.value.remove()
+    mapInstance.value = null
+    mapMarker.value = null
+  }
+})
 
 const refreshReviews = async () => {
   try {
@@ -524,12 +588,13 @@ const deleteReview = async (reviewId) => {
 }
 
 .category-tag {
-  padding: 4px 10px;
+  padding: 6px 12px;
   font-size: 12px;
   border-radius: 999px;
-  background: #f1e6db;
-  color: #7a4f3a;
-  border: 1px solid rgba(122, 79, 58, 0.2);
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  border: 1px solid var(--tag-border);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 
 .action-row {
@@ -541,5 +606,17 @@ const deleteReview = async (reviewId) => {
 
 .favorite-button {
   margin-top: -4px;
+}
+
+.map-card {
+  margin-top: var(--spacing-lg);
+}
+
+.detail-map {
+  width: 100%;
+  height: 260px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
 }
 </style>

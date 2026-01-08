@@ -377,11 +377,12 @@ const removeFromCustomList = async (activityId) => {
 }
 
 .category-tag {
-  padding: 4px 10px;
+  padding: 6px 12px;
   font-size: 12px;
   border-radius: 999px;
-  background: #f1e6db;
-  color: #7a4f3a;
-  border: 1px solid rgba(122, 79, 58, 0.2);
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  border: 1px solid var(--tag-border);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 </style>

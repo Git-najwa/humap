@@ -1,11 +1,31 @@
 <template>
   <div class="activity-list-container">
-    <header class="header container">
-      <h1 class="text-2xl font-semibold">Activités HUMAP</h1>
-      <div class="flex gap-sm">
-        <router-link to="/activities/create">
-          <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
-        </router-link>
+    <header class="hero container">
+      <div class="hero-content">
+        <div>
+          <p class="hero-eyebrow">Découvrir</p>
+          <h1 class="hero-title">Des activités locales</h1>
+          <p class="text-secondary hero-subtitle">Trouvez des idées adaptées à votre mood et à la météo du jour.</p>
+        </div>
+        <div class="hero-actions">
+          <router-link to="/activities/create">
+            <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
+          </router-link>
+        </div>
+      </div>
+      <div class="hero-meta card">
+        <div>
+          <p class="hero-meta-label">Position</p>
+          <p class="hero-meta-value">{{ locationLabel }}</p>
+        </div>
+        <div v-if="weatherSummary">
+          <p class="hero-meta-label">Météo actuelle</p>
+          <p class="hero-meta-value">{{ weatherSummary }}</p>
+        </div>
+        <div v-else class="hero-meta-muted">
+          <p class="hero-meta-label">Météo actuelle</p>
+          <p class="hero-meta-value">En attente…</p>
+        </div>
       </div>
     </header>
 
@@ -19,46 +39,73 @@
     <!-- Error Message -->
     <ErrorMessage :message="activityStore.error" />
 
-    <section class="filters container card" style="display:flex;gap:12px;align-items:center;margin-bottom:var(--spacing-lg)">
-      <AppInputModern v-model="q" placeholder="Recherche..." />
-      <select v-model="mood" class="input" style="width:180px" id="filter-mood" name="mood">
-        <option value="">Tous les moods</option>
-        <option v-for="option in moodOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <AppInputModern v-model.number="price_max" type="number" placeholder="Prix max" style="width:120px" />
-      <AppInputModern v-model.number="nb_people" type="number" placeholder="Nb personnes" style="width:120px" />
-      <AppButtonModern variant="primary" @click="applyFilters">Filtrer</AppButtonModern>
-      <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
-    </section>
-
-    <section class="map-section container card">
-      <div class="map-header">
-        <div>
-          <h2 class="text-xl font-semibold">Carte des activités</h2>
-          <p class="text-tertiary">Explorez les activités proches.</p>
+    <section class="filters container card">
+      <div class="filters-row">
+        <AppInputModern v-model="q" placeholder="Recherche une activité, un lieu..." />
+        <div class="filters-actions">
+          <AppButtonModern variant="secondary" @click="toggleFilters">
+            Filtres
+            <span v-if="activeFiltersCount" class="filters-count">{{ activeFiltersCount }}</span>
+          </AppButtonModern>
+          <AppButtonModern variant="primary" @click="applyFilters">Rechercher</AppButtonModern>
         </div>
-        <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
       </div>
-      <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
+
+      <div v-if="showFilters" class="filters-popover">
+        <div class="filters-popover-header">
+          <div>
+            <p class="filters-popover-title">Filtres avancés</p>
+            <p class="text-tertiary text-sm">Affinez votre recherche.</p>
+          </div>
+          <button class="filters-close" type="button" @click="showFilters = false">×</button>
+        </div>
+        <div class="filters-popover-grid">
+          <div class="filters-field">
+            <label class="filters-label" for="filter-price">Budget max</label>
+            <AppInputModern id="filter-price" v-model.number="price_max" type="number" placeholder="Prix max" />
+          </div>
+          <div class="filters-field">
+            <label class="filters-label" for="filter-people">Nb personnes</label>
+            <AppInputModern id="filter-people" v-model.number="nb_people" type="number" placeholder="Nb personnes" />
+          </div>
+        </div>
+        <div class="filters-popover-actions">
+          <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
+          <AppButtonModern variant="primary" @click="applyFilters">Appliquer</AppButtonModern>
+        </div>
+      </div>
+
+      <div class="filters-chips">
+        <button
+          v-for="chip in chipFilters"
+          :key="chip.key"
+          type="button"
+          class="filter-chip"
+          :class="{ active: activeChip === chip.key }"
+          @click="setChip(chip)"
+        >
+          {{ chip.label }}
+        </button>
+      </div>
     </section>
 
-    <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
+    <div class="split-layout container">
+      <div class="list-pane">
+        <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
 
-    <!-- Empty State -->
-    <div v-else-if="activityStore.activities.length === 0" class="empty-state">
-      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M8 12h8"></path>
-      </svg>
-      <h3>Aucune activité</h3>
-      <p>Soyez le premier à créer une activité</p>
-      <router-link to="/activities/create" class="empty-state-btn">Créer une activité</router-link>
-    </div>
+        <!-- Empty State -->
+        <div v-else-if="visibleActivities.length === 0" class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M8 12h8"></path>
+          </svg>
+          <h3>Aucune activité</h3>
+          <p>Soyez le premier à créer une activité</p>
+          <router-link to="/activities/create" class="empty-state-btn">Créer une activité</router-link>
+        </div>
 
-    <div v-else class="activities-grid container grid grid-cols-3">
-      <div v-for="activity in sortedActivities" :key="activity._id" class="card activity-card" style="position:relative;">
+        <div v-else class="activities-grid">
+          <div v-for="activity in sortedActivities" :key="activity._id" class="card activity-card" style="position:relative;">
         <button class="favorite-badge" @click.prevent="toggleFavorite(activity._id)">
           <StarFilledIcon v-if="isFavorited(activity._id)" :size="20" color="#F59E0B" />
           <StarEmptyIcon v-else :size="20" color="#6B7280" />
@@ -112,23 +159,39 @@
           </AppButtonModern>
         </div>
       </div>
+        </div>
+
+        <div
+          v-if="pagination.total > pagination.limit"
+          class="pagination"
+          style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:var(--spacing-lg)"
+        >
+          <AppButtonModern variant="secondary" @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</AppButtonModern>
+          <span class="text-sm text-tertiary">Page {{ pagination.page }} / {{ pagination.totalPages || Math.ceil(pagination.total / pagination.limit) }}</span>
+          <AppButtonModern
+            variant="secondary"
+            @click="goToPage(pagination.page + 1)"
+            :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))"
+          >
+            Suiv
+          </AppButtonModern>
+        </div>
+      </div>
+
+      <aside class="map-pane">
+        <section class="map-section card">
+          <div class="map-header">
+            <div>
+              <h2 class="text-xl font-semibold">Carte des activités</h2>
+              <p class="text-tertiary">Explorez les activités proches.</p>
+            </div>
+            <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
+          </div>
+          <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
+        </section>
+      </aside>
     </div>
 
-    <div
-      v-if="pagination.total > pagination.limit"
-      class="pagination container"
-      style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:var(--spacing-lg)"
-    >
-      <AppButtonModern variant="secondary" @click="goToPage(pagination.page - 1)" :disabled="pagination.page <= 1">Préc</AppButtonModern>
-      <span class="text-sm text-tertiary">Page {{ pagination.page }} / {{ pagination.totalPages || Math.ceil(pagination.total / pagination.limit) }}</span>
-      <AppButtonModern
-        variant="secondary"
-        @click="goToPage(pagination.page + 1)"
-        :disabled="pagination.page >= (pagination.totalPages || Math.ceil(pagination.total / pagination.limit))"
-      >
-        Suiv
-      </AppButtonModern>
-    </div>
   </div>
 </template>
 
@@ -167,6 +230,11 @@ const markerLayer = ref(null)
 const importError = ref('')
 const importNotice = ref('')
 const isImporting = ref(false)
+const weather = ref(null)
+const weatherLoading = ref(false)
+const weatherError = ref('')
+const activeChip = ref('all')
+const showFilters = ref(false)
 
 const hasMapData = computed(() => {
   return activityStore.activities.some(activity => {
@@ -190,6 +258,48 @@ const customLists = computed(() => {
 const selectedListByActivity = ref({})
 const userCoords = ref(null)
 const usingNearby = ref(false)
+
+const chipFilters = computed(() => {
+  const categories = [
+    { key: 'all', label: 'Tout', type: 'all', value: '' },
+    { key: 'cat:nature', label: 'Nature', type: 'category', value: 'nature' },
+    { key: 'cat:culture', label: 'Culture', type: 'category', value: 'culture' },
+    { key: 'cat:sport', label: 'Sport', type: 'category', value: 'sport' },
+    { key: 'cat:food', label: 'Food', type: 'category', value: 'food' },
+    { key: 'cat:kids', label: 'Famille', type: 'category', value: 'kids' },
+    { key: 'cat:indoor', label: 'Indoor', type: 'category', value: 'indoor' },
+  ]
+  const moods = (moodOptions.value || []).map((option) => ({
+    key: `mood:${option.value}`,
+    label: option.label,
+    type: 'mood',
+    value: option.value,
+  }))
+  return [...categories, ...moods]
+})
+
+const setChip = (chip) => {
+  activeChip.value = chip.key
+  if (chip.type === 'mood') {
+    mood.value = chip.value
+  } else {
+    mood.value = ''
+  }
+}
+
+const toggleFilters = () => {
+  showFilters.value = !showFilters.value
+}
+
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (q.value) count += 1
+  if (mood.value) count += 1
+  if (price_max.value !== null && price_max.value !== '') count += 1
+  if (nb_people.value !== null && nb_people.value !== '') count += 1
+  if (activeChip.value && activeChip.value !== 'all') count += 1
+  return count
+})
 
 const moodOptions = computed(() => {
   const base = ['calm', 'social', 'energetic']
@@ -224,6 +334,19 @@ const buildFilters = () => {
   return filters
 }
 
+const locationLabel = computed(() => {
+  if (!userCoords.value) return 'Autour de vous'
+  return `Lat ${userCoords.value.lat.toFixed(3)} · Lon ${userCoords.value.lon.toFixed(3)}`
+})
+
+const weatherSummary = computed(() => {
+  if (!weather.value) return ''
+  const temp = weather.value.temperature?.toFixed(0)
+  const label = getWeatherLabel(weather.value.code)
+  if (!temp || !label) return ''
+  return `${label} · ${temp}°C`
+})
+
 onMounted(async () => {
   try {
     await activityStore.fetchActivities()
@@ -237,6 +360,7 @@ onMounted(async () => {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           userCoords.value = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+          await fetchWeather(userCoords.value.lat, userCoords.value.lon)
           await runAutoImport(userCoords.value)
           if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people.value === null || nb_people.value === '')) {
             usingNearby.value = true
@@ -263,14 +387,6 @@ onBeforeUnmount(() => {
     mapInstance.value = null
   }
 })
-
-watch(
-  () => activityStore.activities,
-  () => {
-    refreshMapMarkers()
-  },
-  { deep: true }
-)
 
 const applyFilters = async () => {
   try {
@@ -489,7 +605,103 @@ const handleImageError = (event, activity) => {
   event.target.src = buildPlaceholder(activity?._id || activity?.title || 'humap', getCategoryTags(activity)[0] || activity?.title || 'Activité locale')
 }
 
-const haversineKm = (lat1, lon1, lat2, lon2) => {
+const fetchWeather = async (lat, lon) => {
+  weatherLoading.value = true
+  weatherError.value = ''
+  try {
+    const url = new URL('https://api.open-meteo.com/v1/forecast')
+    url.searchParams.set('latitude', lat)
+    url.searchParams.set('longitude', lon)
+    url.searchParams.set('current', 'temperature_2m,precipitation,weathercode,wind_speed_10m')
+    url.searchParams.set('timezone', 'auto')
+    const res = await fetch(url.toString())
+    const data = await res.json()
+    const current = data?.current
+    if (!current) {
+      weather.value = null
+      return
+    }
+    weather.value = {
+      temperature: current.temperature_2m,
+      precipitation: current.precipitation,
+      wind: current.wind_speed_10m,
+      code: current.weathercode,
+    }
+  } catch (err) {
+    weatherError.value = err.message || 'Erreur météo'
+  } finally {
+    weatherLoading.value = false
+  }
+}
+
+function getWeatherLabel(code) {
+  if (code === null || code === undefined) return ''
+  if (code === 0) return 'Ensoleillé'
+  if ([1, 2].includes(code)) return 'Peu nuageux'
+  if (code === 3) return 'Nuageux'
+  if ([45, 48].includes(code)) return 'Brouillard'
+  if (code >= 51 && code <= 67) return 'Pluie'
+  if (code >= 71 && code <= 77) return 'Neige'
+  if (code >= 80 && code <= 82) return 'Averses'
+  if (code >= 95) return 'Orage'
+  return 'Variable'
+}
+
+function getWeatherPreference() {
+  if (!weather.value) return null
+  const rainCodes = new Set([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99])
+  const code = weather.value.code
+  const isRainy = rainCodes.has(code) || (weather.value.precipitation ?? 0) >= 0.2
+  const isCold = (weather.value.temperature ?? 0) <= 6
+  if (isRainy) return { type: 'indoor', label: 'Pluie' }
+  if (isCold) return { type: 'indoor', label: 'Froid' }
+  if (code === 0 || code === 1) return { type: 'outdoor', label: 'Soleil' }
+  return { type: 'mixed', label: 'Nuageux' }
+}
+
+function getActivityEnvironment(activity) {
+  const categories = Array.isArray(activity?.categories) ? activity.categories.join(' ').toLowerCase() : ''
+  const title = (activity?.title || '').toLowerCase()
+  const haystack = `${categories} ${title}`
+  const indoor = ['museum', 'gallery', 'theatre', 'cinema', 'shopping', 'mall', 'cafe', 'restaurant', 'bar', 'spa', 'escape']
+  const outdoor = ['park', 'garden', 'trail', 'hiking', 'beach', 'natural', 'camp', 'sport', 'stadium', 'playground', 'lake']
+  if (indoor.some((key) => haystack.includes(key))) return 'indoor'
+  if (outdoor.some((key) => haystack.includes(key))) return 'outdoor'
+  return 'mixed'
+}
+
+function matchesChip(activity) {
+  if (!activeChip.value || activeChip.value === 'all') return true
+  const env = getActivityEnvironment(activity)
+  const categories = Array.isArray(activity?.categories) ? activity.categories.join(' ').toLowerCase() : ''
+  const title = (activity?.title || '').toLowerCase()
+  const haystack = `${categories} ${title}`
+  if (activeChip.value.startsWith('mood:')) {
+    const moodValue = activeChip.value.split(':')[1]
+    const derived = (activity?.mood || deriveMoodFromCategories(activity) || '').toLowerCase()
+    return derived === moodValue
+  }
+  if (!activeChip.value.startsWith('cat:')) return true
+  const catValue = activeChip.value.split(':')[1]
+  switch (catValue) {
+    case 'nature':
+      return haystack.includes('park') || haystack.includes('garden') || haystack.includes('natural') || haystack.includes('lake')
+    case 'culture':
+      return haystack.includes('museum') || haystack.includes('gallery') || haystack.includes('theatre')
+    case 'sport':
+      return haystack.includes('sport') || haystack.includes('fitness') || haystack.includes('stadium')
+    case 'food':
+      return haystack.includes('restaurant') || haystack.includes('cafe') || haystack.includes('bar') || haystack.includes('catering')
+    case 'kids':
+      return haystack.includes('playground') || haystack.includes('zoo') || haystack.includes('family')
+    case 'indoor':
+      return env === 'indoor'
+    default:
+      return true
+  }
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
   const toRad = (value) => (value * Math.PI) / 180
   const R = 6371
   const dLat = toRad(lat2 - lat1)
@@ -500,19 +712,40 @@ const haversineKm = (lat1, lon1, lat2, lon2) => {
   return 2 * R * Math.asin(Math.sqrt(a))
 }
 
+const visibleActivities = computed(() => {
+  return (activityStore.activities || []).filter(activity => matchesChip(activity))
+})
+
 const sortedActivities = computed(() => {
-  const base = activityStore.activities || []
+  const base = visibleActivities.value || []
   if (!userCoords.value) return base
   const { lat, lon } = userCoords.value
+  const preference = getWeatherPreference()
   return [...base].sort((a, b) => {
     const aCoords = a.coordinates?.coordinates
     const bCoords = b.coordinates?.coordinates
     if (!Array.isArray(aCoords) || !Array.isArray(bCoords)) return 0
     const aDist = haversineKm(lat, lon, aCoords[1], aCoords[0])
     const bDist = haversineKm(lat, lon, bCoords[1], bCoords[0])
+    if (!preference || preference.type === 'mixed') {
+      return aDist - bDist
+    }
+    const aEnv = getActivityEnvironment(a)
+    const bEnv = getActivityEnvironment(b)
+    const aPenalty = aEnv === preference.type ? 0 : 1
+    const bPenalty = bEnv === preference.type ? 0 : 1
+    if (aPenalty !== bPenalty) return aPenalty - bPenalty
     return aDist - bDist
   })
 })
+
+watch(
+  [() => activityStore.activities, () => activeChip.value],
+  () => {
+    refreshMapMarkers()
+  },
+  { deep: true }
+)
 
 const initMap = () => {
   if (!mapEl.value || mapInstance.value) return
@@ -547,7 +780,7 @@ const refreshMapMarkers = () => {
     mapInstance.value.setView([userCoords.value.lat, userCoords.value.lon], 12, { animate: false })
   }
 
-  const points = activityStore.activities
+  const points = visibleActivities.value
     .map(activity => {
       const coords = activity.coordinates?.coordinates
       if (!Array.isArray(coords) || coords.length !== 2) return null
@@ -596,6 +829,210 @@ const refreshMapMarkers = () => {
   gap: var(--spacing-lg);
 }
 
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 3vw, 2.6rem);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  margin-bottom: 0.25rem;
+}
+
+.hero-subtitle {
+  max-width: 520px;
+}
+
+.hero-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: var(--color-text-tertiary);
+  margin-bottom: 0.25rem;
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.hero-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+}
+
+.hero-meta-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-text-tertiary);
+}
+
+.hero-meta-value {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+}
+
+.hero-meta-muted .hero-meta-value {
+  color: var(--color-text-tertiary);
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.filters-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.filters-count {
+  margin-left: 8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  background: rgba(15, 118, 110, 0.15);
+  border: 1px solid rgba(15, 118, 110, 0.25);
+}
+
+.filters-popover {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: var(--glass-shadow);
+}
+
+.filters-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.filters-popover-title {
+  font-weight: var(--font-weight-semibold);
+}
+
+.filters-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.filters-popover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.filters-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filters-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-tertiary);
+}
+
+.filters-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: var(--spacing-sm);
+}
+
+.filters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--color-text-secondary);
+  backdrop-filter: blur(14px) saturate(140%);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.filter-chip:hover {
+  color: var(--color-text);
+  border-color: rgba(124, 139, 154, 0.4);
+}
+
+.filter-chip.active {
+  background: rgba(15, 118, 110, 0.16);
+  color: var(--color-primary);
+  border-color: rgba(15, 118, 110, 0.3);
+}
+
+.split-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.55fr);
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.list-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+.map-pane {
+  position: sticky;
+  top: 96px;
+}
+
 .location,
 .mood {
   font-size: var(--font-size-sm);
@@ -609,12 +1046,13 @@ const refreshMapMarkers = () => {
 }
 
 .category-tag {
-  padding: 4px 10px;
+  padding: 6px 12px;
   font-size: 12px;
   border-radius: 999px;
-  background: #f1e6db;
-  color: #7a4f3a;
-  border: 1px solid rgba(122, 79, 58, 0.2);
+  background: var(--tag-bg);
+  color: var(--tag-text);
+  border: 1px solid var(--tag-border);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 
 .list-inline {
@@ -662,13 +1100,21 @@ const refreshMapMarkers = () => {
 
 .activity-map {
   width: 100%;
-  height: 320px;
+  height: 520px;
   border-radius: 16px;
   border: 1px solid #e5e7eb;
   overflow: hidden;
 }
 
 @media (max-width: 768px) {
+  .split-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .map-pane {
+    position: static;
+  }
+
   .activity-map {
     height: 260px;
   }

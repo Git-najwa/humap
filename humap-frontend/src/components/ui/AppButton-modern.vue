@@ -46,14 +46,15 @@ defineEmits(['click'])
 }
 
 .modern-btn-primary {
-  background-color: var(--color-primary);
+  background: linear-gradient(135deg, #0f766e 0%, #0b4f4b 100%);
   color: white;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 12px 24px rgba(15, 118, 110, 0.25);
 }
 
 .modern-btn-primary:hover:not(:disabled) {
   background-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 16px 30px rgba(15, 118, 110, 0.3);
+  transform: translateY(-1px);
 }
 
 .modern-btn-primary:active:not(:disabled) {
@@ -61,13 +62,14 @@ defineEmits(['click'])
 }
 
 .modern-btn-secondary {
-  background-color: #ffffff;
+  background-color: var(--glass-bg);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px) saturate(140%);
 }
 
 .modern-btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-bg-alt);
+  background-color: var(--glass-bg-strong);
   border-color: var(--color-text-tertiary);
 }
 

@@ -71,14 +71,15 @@ defineExpose({ focus })
 .modern-input {
   width: 100%;
   padding: 0.625rem 0.875rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   font-size: var(--font-size-sm);
   font-family: inherit;
-  background-color: #ffffff;
+  background-color: var(--glass-bg-strong);
   color: var(--color-text);
   transition: all var(--transition-fast);
   line-height: 1.5;
+  backdrop-filter: blur(20px) saturate(140%);
 }
 
 .modern-input::placeholder {
@@ -88,7 +89,7 @@ defineExpose({ focus })
 .modern-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
 }
 
 .modern-input:disabled {

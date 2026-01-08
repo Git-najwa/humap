@@ -99,14 +99,15 @@ defineEmits(['click'])
 }
 
 .app-button--secondary {
-  background-color: var(--color-bg-elevated);
+  background-color: var(--glass-bg);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--glass-border);
   box-shadow: none;
+  backdrop-filter: blur(20px) saturate(140%);
 }
 
 .app-button--secondary:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: var(--glass-bg-strong);
   border-color: rgba(124, 139, 154, 0.4);
 }
 
@@ -125,18 +126,18 @@ defineEmits(['click'])
 }
 
 .app-button--ghost:hover:not(:disabled) {
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .app-button--outline {
   background-color: transparent;
   color: #111827;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--glass-border);
 }
 
 .app-button--outline:hover:not(:disabled) {
-  background-color: #f9fafb;
-  border-color: #9ca3af;
+  background-color: var(--glass-bg);
+  border-color: rgba(124, 139, 154, 0.4);
 }
 
 /* Full Width */
