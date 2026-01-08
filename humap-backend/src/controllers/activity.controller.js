@@ -627,6 +627,7 @@ export async function nearbyActivities(req, res, next) {
             type: "Point",
             coordinates: [longitude, latitude],
           },
+          key: "coordinates",
           distanceField: "distance",
           maxDistance: maxDistanceMeters,
           spherical: true,

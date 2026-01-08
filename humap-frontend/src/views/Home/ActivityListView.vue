@@ -6,14 +6,6 @@
         <router-link to="/activities/create">
           <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
         </router-link>
-        <AppButtonModern
-          v-if="authStore.user"
-          variant="secondary"
-          :disabled="isImporting"
-          @click="handleManualImport"
-        >
-          {{ isImporting ? 'Import...' : 'Importer' }}
-        </AppButtonModern>
       </div>
     </header>
 
@@ -92,7 +84,7 @@
             <p class="location text-tertiary"><LocationIcon :size="14" /> {{ activity.location }}</p>
             <p v-if="getMoodLabel(activity)" class="mood text-tertiary">Ambiance : {{ getMoodLabel(activity) }}</p>
             <p v-if="getBudgetLabel(activity.price_range)" class="mood text-tertiary">
-              Budget : {{ getBudgetLabel(activity.price_range) }}
+              {{ activity.source === 'geoapify' ? 'Budget estimé' : 'Budget' }} : {{ getBudgetLabel(activity.price_range) }}
             </p>
           </div>
           <router-link :to="`/activities/${activity._id}`">
@@ -245,6 +237,7 @@ onMounted(async () => {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           userCoords.value = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+          await runAutoImport(userCoords.value)
           if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people.value === null || nb_people.value === '')) {
             usingNearby.value = true
             await activityStore.fetchNearby(userCoords.value.lat, userCoords.value.lon, 15000, 50)
@@ -335,63 +328,36 @@ const addToCustomList = async (activityId) => {
   }
 }
 
-const handleManualImport = async () => {
-  if (isImporting.value) return
-  isImporting.value = true
-  importError.value = ''
-  importNotice.value = ''
-  try {
-    console.log('manual import: start')
-    const importedCount = await runAutoImport()
-    console.log('manual import: done')
-    await activityStore.fetchActivities()
-    if (importedCount === -1) {
-      importNotice.value = 'Import déjà effectué aujourd\'hui.'
-    } else if (importedCount === 0) {
-      importError.value = 'Aucune activité trouvée via Geoapify.'
-    } else if (typeof importedCount === 'number') {
-      importNotice.value = `Import réussi : ${importedCount} activité(s).`
-    }
-  } catch (err) {
-    console.error('manual import failed', err)
-  } finally {
-    isImporting.value = false
-  }
-}
-
-const runAutoImport = async () => {
-  const key = 'humap:external-import'
-  const today = new Date().toISOString().slice(0, 10)
-  if (localStorage.getItem(key) === today) return -1
+const runAutoImport = async (coords) => {
   const token = localStorage.getItem('token')
-  if (!token) {
-    importError.value = 'Connecte-toi pour importer des activités.'
-    return 0
-  }
+  if (!token) return 0
+  if (!coords?.lat || !coords?.lon) return 0
 
-  const defaultLat = 46.5197
-  const defaultLon = 6.6323
-
-  const coords = await new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve({ lat: defaultLat, lon: defaultLon })
-      return
+  const key = 'humap:external-import:coords'
+  const last = localStorage.getItem(key)
+  let shouldImport = true
+  if (last) {
+    try {
+      const parsed = JSON.parse(last)
+      if (parsed?.lat && parsed?.lon) {
+        const km = haversineKm(parsed.lat, parsed.lon, coords.lat, coords.lon)
+        shouldImport = km >= 2
+      }
+    } catch {
+      shouldImport = true
     }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      () => resolve({ lat: defaultLat, lon: defaultLon }),
-      { enableHighAccuracy: true, timeout: 5000 }
-    )
-  })
+  }
+  if (!shouldImport) return 0
 
   try {
     const response = await api.get('/external-activities/geoapify', {
       params: {
         lat: coords.lat,
         lon: coords.lon,
-        radius: 2000,
+        radius: 15000,
         limit: 50,
         save: true,
+        categories: 'tourism,leisure,entertainment,education,commercial,service,accommodation,catering,natural,public_transport',
       },
       headers: {
         Authorization: `Bearer ${token}`,
@@ -399,7 +365,7 @@ const runAutoImport = async () => {
     })
     const items = Array.isArray(response.data?.items) ? response.data.items : []
     if (items.length > 0) {
-      localStorage.setItem(key, today)
+      localStorage.setItem(key, JSON.stringify({ lat: coords.lat, lon: coords.lon }))
     }
     return items.length
   } catch (err) {

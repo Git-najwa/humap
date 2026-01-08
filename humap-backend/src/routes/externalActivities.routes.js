@@ -20,7 +20,7 @@ router.get("/geoapify", auth, async (req, res, next) => {
       lat,
       lon,
       radius = "2000",
-      categories = "tourism.sights,natural,leisure,entertainment",
+      categories = "tourism,leisure,entertainment,education,commercial,service,accommodation,catering,natural,public_transport",
       limit,
       save = "false",
     } = req.query;
@@ -69,12 +69,13 @@ router.get("/geoapify", auth, async (req, res, next) => {
         haystack.includes("gallery") ||
         haystack.includes("theatre") ||
         haystack.includes("cinema") ||
-        haystack.includes("entertainment")
+        haystack.includes("entertainment") ||
+        haystack.includes("sport")
       ) {
         return 1;
       }
       if (haystack.includes("shopping") || haystack.includes("commercial")) return 2;
-      return 1;
+      return null;
     };
     const pickMood = (rawCategories) => {
       const haystack = rawCategories.join(" ").toLowerCase();
@@ -132,11 +133,15 @@ router.get("/geoapify", auth, async (req, res, next) => {
         feature?.properties?.datasource?.raw?.image_thumbnail ||
         null;
 
+      const description =
+        feature?.properties?.description ||
+        (cleanCategories.length ? cleanCategories.join(" • ") : null);
+
       return {
         external_id: feature?.properties?.place_id || null,
         source: "geoapify",
         title: feature?.properties?.name || "Lieu sans nom",
-        description: feature?.properties?.description || null,
+        description,
         location:
           feature?.properties?.address_line1 ||
           feature?.properties?.formatted ||

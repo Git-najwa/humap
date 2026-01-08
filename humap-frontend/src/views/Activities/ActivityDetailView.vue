@@ -49,7 +49,8 @@
               Ambiance : {{ getMoodLabel(activityStore.currentActivity) }}
             </p>
             <p v-if="getBudgetLabel(activityStore.currentActivity.price_range)" class="text-tertiary">
-              Budget : {{ getBudgetLabel(activityStore.currentActivity.price_range) }}
+              {{ activityStore.currentActivity.source === 'geoapify' ? 'Budget estimé' : 'Budget' }} :
+              {{ getBudgetLabel(activityStore.currentActivity.price_range) }}
             </p>
           </div>
         </div>
