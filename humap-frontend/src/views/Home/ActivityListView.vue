@@ -21,6 +21,10 @@
         <div v-if="weatherSummary">
           <p class="hero-meta-label">Météo actuelle</p>
           <p class="hero-meta-value">{{ weatherSummary }}</p>
+          <p class="hero-meta-sub">{{ weatherDetails }}</p>
+          <p v-if="weatherPreferenceLabel" class="hero-meta-chip">
+            Suggestion : {{ weatherPreferenceLabel }}
+          </p>
         </div>
         <div v-else class="hero-meta-muted">
           <p class="hero-meta-label">Météo actuelle</p>
@@ -347,6 +351,18 @@ const weatherSummary = computed(() => {
   return `${label} · ${temp}°C`
 })
 
+const weatherDetails = computed(() => {
+  if (!weather.value) return ''
+  const rain = weather.value.precipitation ?? 0
+  const wind = weather.value.wind ?? 0
+  return `Pluie ${rain.toFixed(1)} mm · Vent ${wind.toFixed(0)} km/h`
+})
+
+const weatherPreferenceLabel = computed(() => {
+  const pref = getWeatherPreference()
+  return pref?.label || ''
+})
+
 onMounted(async () => {
   try {
     await activityStore.fetchActivities()
@@ -533,7 +549,6 @@ const hashString = (value = '') => {
 
 const getExternalPhoto = (activity) => {
   if (activity?.photos?.length) return ''
-  if (activity?.source !== 'geoapify') return ''
   const tags = getCategoryTags(activity)
   const query = encodeURIComponent([activity?.title, tags[0], tags[1]].filter(Boolean).join(','))
   if (!query) return ''
@@ -885,6 +900,25 @@ const refreshMapMarkers = () => {
 .hero-meta-value {
   font-size: 1rem;
   font-weight: var(--font-weight-semibold);
+}
+
+.hero-meta-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.hero-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
 }
 
 .hero-meta-muted .hero-meta-value {

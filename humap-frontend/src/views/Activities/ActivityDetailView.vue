@@ -221,7 +221,6 @@ const hashString = (value = '') => {
 
 const getExternalPhoto = (activity) => {
   if (activity?.photos?.length) return ''
-  if (activity?.source !== 'geoapify') return ''
   const tags = getCategoryTags(activity)
   const query = encodeURIComponent([activity?.title, tags[0], tags[1]].filter(Boolean).join(','))
   if (!query) return ''
