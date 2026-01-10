@@ -148,6 +148,8 @@ router.get("/geoapify", auth, async (req, res, next) => {
           "Lieu",
         mood: pickMood(rawCategories),
         price_range: pickBudget(rawCategories),
+        nb_people_min: 1,
+        nb_people_max: 8,
         categories: cleanCategories,
         photos: image ? [image] : [],
         coordinates: {

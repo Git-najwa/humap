@@ -23,12 +23,12 @@
             />
           </div>
           <div class="pill-divider"></div>
-          <button class="pill-segment" type="button" @click="scrollToChips">
+          <button class="pill-segment pill-desktop-only" type="button" @click="scrollToChips">
             <span class="segment-title">Ambiance</span>
             <span class="segment-value">{{ activeChipLabel }}</span>
           </button>
           <div class="pill-divider"></div>
-          <button class="pill-segment" type="button" @click="openFilters">
+          <button class="pill-segment pill-desktop-only" type="button" @click="openFilters">
             <span class="segment-title">Filtres</span>
             <span class="segment-value">{{ activeFiltersCount ? `${activeFiltersCount} actifs` : 'Aucun' }}</span>
           </button>
@@ -37,6 +37,10 @@
             <span class="pill-search-label">Rechercher</span>
           </button>
         </div>
+        <button class="mobile-filters-button" type="button" @click="openFilters">
+          Filtres
+          <span v-if="activeFiltersCount" class="mobile-filters-count">{{ activeFiltersCount }}</span>
+        </button>
       </div>
 
       <div class="airbnb-status">
@@ -52,6 +56,7 @@
             <span v-if="weatherDetails" class="status-sub">{{ weatherDetails }}</span>
             <span v-if="weatherPreferenceLabel" class="status-chip">{{ weatherPreferenceLabel }}</span>
           </div>
+          <div v-else class="status-item status-muted">Météo indisponible</div>
         </div>
         <div class="status-actions">
           <router-link to="/activities/create">
@@ -71,12 +76,31 @@
           </div>
           <div class="filters-popover-grid">
             <div class="filters-field">
+              <label class="filters-label" for="filter-mood">Ambiance</label>
+              <input
+                id="filter-mood"
+                v-model="mood"
+                class="filters-select"
+                list="filter-mood-options"
+                placeholder="Choisir une ambiance"
+              />
+              <datalist id="filter-mood-options">
+                <option v-for="option in moodOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </option>
+              </datalist>
+            </div>
+            <div class="filters-field">
               <label class="filters-label" for="filter-price">Budget max</label>
               <AppInputModern id="filter-price" v-model.number="price_max" type="number" placeholder="Prix max" />
             </div>
             <div class="filters-field">
-              <label class="filters-label" for="filter-people">Nb personnes</label>
-              <AppInputModern id="filter-people" v-model.number="nb_people" type="number" min="1" placeholder="Nb personnes" />
+              <label class="filters-label" for="filter-people-min">Personnes min</label>
+              <AppInputModern id="filter-people-min" v-model.number="nb_people_min" type="number" min="1" placeholder="Min" />
+            </div>
+            <div class="filters-field">
+              <label class="filters-label" for="filter-people-max">Personnes max</label>
+              <AppInputModern id="filter-people-max" v-model.number="nb_people_max" type="number" min="1" placeholder="Max" />
             </div>
           </div>
           <div class="filters-popover-actions">
@@ -103,6 +127,13 @@
     </section>
 
     <div class="split-layout airbnb-layout">
+      <aside class="map-pane">
+        <section class="map-section">
+          <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
+          <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
+        </section>
+      </aside>
+
       <div class="list-pane">
         <div class="list-head">
           <p class="text-tertiary text-sm">
@@ -196,12 +227,6 @@
         </div>
       </div>
 
-      <aside class="map-pane">
-        <section class="map-section">
-          <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
-          <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
-        </section>
-      </aside>
     </div>
 
   </div>
@@ -235,7 +260,8 @@ const ErrorMessage = ErrorMessageModern
 const q = ref('')
 const mood = ref('')
 const price_max = ref(null)
-const nb_people = ref(null)
+const nb_people_min = ref(null)
+const nb_people_max = ref(null)
 const mapEl = ref(null)
 const mapInstance = ref(null)
 const markerLayer = ref(null)
@@ -248,6 +274,10 @@ const weatherError = ref('')
 const activeChip = ref('all')
 const showFilters = ref(false)
 const chipsEl = ref(null)
+let mapMoveTimer = null
+let suppressMapMove = false
+const lastMapQuery = ref(null)
+const manualMapMove = ref(false)
 
 const hasMapData = computed(() => {
   return activityStore.activities.some(activity => {
@@ -270,6 +300,7 @@ const customLists = computed(() => {
 })
 const selectedListByActivity = ref({})
 const userCoords = ref(null)
+const mapCenter = ref({ lat: 46.5197, lon: 6.6323 })
 const usingNearby = ref(false)
 
 const chipFilters = computed(() => {
@@ -318,7 +349,8 @@ const activeFiltersCount = computed(() => {
   if (q.value) count += 1
   if (mood.value) count += 1
   if (price_max.value !== null && price_max.value !== '') count += 1
-  if (nb_people.value !== null && nb_people.value !== '') count += 1
+  if (nb_people_min.value !== null && nb_people_min.value !== '') count += 1
+  if (nb_people_max.value !== null && nb_people_max.value !== '') count += 1
   if (activeChip.value && activeChip.value !== 'all') count += 1
   return count
 })
@@ -357,13 +389,17 @@ const buildFilters = () => {
   if (q.value) filters.q = q.value
   if (mood.value) filters.mood = mood.value
   if (price_max.value !== null && price_max.value !== '') filters.price_range = price_max.value
-  if (nb_people.value !== null && nb_people.value !== '') filters.nb_people = nb_people.value
+  if (nb_people_min.value !== null && nb_people_min.value !== '') filters.nb_people_min = nb_people_min.value
+  if (nb_people_max.value !== null && nb_people_max.value !== '') filters.nb_people_max = nb_people_max.value
   return filters
 }
 
 const locationLabel = computed(() => {
-  if (!userCoords.value) return 'Autour de vous'
-  return `Lat ${userCoords.value.lat.toFixed(3)} · Lon ${userCoords.value.lon.toFixed(3)}`
+  if (userCoords.value) {
+    return `Autour de vous · Lat ${userCoords.value.lat.toFixed(3)} · Lon ${userCoords.value.lon.toFixed(3)}`
+  }
+  if (!mapCenter.value) return 'Autour de vous'
+  return `Lat ${mapCenter.value.lat.toFixed(3)} · Lon ${mapCenter.value.lon.toFixed(3)}`
 })
 
 const weatherSummary = computed(() => {
@@ -399,11 +435,13 @@ onMounted(async () => {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           userCoords.value = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+          mapCenter.value = { lat: userCoords.value.lat, lon: userCoords.value.lon }
           await fetchWeather(userCoords.value.lat, userCoords.value.lon)
           await runAutoImport(userCoords.value)
-          if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people.value === null || nb_people.value === '')) {
+          if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people_min.value === null || nb_people_min.value === '') && (nb_people_max.value === null || nb_people_max.value === '')) {
             usingNearby.value = true
             await activityStore.fetchNearby(userCoords.value.lat, userCoords.value.lon, 15000, 50)
+            lastMapQuery.value = { lat: userCoords.value.lat, lng: userCoords.value.lon, zoom: 12 }
           }
         },
         () => {
@@ -413,6 +451,9 @@ onMounted(async () => {
       )
     }
     initMap()
+    if (!weather.value && mapCenter.value) {
+      await fetchWeather(mapCenter.value.lat, mapCenter.value.lon)
+    }
     refreshMapMarkers()
   } catch (err) {
     console.error(err)
@@ -420,6 +461,10 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  if (mapMoveTimer) {
+    clearTimeout(mapMoveTimer)
+    mapMoveTimer = null
+  }
   if (mapInstance.value) {
     mapInstance.value.closePopup()
     mapInstance.value.remove()
@@ -440,7 +485,8 @@ const resetFilters = async () => {
   q.value = ''
   mood.value = ''
   price_max.value = null
-  nb_people.value = null
+  nb_people_min.value = null
+  nb_people_max.value = null
   try {
     if (userCoords.value) {
       usingNearby.value = true
@@ -483,26 +529,29 @@ const addToCustomList = async (activityId) => {
   }
 }
 
-const runAutoImport = async (coords) => {
+const runAutoImport = async (coords, options = {}) => {
   const token = localStorage.getItem('token')
   if (!token) return 0
   if (!coords?.lat || !coords?.lon) return 0
+  const force = Boolean(options.force || coords?.force)
 
   const key = 'humap:external-import:coords'
   const last = localStorage.getItem(key)
-  let shouldImport = true
-  if (last) {
-    try {
-      const parsed = JSON.parse(last)
-      if (parsed?.lat && parsed?.lon) {
-        const km = haversineKm(parsed.lat, parsed.lon, coords.lat, coords.lon)
-        shouldImport = km >= 2
+  if (!force) {
+    let shouldImport = true
+    if (last) {
+      try {
+        const parsed = JSON.parse(last)
+        if (parsed?.lat && parsed?.lon) {
+          const km = haversineKm(parsed.lat, parsed.lon, coords.lat, coords.lon)
+          shouldImport = km >= 2
+        }
+      } catch {
+        shouldImport = true
       }
-    } catch {
-      shouldImport = true
     }
+    if (!shouldImport) return 0
   }
-  if (!shouldImport) return 0
 
   try {
     const response = await api.get('/external-activities/geoapify', {
@@ -657,6 +706,7 @@ const fetchWeather = async (lat, lon) => {
     const current = data?.current
     if (!current) {
       weather.value = null
+      weatherError.value = 'Météo indisponible'
       return
     }
     weather.value = {
@@ -789,16 +839,66 @@ const initMap = () => {
   if (!mapEl.value || mapInstance.value) return
   const { L } = window
   if (!L) return
+  const initialCenter = mapCenter.value || { lat: 46.5197, lon: 6.6323 }
   mapInstance.value = L.map(mapEl.value, {
     zoomControl: true,
     scrollWheelZoom: false,
-  }).setView([46.5197, 6.6323], 12)
+  }).setView([initialCenter.lat, initialCenter.lon], 12)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(mapInstance.value)
 
   markerLayer.value = L.layerGroup().addTo(mapInstance.value)
+  mapInstance.value.on('moveend', handleMapMove)
+}
+
+const handleMapMove = () => {
+  if (suppressMapMove || !mapInstance.value) return
+  clearTimeout(mapMoveTimer)
+  mapMoveTimer = setTimeout(async () => {
+    try {
+      if (!mapInstance.value) return
+      const center = mapInstance.value.getCenter()
+      const bounds = mapInstance.value.getBounds()
+      const zoom = mapInstance.value.getZoom()
+      if (lastMapQuery.value) {
+        const movedKm = haversineKm(
+          lastMapQuery.value.lat,
+          lastMapQuery.value.lng,
+          center.lat,
+          center.lng
+        )
+        if (movedKm < 0.2 && lastMapQuery.value.zoom === zoom) {
+          return
+        }
+      }
+      lastMapQuery.value = { lat: center.lat, lng: center.lng, zoom }
+      mapCenter.value = { lat: center.lat, lon: center.lng }
+      await fetchWeather(center.lat, center.lng)
+      manualMapMove.value = true
+      const token = localStorage.getItem('token')
+      if (token) {
+        await runAutoImport({ lat: center.lat, lon: center.lng }, { force: true })
+      }
+      usingNearby.value = true
+      const sw = bounds.getSouthWest()
+      const ne = bounds.getNorthEast()
+      const bbox = [sw.lng, sw.lat, ne.lng, ne.lat].join(',')
+      await activityStore.fetchWithinBounds(bbox, 50)
+    } catch (err) {
+      console.error(err)
+    }
+  }, 400)
+}
+
+const setMapView = (lat, lon, zoom = 12) => {
+  if (!mapInstance.value) return
+  suppressMapMove = true
+  mapInstance.value.setView([lat, lon], zoom, { animate: false })
+  setTimeout(() => {
+    suppressMapMove = false
+  }, 200)
 }
 
 const refreshMapMarkers = () => {
@@ -815,7 +915,9 @@ const refreshMapMarkers = () => {
       fillOpacity: 0.9,
     }).addTo(markerLayer.value)
     userMarker.bindPopup('Vous êtes ici')
-    mapInstance.value.setView([userCoords.value.lat, userCoords.value.lon], 12, { animate: false })
+    if (!lastMapQuery.value && !manualMapMove.value) {
+      setMapView(userCoords.value.lat, userCoords.value.lon, 12)
+    }
   }
 
   const points = visibleActivities.value
@@ -850,7 +952,7 @@ const refreshMapMarkers = () => {
     bounds.push([point.lat, point.lng])
   })
 
-  if (!userCoords.value) {
+  if (!userCoords.value && !manualMapMove.value) {
     if (bounds.length === 1) {
       mapInstance.value.setView(bounds[0], 13, { animate: false })
     } else {
@@ -957,28 +1059,58 @@ const refreshMapMarkers = () => {
 
 .activity-list-container {
   display: block;
-  height: auto;
-  overflow: visible;
+  height: 100vh;
+  overflow: hidden;
+  --map-offset: 190px;
+  --page-max-width: 1320px;
 }
 
 .airbnb-topbar {
   position: sticky;
-  top: 60px;
+  top: 72px;
   z-index: 8;
   background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(18px) saturate(140%);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
   flex-shrink: 0;
+  padding-top: 0;
 }
 
 .airbnb-topbar-inner {
-  max-width: 1280px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 16px 24px 10px;
+  padding: 10px 24px 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.mobile-filters-button {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  font-weight: 600;
+  color: var(--color-text);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+}
+
+.mobile-filters-count {
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #0f766e;
+  color: #fff;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
 }
 
 .search-pill {
@@ -991,6 +1123,7 @@ const refreshMapMarkers = () => {
   border: 1px solid rgba(15, 23, 42, 0.12);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   flex: 1 1 820px;
+  max-width: 980px;
 }
 
 .pill-segment {
@@ -1062,7 +1195,7 @@ const refreshMapMarkers = () => {
 }
 
 .airbnb-status {
-  max-width: 1280px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
   padding: 0 24px 12px;
   display: flex;
@@ -1187,7 +1320,7 @@ const refreshMapMarkers = () => {
 
 .filters-chips-wrap {
   position: relative;
-  max-width: 1280px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
   padding: 0 24px 12px;
 }
@@ -1244,30 +1377,42 @@ const refreshMapMarkers = () => {
 }
 
 .airbnb-layout {
-  max-width: 100%;
+  max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 24px 40px;
+  padding: 0 24px 24px;
+  height: calc(100vh - var(--map-offset));
 }
 
 .split-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-areas: "list map";
   gap: 32px;
-  align-items: start;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
 }
 
 .list-pane {
   display: flex;
   flex-direction: column;
+  grid-area: list;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 12px;
+  padding-bottom: 32px;
 }
 
 .map-pane {
   position: sticky;
-  top: 220px;
+  top: var(--map-offset);
+  align-self: start;
+  grid-area: map;
+  height: 100%;
 }
 
 .map-section {
-  height: calc(100vh - 260px);
+  height: 100%;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(15, 23, 42, 0.12);
@@ -1360,16 +1505,77 @@ const refreshMapMarkers = () => {
 }
 
 @media (max-width: 768px) {
+  .airbnb-topbar-inner {
+    padding: 12px 16px 8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .search-pill {
+    width: 100%;
+    max-width: 100%;
+    padding: 4px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    border-radius: 20px;
+    flex: none;
+  }
+
+  .pill-segment {
+    min-width: 0;
+    padding: 6px 10px;
+    width: 100%;
+  }
+
+  .pill-divider {
+    display: none;
+  }
+
+  .pill-desktop-only {
+    display: none;
+  }
+
+  .pill-search {
+    height: 40px;
+    padding: 0 14px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobile-filters-button {
+    display: inline-flex;
+  }
+
+  .airbnb-status {
+    padding: 0 16px 10px;
+  }
+
+  .airbnb-layout {
+    padding: 0 16px 32px;
+    height: auto;
+  }
+
   .split-layout {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "list";
+    height: auto;
   }
 
   .map-pane {
-    position: static;
+    display: none;
   }
 
-  .map-section {
-    height: 260px;
+  .list-pane {
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .activity-list-container {
+    height: auto;
+    overflow: visible;
   }
 }
 </style>

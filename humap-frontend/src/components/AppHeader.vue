@@ -2,8 +2,7 @@
   <header class="app-header">
     <div class="header-left">
       <router-link to="/" class="logo">
-        <span class="logo-icon">H</span>
-        <span class="logo-text">HUMAP</span>
+        <img class="logo-image" src="/humap-logo.png" alt="HUMAP" />
       </router-link>
     </div>
 
@@ -144,24 +143,10 @@ onMounted(async () => {
   text-decoration: none;
 }
 
-.logo-icon {
-  width: 34px;
-  height: 34px;
-  background-color: var(--color-primary);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.logo-text {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--color-text);
-  letter-spacing: -0.025em;
+.logo-image {
+  height: 100px;
+  width: auto;
+  display: block;
 }
 
 .header-nav {
@@ -351,14 +336,8 @@ onMounted(async () => {
     height: 52px;
   }
 
-  .logo-icon {
-    width: 30px;
-    height: 30px;
-    font-size: 0.875rem;
-  }
-
-  .logo-text {
-    display: none;
+  .logo-image {
+    height: 56px;
   }
 
   /* Hide desktop nav on mobile */

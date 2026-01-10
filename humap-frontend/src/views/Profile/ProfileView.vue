@@ -271,16 +271,16 @@ onMounted(() => {
 
 <style scoped>
 .profile-container {
-  padding: 2rem 1rem;
-  max-width: 640px;
+  padding: 2.5rem 1.5rem;
+  max-width: 760px;
   margin: 0 auto;
 }
 
 .profile-card {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   overflow: hidden;
 }
 
@@ -293,9 +293,9 @@ onMounted(() => {
 /* Header */
 
 .profile-header {
-  padding: 2rem;
+  padding: 2.5rem 2rem 2rem;
   text-align: center;
-  background: var(--color-bg-alt);
+  background: rgba(246, 241, 234, 0.7);
   color: var(--color-text);
 }
 
@@ -365,43 +365,35 @@ onMounted(() => {
 
 /* Content sections */
 .profile-content {
-  padding: 1.5rem;
+  padding: 2rem;
 }
 
 .section-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #374151;
+  font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.16em;
   margin: 0;
-  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
-  color: var(--color-text);
+  color: var(--color-text-tertiary);
 }
 
-  .info-section {
-    margin: 0.25rem 0 0;
-    color: var(--color-text-tertiary);
-    font-size: var(--font-size-sm);
-  }
+.info-section {
+  margin-top: 1.5rem;
+}
 
-  .info-grid {
-    display: grid;
-    gap: 1rem;
-  }
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 2rem;
+  margin-top: 1rem;
+}
 
-  .info-item {
+.info-item {
   display: flex;
-  justify-content: space-between;
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 1.25rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--color-border);
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
 }
 
 .info-item:last-child {
@@ -409,32 +401,35 @@ onMounted(() => {
 }
 
 .info-label {
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 
 .info-value {
-  color: #111827;
-  font-weight: 500;
-  font-size: 0.875rem;
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+  font-size: 1rem;
 }
 
 /* Stats */
 .stats-section {
-  margin-bottom: 2rem;
+  margin: 2rem 0;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 1rem;
+  margin-top: 1rem;
 }
 
 .stat-card {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
   text-align: center;
 }
 
@@ -455,11 +450,12 @@ onMounted(() => {
 /* Actions */
 .actions-section {
   text-align: center;
+  margin-top: 1.5rem;
 }
 
 /* Edit form */
 .edit-form {
-  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  padding: 2rem;
 }
 
 .form-group {
@@ -501,9 +497,9 @@ onMounted(() => {
 
 /* Danger zone */
 .danger-section {
-  padding: 2rem 1.5rem 1.5rem 1.5rem;
-  background: #fef2f2;
-  border-top: 1px solid #fecaca;
+  padding: 2rem;
+  background: rgba(254, 242, 242, 0.8);
+  border-top: 1px solid rgba(248, 113, 113, 0.3);
 }
 
 .danger-title {
@@ -522,7 +518,7 @@ onMounted(() => {
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  margin: 1rem 1.5rem 0;
+  margin: 1rem 2rem 0;
   background-color: #ecfdf5;
   border: 1px solid #a7f3d0;
   border-radius: 8px;
@@ -539,7 +535,7 @@ onMounted(() => {
 /* Responsive */
 @media (max-width: 640px) {
   .profile-container {
-    padding: 0.75rem 0.5rem;
+    padding: 1rem 0.75rem;
   }
 
   .profile-header {
@@ -559,7 +555,7 @@ onMounted(() => {
   .profile-content,
   .edit-form,
   .danger-section {
-    padding: 0.75rem 0.75rem 1rem 0.75rem;
+    padding: 1.25rem;
   }
 
   .form-actions {
@@ -590,3 +586,6 @@ onMounted(() => {
   }
 }
 </style>
+  .info-grid {
+    grid-template-columns: 1fr;
+  }

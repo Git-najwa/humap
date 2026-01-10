@@ -31,8 +31,18 @@ export async function listActivities(req, res, next) {
     if (req.query.nb_people !== undefined) {
       const nbPeople = parseInt(req.query.nb_people);
       if (!Number.isNaN(nbPeople)) {
-        query.nb_people = nbPeople;
+        query.$or = [
+          { nb_people: nbPeople },
+          { nb_people_min: { $lte: nbPeople }, nb_people_max: { $gte: nbPeople } },
+        ];
       }
+    }
+
+    if (req.query.nb_people_min !== undefined || req.query.nb_people_max !== undefined) {
+      const minPeople = parseInt(req.query.nb_people_min);
+      const maxPeople = parseInt(req.query.nb_people_max);
+      if (!Number.isNaN(minPeople)) query.nb_people_min = { $gte: minPeople };
+      if (!Number.isNaN(maxPeople)) query.nb_people_max = { $lte: maxPeople };
     }
 
     if (req.query.day) {
@@ -332,6 +342,9 @@ export async function topRatedActivities(req, res, next) {
           price_range: 1,
           avgRating: 1,
           nbReviews: 1,
+          nb_people: 1,
+          nb_people_min: 1,
+          nb_people_max: 1,
           source: 1,
         },
       },
@@ -608,7 +621,74 @@ export async function statsByUser(req, res, next) {
 // 5️⃣ NEARBY ACTIVITIES (GEOSPATIAL)
 export async function nearbyActivities(req, res, next) {
   try {
-    const { lat, lng, radius, limit, distance } = req.query;
+    const { lat, lng, radius, limit, distance, bbox } = req.query;
+
+    const maxResults = Math.min(parseInt(limit, 10) || 10, 100);
+
+    if (bbox) {
+      const parts = String(bbox).split(',').map((v) => parseFloat(v));
+      if (parts.length !== 4 || parts.some((v) => Number.isNaN(v))) {
+        return res.status(400).json({ error: "bbox must be minLng,minLat,maxLng,maxLat" });
+      }
+      const [minLng, minLat, maxLng, maxLat] = parts;
+      const nearby = await Activity.aggregate([
+        {
+          $match: {
+            coordinates: {
+              $geoWithin: {
+                $box: [
+                  [minLng, minLat],
+                  [maxLng, maxLat],
+                ],
+              },
+            },
+          },
+        },
+        {
+          $lookup: {
+            from: "reviews",
+            localField: "_id",
+            foreignField: "activity_id",
+            as: "reviews",
+          },
+        },
+        {
+          $addFields: {
+            avgRating: {
+              $cond: [
+                { $gt: [{ $size: "$reviews" }, 0] },
+                { $avg: "$reviews.ranking" },
+                0,
+              ],
+            },
+            nbReviews: { $size: "$reviews" },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            location: 1,
+            mood: 1,
+            price_range: 1,
+            categories: 1,
+            photos: 1,
+            coordinates: 1,
+            distance: { $literal: null },
+            avgRating: { $round: ["$avgRating", 1] },
+            nbReviews: 1,
+            nb_people: 1,
+            nb_people_min: 1,
+            nb_people_max: 1,
+            source: 1,
+          },
+        },
+        { $limit: maxResults },
+      ]);
+
+      return ok(res, { items: nearby });
+    }
 
     if (!lat || !lng) {
       return res.status(400).json({ error: "lat and lng are required" });
@@ -616,7 +696,6 @@ export async function nearbyActivities(req, res, next) {
 
     const fallbackKm = parseInt(distance, 10) || 5;
     const maxDistanceMeters = radius ? parseInt(radius, 10) : fallbackKm * 1000;
-    const maxResults = Math.min(parseInt(limit, 10) || 10, 100);
     const longitude = parseFloat(lng);
     const latitude = parseFloat(lat);
 
@@ -667,6 +746,9 @@ export async function nearbyActivities(req, res, next) {
           distance: { $round: ["$distance", 1] },
           avgRating: { $round: ["$avgRating", 1] },
           nbReviews: 1,
+          nb_people: 1,
+          nb_people_min: 1,
+          nb_people_max: 1,
           source: 1,
         },
       },
@@ -692,8 +774,16 @@ export async function recommendations(req, res, next) {
     const latitude = parseFloat(lat);
 
     const match = {};
-    if (mood) match.mood = mood;
-    if (nb_people) match.nb_people = parseInt(nb_people, 10);
+        if (mood) match.mood = mood;
+        if (nb_people) {
+          const nbPeople = parseInt(nb_people, 10);
+          if (!Number.isNaN(nbPeople)) {
+            match.$or = [
+              { nb_people: nbPeople },
+              { nb_people_min: { $lte: nbPeople }, nb_people_max: { $gte: nbPeople } },
+            ];
+          }
+        }
     if (price_max) match.price_range = { $lte: parseInt(price_max, 10) };
     if (hours) match.hours = { $lte: parseInt(hours, 10) };
     if (day) match.day = { $regex: day, $options: "i" };
@@ -702,6 +792,7 @@ export async function recommendations(req, res, next) {
       {
         $geoNear: {
           near: { type: "Point", coordinates: [longitude, latitude] },
+          key: "coordinates",
           distanceField: "distance",
           maxDistance,
           spherical: true,

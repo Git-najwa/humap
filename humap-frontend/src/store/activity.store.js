@@ -92,6 +92,35 @@ export const useActivityStore = defineStore('activity', () => {
     }
   }
 
+  const fetchWithinBounds = async (bbox, limit = 50) => {
+    isLoading.value = true
+    error.value = null
+    try {
+      const response = await activityService.getNearby(null, null, null, limit, bbox)
+      activities.value = response.data.items || []
+      pagination.value = {
+        page: 1,
+        limit,
+        total: activities.value.length,
+        totalPages: 1,
+      }
+      filters.value = {}
+      return response.data
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Erreur lors de la récupération des activités'
+      activities.value = []
+      pagination.value = {
+        page: 1,
+        limit,
+        total: 0,
+        totalPages: 1,
+      }
+      throw error.value
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const createActivity = async (data) => {
     isLoading.value = true
     error.value = null
@@ -241,6 +270,7 @@ export const useActivityStore = defineStore('activity', () => {
     filters,
     fetchActivities,
     fetchNearby,
+    fetchWithinBounds,
     applyFilters,
     goToPage,
     setLimit,

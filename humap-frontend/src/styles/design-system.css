@@ -37,8 +37,8 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
   
   /* Typography - improved */
-  --font-family: "Manrope", "Segoe UI", sans-serif;
-  --font-family-display: "Playfair Display", "Georgia", serif;
+  --font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-family-display: "Space Grotesk", "Segoe UI", sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
