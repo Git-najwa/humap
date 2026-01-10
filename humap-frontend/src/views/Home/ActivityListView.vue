@@ -1,38 +1,5 @@
 <template>
   <div class="activity-list-container">
-    <header class="hero container">
-      <div class="hero-content">
-        <div>
-          <p class="hero-eyebrow">Découvrir</p>
-          <h1 class="hero-title">Des activités locales</h1>
-          <p class="text-secondary hero-subtitle">Trouvez des idées adaptées à votre mood et à la météo du jour.</p>
-        </div>
-        <div class="hero-actions">
-          <router-link to="/activities/create">
-            <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
-          </router-link>
-        </div>
-      </div>
-      <div class="hero-meta card">
-        <div>
-          <p class="hero-meta-label">Position</p>
-          <p class="hero-meta-value">{{ locationLabel }}</p>
-        </div>
-        <div v-if="weatherSummary">
-          <p class="hero-meta-label">Météo actuelle</p>
-          <p class="hero-meta-value">{{ weatherSummary }}</p>
-          <p class="hero-meta-sub">{{ weatherDetails }}</p>
-          <p v-if="weatherPreferenceLabel" class="hero-meta-chip">
-            Suggestion : {{ weatherPreferenceLabel }}
-          </p>
-        </div>
-        <div v-else class="hero-meta-muted">
-          <p class="hero-meta-label">Météo actuelle</p>
-          <p class="hero-meta-value">En attente…</p>
-        </div>
-      </div>
-    </header>
-
     <div v-if="importError" class="container" style="margin-bottom:var(--spacing-md);color:#dc2626">
       {{ importError }}
     </div>
@@ -43,58 +10,105 @@
     <!-- Error Message -->
     <ErrorMessage :message="activityStore.error" />
 
-    <section class="filters container card">
-      <div class="filters-row">
-        <AppInputModern v-model="q" placeholder="Recherche une activité, un lieu..." />
-        <div class="filters-actions">
-          <AppButtonModern variant="secondary" @click="toggleFilters">
-            Filtres
-            <span v-if="activeFiltersCount" class="filters-count">{{ activeFiltersCount }}</span>
-          </AppButtonModern>
-          <AppButtonModern variant="primary" @click="applyFilters">Rechercher</AppButtonModern>
+    <section class="airbnb-topbar">
+      <div class="airbnb-topbar-inner">
+        <div class="search-pill">
+          <div class="pill-segment pill-segment-input">
+            <span class="segment-title">Activité</span>
+            <input
+              v-model="q"
+              class="pill-input"
+              placeholder="Ville, activité..."
+              aria-label="Recherche"
+            />
+          </div>
+          <div class="pill-divider"></div>
+          <button class="pill-segment" type="button" @click="scrollToChips">
+            <span class="segment-title">Ambiance</span>
+            <span class="segment-value">{{ activeChipLabel }}</span>
+          </button>
+          <div class="pill-divider"></div>
+          <button class="pill-segment" type="button" @click="openFilters">
+            <span class="segment-title">Filtres</span>
+            <span class="segment-value">{{ activeFiltersCount ? `${activeFiltersCount} actifs` : 'Aucun' }}</span>
+          </button>
+          <button class="pill-search" type="button" aria-label="Rechercher" @click="applyFilters">
+            <span class="pill-search-icon">🔍</span>
+            <span class="pill-search-label">Rechercher</span>
+          </button>
         </div>
       </div>
 
-      <div v-if="showFilters" class="filters-popover">
-        <div class="filters-popover-header">
-          <div>
-            <p class="filters-popover-title">Filtres avancés</p>
-            <p class="text-tertiary text-sm">Affinez votre recherche.</p>
+      <div class="airbnb-status">
+        <div class="status-left">
+          <div class="status-item">
+            <LocationIcon :size="16" />
+            <span>{{ locationLabel }}</span>
           </div>
-          <button class="filters-close" type="button" @click="showFilters = false">×</button>
-        </div>
-        <div class="filters-popover-grid">
-          <div class="filters-field">
-            <label class="filters-label" for="filter-price">Budget max</label>
-            <AppInputModern id="filter-price" v-model.number="price_max" type="number" placeholder="Prix max" />
-          </div>
-          <div class="filters-field">
-            <label class="filters-label" for="filter-people">Nb personnes</label>
-            <AppInputModern id="filter-people" v-model.number="nb_people" type="number" placeholder="Nb personnes" />
+          <div v-if="weatherLoading" class="status-item status-muted">Météo en cours...</div>
+          <div v-else-if="weatherError" class="status-item status-muted">Météo indisponible</div>
+          <div v-else-if="weatherSummary" class="status-item">
+            <span class="status-label">{{ weatherSummary }}</span>
+            <span v-if="weatherDetails" class="status-sub">{{ weatherDetails }}</span>
+            <span v-if="weatherPreferenceLabel" class="status-chip">{{ weatherPreferenceLabel }}</span>
           </div>
         </div>
-        <div class="filters-popover-actions">
-          <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
-          <AppButtonModern variant="primary" @click="applyFilters">Appliquer</AppButtonModern>
+        <div class="status-actions">
+          <router-link to="/activities/create">
+            <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
+          </router-link>
         </div>
       </div>
 
-      <div class="filters-chips">
-        <button
-          v-for="chip in chipFilters"
-          :key="chip.key"
-          type="button"
-          class="filter-chip"
-          :class="{ active: activeChip === chip.key }"
-          @click="setChip(chip)"
-        >
-          {{ chip.label }}
-        </button>
+      <div v-if="showFilters" class="filters-modal">
+        <div class="filters-modal-card">
+          <div class="filters-popover-header">
+            <div>
+              <p class="filters-popover-title">Filtres</p>
+              <p class="text-tertiary text-sm">Affinez votre recherche.</p>
+            </div>
+            <button class="filters-close" type="button" @click="showFilters = false">×</button>
+          </div>
+          <div class="filters-popover-grid">
+            <div class="filters-field">
+              <label class="filters-label" for="filter-price">Budget max</label>
+              <AppInputModern id="filter-price" v-model.number="price_max" type="number" placeholder="Prix max" />
+            </div>
+            <div class="filters-field">
+              <label class="filters-label" for="filter-people">Nb personnes</label>
+              <AppInputModern id="filter-people" v-model.number="nb_people" type="number" min="1" placeholder="Nb personnes" />
+            </div>
+          </div>
+          <div class="filters-popover-actions">
+            <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
+            <AppButtonModern variant="primary" @click="applyFilters">Appliquer</AppButtonModern>
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-chips-wrap" ref="chipsEl">
+        <div class="filters-chips airbnb-chips">
+          <button
+            v-for="chip in chipFilters"
+            :key="chip.key"
+            type="button"
+            class="filter-chip"
+            :class="{ active: activeChip === chip.key }"
+            @click="setChip(chip)"
+          >
+            {{ chip.label }}
+          </button>
+        </div>
       </div>
     </section>
 
-    <div class="split-layout container">
+    <div class="split-layout airbnb-layout">
       <div class="list-pane">
+        <div class="list-head">
+          <p class="text-tertiary text-sm">
+            {{ pagination.total || activityStore.activities.length }} activités
+          </p>
+        </div>
         <div v-if="activityStore.isLoading" class="loading">Chargement des activités...</div>
 
         <!-- Empty State -->
@@ -109,7 +123,7 @@
         </div>
 
         <div v-else class="activities-grid">
-          <div v-for="activity in sortedActivities" :key="activity._id" class="card activity-card" style="position:relative;">
+          <div v-for="activity in sortedActivities" :key="activity._id" class="activity-card" style="position:relative;">
         <button class="favorite-badge" @click.prevent="toggleFavorite(activity._id)">
           <StarFilledIcon v-if="isFavorited(activity._id)" :size="20" color="#F59E0B" />
           <StarEmptyIcon v-else :size="20" color="#6B7280" />
@@ -183,14 +197,8 @@
       </div>
 
       <aside class="map-pane">
-        <section class="map-section card">
-          <div class="map-header">
-            <div>
-              <h2 class="text-xl font-semibold">Carte des activités</h2>
-              <p class="text-tertiary">Explorez les activités proches.</p>
-            </div>
-            <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
-          </div>
+        <section class="map-section">
+          <div v-if="!hasMapData" class="map-empty">Aucune activité géolocalisée.</div>
           <div ref="mapEl" class="activity-map" aria-label="Carte des activités"></div>
         </section>
       </aside>
@@ -239,6 +247,7 @@ const weatherLoading = ref(false)
 const weatherError = ref('')
 const activeChip = ref('all')
 const showFilters = ref(false)
+const chipsEl = ref(null)
 
 const hasMapData = computed(() => {
   return activityStore.activities.some(activity => {
@@ -295,6 +304,15 @@ const toggleFilters = () => {
   showFilters.value = !showFilters.value
 }
 
+const openFilters = () => {
+  showFilters.value = true
+}
+
+const scrollToChips = () => {
+  if (!chipsEl.value) return
+  chipsEl.value.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+}
+
 const activeFiltersCount = computed(() => {
   let count = 0
   if (q.value) count += 1
@@ -303,6 +321,11 @@ const activeFiltersCount = computed(() => {
   if (nb_people.value !== null && nb_people.value !== '') count += 1
   if (activeChip.value && activeChip.value !== 'all') count += 1
   return count
+})
+
+const activeChipLabel = computed(() => {
+  const chip = chipFilters.value.find((entry) => entry.key === activeChip.value)
+  return chip?.label || 'Tout'
 })
 
 const moodOptions = computed(() => {
@@ -840,8 +863,8 @@ const refreshMapMarkers = () => {
 <style scoped>
 .activities-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .hero {
@@ -928,47 +951,188 @@ const refreshMapMarkers = () => {
 .filters {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  gap: 10px;
   margin-bottom: var(--spacing-lg);
 }
 
-.filters-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
+.activity-list-container {
+  display: block;
+  height: auto;
+  overflow: visible;
 }
 
-.filters-actions {
-  display: flex;
-  gap: 8px;
-  margin-left: auto;
+.airbnb-topbar {
+  position: sticky;
+  top: 60px;
+  z-index: 8;
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  flex-shrink: 0;
 }
 
-.filters-count {
-  margin-left: 8px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  display: inline-flex;
+.airbnb-topbar-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 24px 10px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-primary);
-  background: rgba(15, 118, 110, 0.15);
-  border: 1px solid rgba(15, 118, 110, 0.25);
 }
 
-.filters-popover {
-  margin-top: var(--spacing-sm);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-xl);
-  background: var(--glass-bg-strong);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(22px) saturate(140%);
-  box-shadow: var(--glass-shadow);
+.search-pill {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 6px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  flex: 1 1 820px;
+}
+
+.pill-segment {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 18px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.pill-segment-input {
+  flex: 1 1 auto;
+  min-width: 220px;
+}
+
+.pill-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.98rem;
+  color: var(--color-text);
+}
+
+.pill-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.segment-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-text-tertiary);
+}
+
+.segment-value {
+  font-size: 0.96rem;
+  color: var(--color-text);
+}
+
+.pill-search {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  background: #0f766e;
+  color: #fff;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+}
+
+.pill-search-icon {
+  font-size: 1rem;
+}
+
+.pill-search-label {
+  font-size: 0.9rem;
+}
+
+.airbnb-status {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+}
+
+.status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.status-muted {
+  color: var(--color-text-tertiary);
+}
+
+.status-label {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.status-sub {
+  color: var(--color-text-tertiary);
+  margin-left: 6px;
+}
+
+.status-chip {
+  margin-left: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.12);
+  color: #0f766e;
+  font-size: 0.75rem;
+  border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.status-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filters-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 2000;
+}
+
+.filters-modal-card {
+  width: min(720px, 92vw);
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
 }
 
 .filters-popover-header {
@@ -986,8 +1150,8 @@ const refreshMapMarkers = () => {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: var(--glass-bg);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
@@ -1021,13 +1185,38 @@ const refreshMapMarkers = () => {
   margin-top: var(--spacing-sm);
 }
 
+.filters-chips-wrap {
+  position: relative;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 12px;
+}
+
 .filters-chips {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-behavior: smooth;
+}
+
+.filters-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.filters-chips-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 36px;
+  height: 100%;
+  background: linear-gradient(270deg, rgba(246, 241, 234, 1), rgba(246, 241, 234, 0));
+  pointer-events: none;
 }
 
 .filter-chip {
+  flex: 0 0 auto;
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 0.8rem;
@@ -1050,10 +1239,20 @@ const refreshMapMarkers = () => {
   border-color: rgba(15, 118, 110, 0.3);
 }
 
+.list-head {
+  margin: 8px 0 16px;
+}
+
+.airbnb-layout {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+}
+
 .split-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.55fr);
-  gap: var(--spacing-lg);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 32px;
   align-items: start;
 }
 
@@ -1064,7 +1263,66 @@ const refreshMapMarkers = () => {
 
 .map-pane {
   position: sticky;
-  top: 96px;
+  top: 220px;
+}
+
+.map-section {
+  height: calc(100vh - 260px);
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  position: relative;
+}
+
+.map-empty {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.activity-map {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.activity-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.activity-card h3 {
+  font-size: 1rem;
+  margin-top: 8px;
+}
+
+.activity-card .text-secondary {
+  font-size: 0.9rem;
+}
+
+.activity-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.favorite-badge {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  backdrop-filter: none;
 }
 
 .location,
@@ -1101,45 +1359,6 @@ const refreshMapMarkers = () => {
   min-width: 180px;
 }
 
-.activity-image {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 12px;
-  margin-bottom: 12px;
-  border: 1px solid #e5e7eb;
-}
-
-.map-section {
-  margin-bottom: var(--spacing-lg);
-}
-
-.map-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-  gap: var(--spacing-md);
-}
-
-.map-empty {
-  font-size: 0.875rem;
-  color: var(--color-text-tertiary, #6b7280);
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  padding: 0.375rem 0.75rem;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
-.activity-map {
-  width: 100%;
-  height: 520px;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
-  overflow: hidden;
-}
-
 @media (max-width: 768px) {
   .split-layout {
     grid-template-columns: 1fr;
@@ -1149,7 +1368,7 @@ const refreshMapMarkers = () => {
     position: static;
   }
 
-  .activity-map {
+  .map-section {
     height: 260px;
   }
 }

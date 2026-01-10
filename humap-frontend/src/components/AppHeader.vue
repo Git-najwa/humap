@@ -126,12 +126,15 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1.5rem;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.22);
-  border-bottom: 1px solid var(--glass-border);
-  backdrop-filter: blur(26px) saturate(140%);
-  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  padding: 0 2rem;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(24px) saturate(140%);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
 }
 
 .header-left .logo {
