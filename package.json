@@ -9,5 +9,9 @@
   "scripts": {
     "start": "npm --prefix humap-backend start",
     "test": "npm --prefix humap-backend test"
+  },
+  "dependencies": {
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   }
 }
