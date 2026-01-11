@@ -1337,7 +1337,7 @@ const refreshMapMarkers = () => {
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
-  z-index: 2000;
+  z-index: 5000;
 }
 
 .filters-modal-card {

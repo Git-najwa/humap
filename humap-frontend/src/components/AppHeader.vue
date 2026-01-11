@@ -180,8 +180,8 @@ onMounted(async () => {
 }
 
 .nav-link.router-link-active {
-  color: var(--color-primary);
-  background-color: rgba(15, 118, 110, 0.18);
+  color: #5b3a25;
+  background-color: rgba(211, 201, 188, 0.6);
   border-radius: var(--radius-pill);
 }
 
@@ -286,7 +286,7 @@ onMounted(async () => {
 }
 
 .mobile-nav-item.router-link-active {
-  color: var(--color-primary);
+  color: #5b3a25;
 }
 
 .mobile-nav-button {
