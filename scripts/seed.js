@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../humap-backend/.env") });
 
 const GEO_DEFAULT = { lat: 46.5197, lon: 6.6323, radius: 4000, limit: 30 };
+const REQUIRED_PASSWORD_KEYS = ["SEED_SUPERADMIN_PASSWORD", "SEED_ADMIN_PASSWORD", "SEED_ALICE_PASSWORD", "SEED_BOB_PASSWORD"];
 
 const toLabel = (value) => {
   const last = String(value || "").split(".").pop() || "";
@@ -255,6 +256,11 @@ const curatedActivities = [
 async function seed() {
   try {
     const dbUrl = process.env.DATABASE_URL || "mongodb://127.0.0.1:27017/humap";
+    for (const key of REQUIRED_PASSWORD_KEYS) {
+      if (!process.env[key]) {
+        throw new Error(`Missing environment variable: ${key}`);
+      }
+    }
     console.log("[seed] Start -", dbUrl);
 
     await mongoose.connect(dbUrl);
@@ -270,10 +276,10 @@ async function seed() {
 
     console.log("[seed] Inserting users...");
     const users = await User.create([
-      { username: "superadmin", email: "superadmin@humap.dev", password: "SuperAdmin123!", role: "superadmin" },
-      { username: "admin", email: "admin@humap.dev", password: "Admin123!", role: "admin" },
-      { username: "alice", email: "alice@humap.dev", password: "Alice123!" },
-      { username: "bob", email: "bob@humap.dev", password: "Bob123!" },
+      { username: "superadmin", email: "superadmin@humap.dev", password: process.env.SEED_SUPERADMIN_PASSWORD, role: "superadmin" },
+      { username: "admin", email: "admin@humap.dev", password: process.env.SEED_ADMIN_PASSWORD, role: "admin" },
+      { username: "alice", email: "alice@humap.dev", password: process.env.SEED_ALICE_PASSWORD },
+      { username: "bob", email: "bob@humap.dev", password: process.env.SEED_BOB_PASSWORD },
     ]);
 
     const ownerId = users[0]._id;
