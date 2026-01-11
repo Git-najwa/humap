@@ -38,7 +38,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadDir = path.resolve(__dirname, "../uploads");
 
-app.get("/", (req, res) => res.send("Salut les bgs"));
+app.get("/", (req, res) => res.redirect("/api-docs"));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
