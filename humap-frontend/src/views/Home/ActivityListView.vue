@@ -297,7 +297,6 @@ const chipFilters = computed(() => {
     { key: 'cat:indoor', label: 'Indoor', type: 'category', value: 'indoor' },
     { key: 'mood:calm', label: 'Calm', type: 'mood', value: 'calm' },
     { key: 'mood:social', label: 'Social', type: 'mood', value: 'social' },
-    { key: 'mood:energetic', label: 'Energetic', type: 'mood', value: 'energetic' },
   ]
 })
 
@@ -761,7 +760,8 @@ function matchesChip(activity) {
         haystack.includes('swimming') ||
         haystack.includes('climb') ||
         haystack.includes('hiking') ||
-        haystack.includes('trail')
+        haystack.includes('trail') ||
+        (activity?.mood || deriveMoodFromCategories(activity)) === 'energetic'
       )
     case 'food':
       return haystack.includes('restaurant') || haystack.includes('cafe') || haystack.includes('bar') || haystack.includes('catering')
@@ -1095,6 +1095,18 @@ const refreshMapMarkers = () => {
   --header-height: 96px;
   --map-offset: 160px;
   --page-max-width: 1320px;
+}
+
+:global(html),
+:global(body),
+:global(#app) {
+  height: 100%;
+}
+
+@media (min-width: 769px) {
+  :global(body) {
+    overflow: hidden;
+  }
 }
 
 .airbnb-topbar {
@@ -1445,6 +1457,7 @@ const refreshMapMarkers = () => {
   flex-direction: column;
   grid-area: list;
   min-height: 0;
+  height: 100%;
   overflow-y: auto;
   padding-right: 12px;
   padding-bottom: 32px;
@@ -1632,6 +1645,10 @@ const refreshMapMarkers = () => {
     height: auto;
     overflow: visible;
     --header-height: 64px;
+  }
+
+  :global(body) {
+    overflow: auto;
   }
 }
 </style>

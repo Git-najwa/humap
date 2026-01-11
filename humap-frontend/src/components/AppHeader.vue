@@ -182,6 +182,7 @@ onMounted(async () => {
 .nav-link.router-link-active {
   color: var(--color-primary);
   background-color: rgba(15, 118, 110, 0.18);
+  border-radius: var(--radius-pill);
 }
 
 .nav-icon {
