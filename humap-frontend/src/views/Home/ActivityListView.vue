@@ -76,31 +76,12 @@
           </div>
           <div class="filters-popover-grid">
             <div class="filters-field">
-              <label class="filters-label" for="filter-mood">Ambiance</label>
-              <input
-                id="filter-mood"
-                v-model="mood"
-                class="filters-select"
-                list="filter-mood-options"
-                placeholder="Choisir une ambiance"
-              />
-              <datalist id="filter-mood-options">
-                <option v-for="option in moodOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </option>
-              </datalist>
-            </div>
-            <div class="filters-field">
               <label class="filters-label" for="filter-price">Budget max</label>
               <AppInputModern id="filter-price" v-model.number="price_max" type="number" placeholder="Prix max" />
             </div>
             <div class="filters-field">
-              <label class="filters-label" for="filter-people-min">Personnes min</label>
-              <AppInputModern id="filter-people-min" v-model.number="nb_people_min" type="number" min="1" placeholder="Min" />
-            </div>
-            <div class="filters-field">
-              <label class="filters-label" for="filter-people-max">Personnes max</label>
-              <AppInputModern id="filter-people-max" v-model.number="nb_people_max" type="number" min="1" placeholder="Max" />
+              <label class="filters-label" for="filter-people">Nombre de personnes</label>
+              <AppInputModern id="filter-people" v-model.number="nb_people" type="number" min="1" placeholder="Nb personnes" />
             </div>
           </div>
           <div class="filters-popover-actions">
@@ -260,8 +241,7 @@ const ErrorMessage = ErrorMessageModern
 const q = ref('')
 const mood = ref('')
 const price_max = ref(null)
-const nb_people_min = ref(null)
-const nb_people_max = ref(null)
+const nb_people = ref(null)
 const mapEl = ref(null)
 const mapInstance = ref(null)
 const markerLayer = ref(null)
@@ -342,8 +322,7 @@ const activeFiltersCount = computed(() => {
   if (q.value) count += 1
   if (mood.value) count += 1
   if (price_max.value !== null && price_max.value !== '') count += 1
-  if (nb_people_min.value !== null && nb_people_min.value !== '') count += 1
-  if (nb_people_max.value !== null && nb_people_max.value !== '') count += 1
+  if (nb_people.value !== null && nb_people.value !== '') count += 1
   if (activeChip.value && activeChip.value !== 'all') count += 1
   return count
 })
@@ -351,19 +330,6 @@ const activeFiltersCount = computed(() => {
 const activeChipLabel = computed(() => {
   const chip = chipFilters.value.find((entry) => entry.key === activeChip.value)
   return chip?.label || 'Tout'
-})
-
-const moodOptions = computed(() => {
-  const base = ['calm', 'social', 'energetic']
-  const fromActivities = activityStore.activities
-    .map((activity) => deriveMoodFromCategories(activity) || activity?.mood)
-    .filter(Boolean)
-    .map((value) => value.toString().trim().toLowerCase())
-  const merged = Array.from(new Set([...base, ...fromActivities])).filter(Boolean)
-  return merged.map((value) => ({
-    value,
-    label: value.charAt(0).toUpperCase() + value.slice(1),
-  }))
 })
 
 const isActivityInList = (activityId, listId) => {
@@ -382,8 +348,7 @@ const buildFilters = () => {
   if (q.value) filters.q = q.value
   if (mood.value) filters.mood = mood.value
   if (price_max.value !== null && price_max.value !== '') filters.price_range = price_max.value
-  if (nb_people_min.value !== null && nb_people_min.value !== '') filters.nb_people_min = nb_people_min.value
-  if (nb_people_max.value !== null && nb_people_max.value !== '') filters.nb_people_max = nb_people_max.value
+  if (nb_people.value !== null && nb_people.value !== '') filters.nb_people = nb_people.value
   return filters
 }
 
@@ -431,7 +396,7 @@ onMounted(async () => {
           mapCenter.value = { lat: userCoords.value.lat, lon: userCoords.value.lon }
           await fetchWeather(userCoords.value.lat, userCoords.value.lon)
           await runAutoImport(userCoords.value)
-          if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people_min.value === null || nb_people_min.value === '') && (nb_people_max.value === null || nb_people_max.value === '')) {
+          if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people.value === null || nb_people.value === '')) {
             usingNearby.value = true
             await activityStore.fetchNearby(userCoords.value.lat, userCoords.value.lon, 15000, 50)
             lastMapQuery.value = { lat: userCoords.value.lat, lng: userCoords.value.lon, zoom: 12 }
@@ -478,8 +443,7 @@ const resetFilters = async () => {
   q.value = ''
   mood.value = ''
   price_max.value = null
-  nb_people_min.value = null
-  nb_people_max.value = null
+  nb_people.value = null
   try {
     if (userCoords.value) {
       usingNearby.value = true
@@ -1416,6 +1380,8 @@ const refreshMapMarkers = () => {
   background: #fff;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
   position: relative;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .map-empty {
@@ -1434,6 +1400,7 @@ const refreshMapMarkers = () => {
   width: 100%;
   height: 100%;
   border: none;
+  touch-action: none;
 }
 
 .activity-card {
