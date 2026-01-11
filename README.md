@@ -89,6 +89,8 @@ humap/
 cd humap-backend
 npm install
 npm start
+# (optionnel) Seed de la base depuis la racine du repo :
+# node scripts/seed.js
 ```
 
 Backend accessible sur `http://localhost:3000`.
@@ -122,6 +124,14 @@ PORT=3000
 DEBUG=humap:*
 MY_APP_SECRET_KEY=****
 GEOAPIFY_API_KEY=****
+# (optionnel) FRONTEND_URL pour CORS/Socket.io (prod)
+FRONTEND_URL=https://<frontend-render-url>
+
+# Mots de passe utilisés par le script de seed (obligatoires pour node scripts/seed.js)
+SEED_SUPERADMIN_PASSWORD=*****
+SEED_ADMIN_PASSWORD=*****
+SEED_ALICE_PASSWORD=*****
+SEED_BOB_PASSWORD=*****
 ```
 
 En production, les variables sont définies directement dans Render (Database URL, clef JWT, clés API).
@@ -169,7 +179,9 @@ Les tests sont automatisés et reproductibles.
 * Type : Web Service
 * Build : `npm install`
 * Start : `npm start`
-* Variables Render recommandées : `DATABASE_URL`, `MY_APP_SECRET_KEY`, `GEOAPIFY_API_KEY`
+* Variables Render recommandées : `DATABASE_URL`, `MY_APP_SECRET_KEY`, `GEOAPIFY_API_KEY`, `FRONTEND_URL`
+* Variables requises pour exécuter le seed (si vous le lancez côté Render ou en local vers Atlas) :
+  `SEED_SUPERADMIN_PASSWORD`, `SEED_ADMIN_PASSWORD`, `SEED_ALICE_PASSWORD`, `SEED_BOB_PASSWORD`
 
 ### Frontend (Render)
 
