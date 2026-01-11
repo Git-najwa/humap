@@ -1337,7 +1337,12 @@ const refreshMapMarkers = () => {
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
-  z-index: 5000;
+  z-index: 10000;
+}
+
+.filters-modal-card {
+  position: relative;
+  z-index: 10001;
 }
 
 .filters-modal-card {
@@ -1460,9 +1465,9 @@ const refreshMapMarkers = () => {
 }
 
 .filter-chip.active {
-  background: rgba(15, 118, 110, 0.16);
-  color: var(--color-primary);
-  border-color: rgba(15, 118, 110, 0.3);
+  background: rgba(211, 201, 188, 0.6);
+  color: #5b3a25;
+  border-color: rgba(161, 142, 122, 0.35);
 }
 
 .list-head {
