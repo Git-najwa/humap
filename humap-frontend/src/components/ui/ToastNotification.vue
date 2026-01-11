@@ -8,7 +8,7 @@
           :class="['toast', `toast-${toast.type}`]"
         >
           <span class="toast-icon">
-            <CheckIcon v-if="toast.type === 'success'" :size="18" color="#10b981" />
+            <CheckIcon v-if="toast.type === 'success'" :size="18" color="var(--color-primary-dark)" />
             <InfoIcon v-else :size="18" color="#6366f1" />
           </span>
           <div class="toast-content">
@@ -59,7 +59,7 @@ const { toasts, removeToast } = useToast()
 }
 
 .toast-success {
-  border-left: 4px solid #10b981;
+  border-left: 4px solid var(--color-primary-dark);
 }
 
 .toast-icon {
@@ -71,7 +71,7 @@ const { toasts, removeToast } = useToast()
 }
 
 .toast-success .toast-icon {
-  color: #10b981;
+  color: var(--color-primary-dark);
 }
 
 .toast-content {

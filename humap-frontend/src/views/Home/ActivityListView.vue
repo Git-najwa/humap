@@ -978,8 +978,8 @@ const refreshMapMarkers = () => {
   if (userCoords.value) {
     const userMarker = L.circleMarker([userCoords.value.lat, userCoords.value.lon], {
       radius: 6,
-      color: '#b99266',
-      fillColor: '#e6d4ba',
+      color: '#a18e7a',
+      fillColor: '#d3c9bc',
       fillOpacity: 0.9,
     }).addTo(markerLayer.value)
     userMarker.bindPopup('Vous êtes ici')
@@ -1318,10 +1318,10 @@ const refreshMapMarkers = () => {
   margin-left: 8px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(196, 161, 119, 0.18);
+  background: rgba(211, 201, 188, 0.35);
   color: var(--color-primary-dark);
   font-size: 0.75rem;
-  border: 1px solid rgba(196, 161, 119, 0.35);
+  border: 1px solid rgba(161, 142, 122, 0.35);
 }
 
 .status-actions {

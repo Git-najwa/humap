@@ -3,7 +3,7 @@
     <div class="auth-card">
       <div class="auth-header">
         <div class="logo">
-          <span class="logo-icon">H</span>
+          <img class="logo-image" src="/humap-logo.png" alt="HUMAP" />
         </div>
         <h1>Bienvenue</h1>
         <p class="subtitle">Connectez-vous à votre compte HUMAP</p>
@@ -104,17 +104,17 @@ const handleLogin = async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 120px;
+  width: 180px;
   height: 120px;
-  background-color: var(--color-primary);
-  border-radius: 24px;
+  background-color: transparent;
+  border-radius: 0;
   margin-bottom: 1.25rem;
 }
 
-.logo-icon {
-  color: white;
-  font-size: 3.75rem;
-  font-weight: 700;
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .auth-header h1 {

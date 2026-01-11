@@ -519,10 +519,10 @@ onMounted(() => {
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   margin: 1rem 2rem 0;
-  background-color: #ecfdf5;
-  border: 1px solid #a7f3d0;
+  background-color: var(--color-primary-light);
+  border: 1px solid rgba(161, 142, 122, 0.35);
   border-radius: 8px;
-  color: #065f46;
+  color: var(--color-primary-dark);
   font-size: 0.875rem;
 }
 
@@ -535,7 +535,7 @@ onMounted(() => {
 /* Responsive */
 @media (max-width: 640px) {
   .profile-container {
-    padding: 1rem 0.75rem;
+    padding: 1rem 0.75rem calc(60px + 1.5rem);
   }
 
   .profile-header {

@@ -112,8 +112,10 @@ const handleRegister = async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 90px;
-  height: 64px;
+  width: 180px;
+  height: 120px;
+  background-color: transparent;
+  border-radius: 0;
   margin-bottom: 1.25rem;
 }
 
