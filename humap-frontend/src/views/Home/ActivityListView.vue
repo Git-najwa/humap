@@ -838,6 +838,13 @@ const initMap = () => {
   mapInstance.value.on('moveend', handleMapMove)
   mapInstance.value.on('zoomstart', () => {
     mapZooming = true
+    suppressMapMove = true
+  })
+  mapInstance.value.on('zoomend', () => {
+    mapZooming = false
+    setTimeout(() => {
+      suppressMapMove = false
+    }, 150)
   })
   mapInstance.value.whenReady(() => {
     mapInstance.value.invalidateSize()
@@ -994,7 +1001,7 @@ const refreshMapMarkers = () => {
 <style scoped>
 .activities-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 
@@ -1087,13 +1094,14 @@ const refreshMapMarkers = () => {
 }
 
 .activity-list-container {
-  display: block;
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-height));
   overflow: hidden;
   padding-top: 0;
   padding-bottom: 0;
   --header-height: 96px;
-  --map-offset: 160px;
+  --map-offset: 0px;
   --page-max-width: 1320px;
 }
 
@@ -1439,7 +1447,8 @@ const refreshMapMarkers = () => {
   max-width: var(--page-max-width);
   margin: 0 auto;
   padding:  24px 24px;
-  height: calc(100vh - var(--map-offset));
+  flex: 1;
+  min-height: 0;
 }
 
 .split-layout {
@@ -1464,8 +1473,8 @@ const refreshMapMarkers = () => {
 }
 
 .map-pane {
-  position: sticky;
-  top: var(--map-offset);
+  position: relative;
+  top: auto;
   align-self: start;
   grid-area: map;
   height: 100%;
@@ -1573,6 +1582,10 @@ const refreshMapMarkers = () => {
 }
 
 @media (max-width: 768px) {
+  .activities-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
   .airbnb-topbar-inner {
     padding: 12px 16px 8px;
     flex-direction: column;

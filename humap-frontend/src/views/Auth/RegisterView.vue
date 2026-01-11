@@ -1,9 +1,9 @@
 <template>
   <div class="auth-container">
-    <div class="auth-card">
+      <div class="auth-card">
       <div class="auth-header">
         <div class="logo">
-          <span class="logo-icon">H</span>
+          <img class="logo-image" src="/humap-logo.png" alt="HUMAP" />
         </div>
         <h1>Créer un compte</h1>
         <p class="subtitle">Rejoignez la communauté HUMAP</p>
@@ -112,17 +112,15 @@ const handleRegister = async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background-color: var(--color-primary);
-  border-radius: 10px;
+  width: 90px;
+  height: 64px;
   margin-bottom: 1.25rem;
 }
 
-.logo-icon {
-  color: white;
-  font-size: 1.25rem;
-  font-weight: 700;
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .auth-header h1 {
