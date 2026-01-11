@@ -1,4 +1,4 @@
-# HUMAP - REST API & Mobile Frontend
+# HUMAP
 
 HUMAP est une application mobile accompagnée d’une **API REST** développée avec **Express** et **MongoDB**, permettant de recommander des **activités locales personnalisées** selon l’humeur, le contexte et la **géolocalisation** de l’utilisateur.
 
@@ -168,7 +168,7 @@ Les tests sont automatisés et reproductibles.
 ## Documentation API
 
 * Documentation technique : `humap-backend/docs/` 
-* OpenAPI / Swagger inclus
+* OpenAPI / Swagger : [Swagger UI](http://localhost:3000/api-docs/)
 
 ---
 
