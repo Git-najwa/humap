@@ -7,6 +7,8 @@ import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 import { getIO } from "../utils/socket.js";
 import { halResource, halCollection, buildQueryString } from "../utils/hal.js";
 
+const isElevated = (role) => role === "admin" || role === "superadmin";
+
 export async function listActivities(req, res, next) {
   try {
     // 📖 PAGINATION
@@ -127,7 +129,7 @@ export async function updateActivity(req, res, next) {
     if (!activity.user_id) {
       throw new ForbiddenError("You can only update your own activities");
     }
-    if (activity.user_id.toString() !== req.currentUserId && currentUser.role !== "admin") {
+    if (activity.user_id.toString() !== req.currentUserId && !isElevated(currentUser.role)) {
       throw new ForbiddenError("You can only update your own activities");
     }
 
@@ -164,7 +166,7 @@ export async function deleteActivity(req, res, next) {
     if (!activity.user_id) {
       throw new ForbiddenError("You can only delete your own activities");
     }
-    if (activity.user_id.toString() !== req.currentUserId && currentUser.role !== "admin") {
+    if (activity.user_id.toString() !== req.currentUserId && !isElevated(currentUser.role)) {
       throw new ForbiddenError("You can only delete your own activities");
     }
 

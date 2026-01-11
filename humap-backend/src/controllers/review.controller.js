@@ -6,6 +6,8 @@ import { NotFoundError, ForbiddenError } from "../utils/errors.js";
 import { getIO } from "../utils/socket.js";
 import { halResource, halCollection } from "../utils/hal.js";
 
+const isElevated = (role) => role === "admin" || role === "superadmin";
+
 export async function listReviews(req, res, next) {
   try {
     const page = Math.max(parseInt(req.query.page || "1", 10), 1);
@@ -128,7 +130,7 @@ export async function deleteReview(req, res, next) {
     }
 
     // Vérifier que l'utilisateur est propriétaire ou admin
-    if (review.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
+    if (review.user_id.toString() !== req.currentUserId && !isElevated(req.user?.role)) {
       throw new ForbiddenError("You can only delete your own reviews");
     }
 
@@ -147,7 +149,7 @@ export async function updateReview(req, res, next) {
       throw new NotFoundError("Review");
     }
 
-    if (review.user_id.toString() !== req.currentUserId && req.user?.role !== "admin") {
+    if (review.user_id.toString() !== req.currentUserId && !isElevated(req.user?.role)) {
       throw new ForbiddenError("You can only update your own reviews");
     }
 

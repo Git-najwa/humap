@@ -2,6 +2,8 @@ import User from "../models/User.js";
 import { ok } from "../utils/responses.js";
 import { NotFoundError, ForbiddenError, BadRequestError } from "../utils/errors.js";
 
+const isElevated = (role) => role === "admin" || role === "superadmin";
+
 export async function getUser(req, res, next) {
   try {
     const user = await User.findById(req.params.id);
@@ -19,7 +21,7 @@ export async function updateUser(req, res, next) {
     if (!currentUser) {
       throw new NotFoundError("User");
     }
-    if (req.params.id !== req.currentUserId && currentUser.role !== "admin") {
+    if (req.params.id !== req.currentUserId && !isElevated(currentUser.role)) {
       throw new ForbiddenError("You can only update your own profile");
     }
 
@@ -59,7 +61,7 @@ export async function deleteUser(req, res, next) {
     if (!currentUser) {
       throw new NotFoundError("User");
     }
-    if (currentUser.role !== "admin") {
+    if (!isElevated(currentUser.role)) {
       throw new ForbiddenError("You can only delete users as admin");
     }
 

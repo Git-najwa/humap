@@ -12,7 +12,7 @@ const userSchema = new Schema(
     avatar: { type: String, trim: true },
     password: { type: String, required: true },
     nb_reviews: { type: Number, default: 0 },
-    role: { type: String, enum: ["user", "admin"], default: "user" },
+    role: { type: String, enum: ["user", "admin", "superadmin"], default: "user" },
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
