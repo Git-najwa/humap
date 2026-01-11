@@ -72,7 +72,7 @@ defineExpose({ focus })
   width: 100%;
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-sm);
   font-family: inherit;
   background-color: var(--glass-bg-strong);

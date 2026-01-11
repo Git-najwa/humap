@@ -54,7 +54,7 @@ defineEmits(['click'])
 .app-button {
   padding: var(--spacing-sm) var(--spacing-lg);
   border: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   cursor: pointer;

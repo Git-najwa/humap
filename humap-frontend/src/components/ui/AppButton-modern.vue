@@ -22,7 +22,7 @@ defineEmits(['click'])
 <style scoped>
 .modern-btn {
   padding: 0.5rem 1rem;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   border: none;

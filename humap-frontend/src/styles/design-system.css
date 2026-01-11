@@ -76,6 +76,7 @@
   --radius-lg: 0.9rem;
   --radius-xl: 1.2rem;
   --radius-2xl: 1.6rem;
+  --radius-pill: 999px;
   
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -112,7 +113,7 @@
 /* Modern Button */
 .btn {
   padding: var(--spacing-sm) var(--spacing-lg);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
   border: none;
@@ -203,7 +204,7 @@
   width: 100%;
   padding: 0.625rem var(--spacing-md);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-base);
   font-family: inherit;
   background-color: rgba(255, 255, 255, 0.7);

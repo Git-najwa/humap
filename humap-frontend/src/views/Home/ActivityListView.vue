@@ -259,6 +259,7 @@ let suppressMapMove = false
 const lastMapQuery = ref(null)
 const manualMapMove = ref(false)
 const pendingMapRefresh = ref(false)
+let mapZooming = false
 
 const hasMapData = computed(() => {
   return activityStore.activities.some(activity => {
@@ -835,6 +836,9 @@ const initMap = () => {
 
   markerLayer.value = L.layerGroup().addTo(mapInstance.value)
   mapInstance.value.on('moveend', handleMapMove)
+  mapInstance.value.on('zoomstart', () => {
+    mapZooming = true
+  })
   mapInstance.value.whenReady(() => {
     mapInstance.value.invalidateSize()
     if (userCoords.value) {
@@ -850,6 +854,10 @@ const initMap = () => {
 
 const handleMapMove = () => {
   if (suppressMapMove || !mapInstance.value) return
+  if (mapZooming) {
+    mapZooming = false
+    return
+  }
   clearTimeout(mapMoveTimer)
   mapMoveTimer = setTimeout(async () => {
     try {
@@ -901,7 +909,7 @@ const loadMapActivities = async (options = {}) => {
       center.lat,
       center.lng
     )
-    if (movedKm < 0.2 && lastMapQuery.value.zoom === zoom) {
+    if (movedKm < 0.2) {
       return
     }
   }
@@ -1418,7 +1426,7 @@ const refreshMapMarkers = () => {
 .airbnb-layout {
   max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 24px 24px;
+  padding:  24px 24px;
   height: calc(100vh - var(--map-offset));
 }
 
