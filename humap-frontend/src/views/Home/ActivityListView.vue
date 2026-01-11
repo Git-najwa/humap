@@ -3,7 +3,7 @@
     <div v-if="importError" class="container" style="margin-bottom:var(--spacing-md);color:#dc2626">
       {{ importError }}
     </div>
-    <div v-else-if="importNotice" class="container" style="margin-bottom:var(--spacing-md);color:#0f766e">
+    <div v-else-if="importNotice" class="container" style="margin-bottom:var(--spacing-md);color:var(--color-primary)">
       {{ importNotice }}
     </div>
 
@@ -252,6 +252,7 @@ const weather = ref(null)
 const weatherLoading = ref(false)
 const weatherError = ref('')
 const prevBodyOverflow = ref('')
+const isBodyScrollLocked = ref(false)
 const activeChip = ref('all')
 const showFilters = ref(false)
 const chipsEl = ref(null)
@@ -282,13 +283,34 @@ const customLists = computed(() => {
   return Array.from(map.values())
 })
 
+const shouldLockBodyScroll = () => window.matchMedia('(min-width: 769px)').matches
+
+const applyBodyScrollLock = () => {
+  if (shouldLockBodyScroll()) {
+    if (!isBodyScrollLocked.value) {
+      prevBodyOverflow.value = document.body.style.overflow || ''
+      document.body.style.overflow = 'hidden'
+      isBodyScrollLocked.value = true
+    }
+    return
+  }
+  if (isBodyScrollLocked.value) {
+    document.body.style.overflow = prevBodyOverflow.value
+    isBodyScrollLocked.value = false
+  }
+}
+
 onMounted(() => {
-  prevBodyOverflow.value = document.body.style.overflow || ''
-  document.body.style.overflow = 'hidden'
+  applyBodyScrollLock()
+  window.addEventListener('resize', applyBodyScrollLock)
 })
 
 onBeforeUnmount(() => {
-  document.body.style.overflow = prevBodyOverflow.value
+  window.removeEventListener('resize', applyBodyScrollLock)
+  if (isBodyScrollLocked.value) {
+    document.body.style.overflow = prevBodyOverflow.value
+    isBodyScrollLocked.value = false
+  }
 })
 const selectedListByActivity = ref({})
 const userCoords = ref(null)
@@ -956,8 +978,8 @@ const refreshMapMarkers = () => {
   if (userCoords.value) {
     const userMarker = L.circleMarker([userCoords.value.lat, userCoords.value.lon], {
       radius: 6,
-      color: '#0f766e',
-      fillColor: '#14b8a6',
+      color: '#b89468',
+      fillColor: '#dcc9ac',
       fillOpacity: 0.9,
     }).addTo(markerLayer.value)
     userMarker.bindPopup('Vous êtes ici')
@@ -1160,7 +1182,7 @@ const refreshMapMarkers = () => {
   min-width: 20px;
   height: 20px;
   border-radius: 999px;
-  background: #0f766e;
+  background: var(--color-primary-dark);
   color: #fff;
   font-size: 0.75rem;
   display: inline-flex;
@@ -1236,11 +1258,11 @@ const refreshMapMarkers = () => {
   height: 44px;
   border-radius: 999px;
   border: none;
-  background: #0f766e;
-  color: #fff;
+  background: var(--color-primary);
+  color: #3a2a1a;
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+  box-shadow: 0 8px 18px rgba(180, 150, 104, 0.24);
   margin-right: 8px;
 }
 
@@ -1296,10 +1318,10 @@ const refreshMapMarkers = () => {
   margin-left: 8px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(15, 118, 110, 0.12);
-  color: #0f766e;
+  background: rgba(196, 161, 119, 0.18);
+  color: var(--color-primary-dark);
   font-size: 0.75rem;
-  border: 1px solid rgba(15, 118, 110, 0.2);
+  border: 1px solid rgba(196, 161, 119, 0.35);
 }
 
 .status-actions {
@@ -1586,6 +1608,10 @@ const refreshMapMarkers = () => {
 }
 
 @media (max-width: 768px) {
+  .airbnb-topbar {
+    top: var(--header-height);
+  }
+
   .activities-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }

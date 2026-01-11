@@ -1,8 +1,10 @@
 import express from "express";
+import createDebugger from "debug";
 import Activity from "../models/Activity.js";
 import auth from "../middlewares/auth.js";
 
 const router = express.Router();
+const debug = createDebugger("humap:geoapify");
 
 const normalizeLimit = (value) => {
   const limit = parseInt(value, 10);
@@ -47,6 +49,7 @@ router.get("/geoapify", auth, async (req, res, next) => {
 
     const data = await response.json();
     const features = Array.isArray(data?.features) ? data.features : [];
+    debug(`Geoapify response ok: status=${response.status} features=${features.length}`);
 
     const toLabel = (value) => {
       const last = String(value || "").split(".").pop() || "";
@@ -163,8 +166,12 @@ router.get("/geoapify", auth, async (req, res, next) => {
     });
 
     const shouldSave = String(save).toLowerCase() === "true";
+    const debugMode = String(req.query.debug || "").toLowerCase() === "true";
     if (!shouldSave) {
-      return res.json({ items: mapped });
+      return res.json({
+        items: mapped,
+        ...(debugMode ? { meta: { features: features.length, mapped: mapped.length } } : {}),
+      });
     }
 
     const created = [];
@@ -211,7 +218,12 @@ router.get("/geoapify", auth, async (req, res, next) => {
       created.push(activity);
     }
 
-    return res.json({ items: created });
+    return res.json({
+      items: created,
+      ...(debugMode
+        ? { meta: { features: features.length, mapped: mapped.length, saved: created.length } }
+        : {}),
+    });
   } catch (error) {
     next(error);
   }

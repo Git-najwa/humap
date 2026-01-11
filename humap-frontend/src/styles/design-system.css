@@ -2,12 +2,12 @@
 
 :root {
   /* Primary Colors */
-  --color-primary: #0f766e;
-  --color-primary-dark: #0f5f59;
-  --color-primary-light: #d7f2ec;
+  --color-primary: #c4a177;
+  --color-primary-dark: #a78660;
+  --color-primary-light: #f2e5d4;
   --color-secondary: #F59E0B;
   --color-accent: #DC2626;
-  --color-accent-green: #16A34A;
+  --color-accent-green: #b89468;
   --color-accent-orange: #EA580C;
   
   /* Neutral Colors - KEEPING THE WARM BACKGROUND */

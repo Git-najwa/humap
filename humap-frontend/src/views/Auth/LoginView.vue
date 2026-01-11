@@ -104,16 +104,16 @@ const handleLogin = async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 120px;
+  height: 120px;
   background-color: var(--color-primary);
-  border-radius: 10px;
+  border-radius: 24px;
   margin-bottom: 1.25rem;
 }
 
 .logo-icon {
   color: white;
-  font-size: 1.25rem;
+  font-size: 3.75rem;
   font-weight: 700;
 }
 
