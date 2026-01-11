@@ -24,7 +24,7 @@
           </div>
           <div class="pill-divider"></div>
           <button class="pill-segment pill-desktop-only" type="button" @click="scrollToChips">
-            <span class="segment-title">Ambiance</span>
+            <span class="segment-title">Mood</span>
             <span class="segment-value">{{ activeChipLabel }}</span>
           </button>
           <div class="pill-divider"></div>
@@ -57,11 +57,6 @@
             <span v-if="weatherPreferenceLabel" class="status-chip">{{ weatherPreferenceLabel }}</span>
           </div>
           <div v-else class="status-item status-muted">Météo indisponible</div>
-        </div>
-        <div class="status-actions">
-          <router-link to="/activities/create">
-            <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
-          </router-link>
         </div>
       </div>
 
@@ -103,6 +98,11 @@
           >
             {{ chip.label }}
           </button>
+        </div>
+        <div class="chips-actions">
+          <router-link to="/activities/create">
+            <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
+          </router-link>
         </div>
       </div>
     </section>
@@ -159,7 +159,7 @@
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
             <p class="location text-tertiary"><LocationIcon :size="14" /> {{ activity.location }}</p>
-            <p v-if="getMoodLabel(activity)" class="mood text-tertiary">Ambiance : {{ getMoodLabel(activity) }}</p>
+            <p v-if="getMoodLabel(activity)" class="mood text-tertiary">Mood : {{ getMoodLabel(activity) }}</p>
             <p v-if="getBudgetLabel(activity.price_range)" class="mood text-tertiary">
               {{ activity.source === 'geoapify' ? 'Budget estimé' : 'Budget' }} : {{ getBudgetLabel(activity.price_range) }}
             </p>
@@ -292,6 +292,9 @@ const chipFilters = computed(() => {
     { key: 'cat:food', label: 'Food', type: 'category', value: 'food' },
     { key: 'cat:kids', label: 'Famille', type: 'category', value: 'kids' },
     { key: 'cat:indoor', label: 'Indoor', type: 'category', value: 'indoor' },
+    { key: 'mood:calm', label: 'Calm', type: 'mood', value: 'calm' },
+    { key: 'mood:social', label: 'Social', type: 'mood', value: 'social' },
+    { key: 'mood:energetic', label: 'Energetic', type: 'mood', value: 'energetic' },
   ]
 })
 
@@ -1145,6 +1148,7 @@ const refreshMapMarkers = () => {
   font-weight: var(--font-weight-semibold);
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+  margin-right: 8px;
 }
 
 .pill-search-icon {
@@ -1284,6 +1288,9 @@ const refreshMapMarkers = () => {
   max-width: var(--page-max-width);
   margin: 0 auto;
   padding: 0 24px 8px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .filters-chips {
@@ -1292,6 +1299,7 @@ const refreshMapMarkers = () => {
   overflow-x: auto;
   padding-bottom: 4px;
   scroll-behavior: smooth;
+  flex: 1;
 }
 
 .filters-chips::-webkit-scrollbar {
@@ -1307,6 +1315,10 @@ const refreshMapMarkers = () => {
   height: 100%;
   background: linear-gradient(270deg, rgba(246, 241, 234, 1), rgba(246, 241, 234, 0));
   pointer-events: none;
+}
+
+.chips-actions {
+  flex: 0 0 auto;
 }
 
 .filter-chip {
