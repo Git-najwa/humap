@@ -60,31 +60,33 @@
         </div>
       </div>
 
-      <div v-if="showFilters" class="filters-modal">
-        <div class="filters-modal-card">
-          <div class="filters-popover-header">
-            <div>
-              <p class="filters-popover-title">Filtres</p>
-              <p class="text-tertiary text-sm">Affinez votre recherche.</p>
+      <Teleport to="body">
+        <div v-if="showFilters" class="filters-modal">
+          <div class="filters-modal-card">
+            <div class="filters-popover-header">
+              <div>
+                <p class="filters-popover-title">Filtres</p>
+                <p class="text-tertiary text-sm">Affinez votre recherche.</p>
+              </div>
+              <button class="filters-close" type="button" @click="showFilters = false">×</button>
             </div>
-            <button class="filters-close" type="button" @click="showFilters = false">×</button>
-          </div>
-          <div class="filters-popover-grid">
-            <div class="filters-field">
-              <label class="filters-label" for="filter-price">Budget max</label>
-              <AppInputModern id="filter-price" v-model.number="price_max" type="number" placeholder="Prix max" />
+            <div class="filters-popover-grid">
+              <div class="filters-field">
+                <label class="filters-label" for="filter-price">Budget max</label>
+                <AppInputModern id="filter-price" v-model.number="price_max" type="number" placeholder="Prix max" />
+              </div>
+              <div class="filters-field">
+                <label class="filters-label" for="filter-people">Nombre de personnes</label>
+                <AppInputModern id="filter-people" v-model.number="nb_people" type="number" min="1" placeholder="Nb personnes" />
+              </div>
             </div>
-            <div class="filters-field">
-              <label class="filters-label" for="filter-people">Nombre de personnes</label>
-              <AppInputModern id="filter-people" v-model.number="nb_people" type="number" min="1" placeholder="Nb personnes" />
+            <div class="filters-popover-actions">
+              <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
+              <AppButtonModern variant="primary" @click="applyFilters">Appliquer</AppButtonModern>
             </div>
-          </div>
-          <div class="filters-popover-actions">
-            <AppButtonModern variant="secondary" @click="resetFilters">Réinitialiser</AppButtonModern>
-            <AppButtonModern variant="primary" @click="applyFilters">Appliquer</AppButtonModern>
           </div>
         </div>
-      </div>
+      </Teleport>
 
       <div class="filters-chips-wrap" ref="chipsEl">
         <div class="filters-chips airbnb-chips">
@@ -1337,12 +1339,12 @@ const refreshMapMarkers = () => {
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
-  z-index: 10000;
+  z-index: 20000;
 }
 
 .filters-modal-card {
   position: relative;
-  z-index: 10001;
+  z-index: 20001;
 }
 
 .filters-modal-card {
