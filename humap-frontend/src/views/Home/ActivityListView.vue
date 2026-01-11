@@ -101,7 +101,7 @@
         </div>
         <div class="chips-actions">
           <router-link to="/activities/create">
-            <AppButtonModern variant="primary">+ Nouvelle activité</AppButtonModern>
+            <AppButtonModern variant="primary" class="no-shadow">+ Nouvelle activité</AppButtonModern>
           </router-link>
         </div>
       </div>
@@ -737,7 +737,20 @@ function matchesChip(activity) {
     case 'culture':
       return haystack.includes('museum') || haystack.includes('gallery') || haystack.includes('theatre')
     case 'sport':
-      return haystack.includes('sport') || haystack.includes('fitness') || haystack.includes('stadium')
+      return (
+        haystack.includes('sport') ||
+        haystack.includes('fitness') ||
+        haystack.includes('stadium') ||
+        haystack.includes('leisure') ||
+        haystack.includes('riding') ||
+        haystack.includes('horse') ||
+        haystack.includes('golf') ||
+        haystack.includes('tennis') ||
+        haystack.includes('swimming') ||
+        haystack.includes('climb') ||
+        haystack.includes('hiking') ||
+        haystack.includes('trail')
+      )
     case 'food':
       return haystack.includes('restaurant') || haystack.includes('cafe') || haystack.includes('bar') || haystack.includes('catering')
     case 'kids':
@@ -1319,6 +1332,10 @@ const refreshMapMarkers = () => {
 
 .chips-actions {
   flex: 0 0 auto;
+}
+
+.no-shadow {
+  box-shadow: none !important;
 }
 
 .filter-chip {
