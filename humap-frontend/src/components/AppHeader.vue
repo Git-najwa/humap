@@ -129,7 +129,7 @@ onMounted(async () => {
   top: 0;
   z-index: 12;
   padding: 0 2rem;
-  height: 72px;
+  height: 96px;
   background: rgba(255, 255, 255, 0.3);
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(24px) saturate(140%);
@@ -144,7 +144,7 @@ onMounted(async () => {
 }
 
 .logo-image {
-  height: 100px;
+  height: 80px;
   width: auto;
   display: block;
 }
@@ -333,11 +333,11 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .app-header {
     padding: 0 1rem;
-    height: 52px;
+    height: 64px;
   }
 
   .logo-image {
-    height: 56px;
+    height: 48px;
   }
 
   /* Hide desktop nav on mobile */

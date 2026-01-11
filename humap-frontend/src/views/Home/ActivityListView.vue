@@ -304,7 +304,7 @@ const mapCenter = ref({ lat: 46.5197, lon: 6.6323 })
 const usingNearby = ref(false)
 
 const chipFilters = computed(() => {
-  const categories = [
+  return [
     { key: 'all', label: 'Tout', type: 'all', value: '' },
     { key: 'cat:nature', label: 'Nature', type: 'category', value: 'nature' },
     { key: 'cat:culture', label: 'Culture', type: 'category', value: 'culture' },
@@ -313,13 +313,6 @@ const chipFilters = computed(() => {
     { key: 'cat:kids', label: 'Famille', type: 'category', value: 'kids' },
     { key: 'cat:indoor', label: 'Indoor', type: 'category', value: 'indoor' },
   ]
-  const moods = (moodOptions.value || []).map((option) => ({
-    key: `mood:${option.value}`,
-    label: option.label,
-    type: 'mood',
-    value: option.value,
-  }))
-  return [...categories, ...moods]
 })
 
 const setChip = (chip) => {
@@ -1061,18 +1054,21 @@ const refreshMapMarkers = () => {
   display: block;
   height: 100vh;
   overflow: hidden;
-  --map-offset: 190px;
+  padding-top: 0;
+  padding-bottom: 0;
+  --header-height: 96px;
+  --map-offset: 160px;
   --page-max-width: 1320px;
 }
 
 .airbnb-topbar {
   position: sticky;
-  top: 72px;
-  z-index: 8;
+  top: 0;
+  z-index: 7;
   background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(18px) saturate(140%);
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
   flex-shrink: 0;
   padding-top: 0;
 }
@@ -1080,7 +1076,7 @@ const refreshMapMarkers = () => {
 .airbnb-topbar-inner {
   max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 10px 24px 6px;
+  padding: 6px 24px 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1197,7 +1193,7 @@ const refreshMapMarkers = () => {
 .airbnb-status {
   max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 24px 12px;
+  padding: 0 24px 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1322,7 +1318,7 @@ const refreshMapMarkers = () => {
   position: relative;
   max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 24px 12px;
+  padding: 0 24px 8px;
 }
 
 .filters-chips {
@@ -1576,6 +1572,7 @@ const refreshMapMarkers = () => {
   .activity-list-container {
     height: auto;
     overflow: visible;
+    --header-height: 64px;
   }
 }
 </style>
