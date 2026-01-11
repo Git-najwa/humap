@@ -251,6 +251,7 @@ const isImporting = ref(false)
 const weather = ref(null)
 const weatherLoading = ref(false)
 const weatherError = ref('')
+const prevBodyOverflow = ref('')
 const activeChip = ref('all')
 const showFilters = ref(false)
 const chipsEl = ref(null)
@@ -279,6 +280,15 @@ const customLists = computed(() => {
       }
     })
   return Array.from(map.values())
+})
+
+onMounted(() => {
+  prevBodyOverflow.value = document.body.style.overflow || ''
+  document.body.style.overflow = 'hidden'
+})
+
+onBeforeUnmount(() => {
+  document.body.style.overflow = prevBodyOverflow.value
 })
 const selectedListByActivity = ref({})
 const userCoords = ref(null)
@@ -1111,12 +1121,6 @@ const refreshMapMarkers = () => {
   height: 100%;
 }
 
-@media (min-width: 769px) {
-  :global(body) {
-    overflow: hidden;
-  }
-}
-
 .airbnb-topbar {
   position: sticky;
   top: 0;
@@ -1660,8 +1664,5 @@ const refreshMapMarkers = () => {
     --header-height: 64px;
   }
 
-  :global(body) {
-    overflow: auto;
-  }
 }
 </style>
