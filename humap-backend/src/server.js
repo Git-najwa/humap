@@ -1,12 +1,17 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import createDebugger from "debug";
 import http from "node:http";
 import { Server } from "socket.io";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const debug = createDebugger("humap:server");
 let io;
 
 async function start() {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  dotenv.config({ path: path.resolve(__dirname, "../.env") });
   const port = normalizePort(process.env.PORT || 3000);
   // Use console log so it's visible even if DEBUG is not enabled.
   // eslint-disable-next-line no-console
