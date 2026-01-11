@@ -19,17 +19,38 @@ components:
     User:
       type: object
       properties:
-        id: { type: string }
-        username: { type: string }
-        email: { type: string }
-        gender: { type: string }
-        avatar: { type: string }
+        id:
+          type: string
+          description: Identifiant unique de l'utilisateur
+        username:
+          type: string
+          description: Nom d'utilisateur
+        gender:
+          type: string
+          description: Genre de l'utilisateur
+        email:
+          type: string
+          description: Email de l'utilisateur
+        avatar:
+          type: string
+          description: URL de l'image de profil
+        nb_reviews:
+          type: integer
+          description: Nombre de reviews postées
+          default: 0
         role:
           type: string
-          enum: [user, admin]
-        nb_reviews: { type: number }
-        created_at: { type: string, format: date-time }
-      required: [id, username, email, role]
+          description: Rôle de l'utilisateur (user/admin)
+          default: user
+        created_at:
+          type: string
+          format: date-time
+          description: Date d'inscription
+      required:
+        - id
+        - username
+        - email
+        - role
 
     Activity:
       type: object
