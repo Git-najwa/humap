@@ -170,26 +170,6 @@
             <AppButtonModern variant="secondary">Voir</AppButtonModern>
           </router-link>
         </div>
-        <div v-if="authStore.user && customLists.length" class="list-inline">
-          <select
-            v-model="selectedListByActivity[activity._id]"
-            class="input"
-            :id="`list-select-${activity._id}`"
-            :name="`list-select-${activity._id}`"
-          >
-            <option value="">Ajouter à une liste</option>
-            <option v-for="list in customLists" :key="list._id" :value="list._id">
-              {{ list.custom_name || 'Sans nom' }}
-            </option>
-          </select>
-          <AppButtonModern
-            variant="secondary"
-            :disabled="!selectedListByActivity[activity._id] || isActivityInList(activity._id, selectedListByActivity[activity._id])"
-            @click="addToCustomList(activity._id)"
-          >
-            {{ isActivityInList(activity._id, selectedListByActivity[activity._id]) ? 'Déjà dans la liste' : 'Ajouter' }}
-          </AppButtonModern>
-        </div>
       </div>
         </div>
 
@@ -223,7 +203,6 @@ import api from '../../services/api'
 import { useActivityStore } from '../../store/activity.store'
 import { useAuthStore } from '../../store/auth.store'
 import { useFavoriteStore } from '../../store/favorite.store'
-import { useListStore } from '../../store/list.store'
 import ErrorMessageModern from '../../components/ui/ErrorMessage-modern.vue'
 import AppInputModern from '../../components/ui/AppInput-modern.vue'
 import AppButtonModern from '../../components/ui/AppButton-modern.vue'
@@ -233,7 +212,6 @@ const activityStore = useActivityStore()
 const router = useRouter()
 const authStore = useAuthStore()
 const favoriteStore = useFavoriteStore()
-const listStore = useListStore()
 
 const { pagination } = storeToRefs(activityStore)
 const { favorites } = storeToRefs(favoriteStore)
@@ -272,18 +250,6 @@ const hasMapData = computed(() => {
   })
 })
 
-const customLists = computed(() => {
-  const map = new Map()
-  listStore.lists
-    .filter(entry => entry.list_type === 'custom')
-    .forEach(entry => {
-      const name = entry.custom_name?.trim() || 'Sans nom'
-      if (!map.has(name)) {
-        map.set(name, { _id: entry._id, custom_name: name })
-      }
-    })
-  return Array.from(map.values())
-})
 
 const shouldLockBodyScroll = () => window.matchMedia('(min-width: 769px)').matches
 
@@ -314,7 +280,6 @@ onBeforeUnmount(() => {
     isBodyScrollLocked.value = false
   }
 })
-const selectedListByActivity = ref({})
 const userCoords = ref(null)
 const mapCenter = ref({ lat: 46.5197, lon: 6.6323 })
 const usingNearby = ref(false)
@@ -380,17 +345,6 @@ const hasServerFilters = computed(() => {
   )
 })
 
-const isActivityInList = (activityId, listId) => {
-  const baseEntry = listStore.lists.find(entry => entry._id === listId)
-  if (!baseEntry) return false
-  const listName = baseEntry.custom_name?.trim() || 'Sans nom'
-  return listStore.lists.some(entry =>
-    entry.list_type === 'custom' &&
-    (entry.custom_name?.trim() || 'Sans nom') === listName &&
-    entry.activity_id === activityId
-  )
-}
-
 const buildFilters = () => {
   const filters = {}
   if (q.value) filters.q = q.value
@@ -433,7 +387,6 @@ onMounted(async () => {
     await activityStore.fetchActivities()
     await favoriteStore.loadFavorites()
     if (authStore.user) {
-      await listStore.fetchAllLists()
       await runAutoImport()
       await activityStore.fetchActivities()
     }
@@ -520,17 +473,6 @@ const toggleFavorite = async (activityId) => {
     await favoriteStore.toggleFavorite(activityId)
   } catch (err) {
     console.error(err)
-  }
-}
-
-const addToCustomList = async (activityId) => {
-  const listId = selectedListByActivity.value[activityId]
-  if (!listId || isActivityInList(activityId, listId)) return
-  try {
-    await listStore.addActivityToList(listId, activityId)
-    selectedListByActivity.value[activityId] = ''
-  } catch (err) {
-    console.error('addToCustomList failed', err)
   }
 }
 
@@ -1600,18 +1542,6 @@ const refreshMapMarkers = () => {
   color: var(--tag-text);
   border: 1px solid var(--tag-border);
   backdrop-filter: blur(16px) saturate(140%);
-}
-
-.list-inline {
-  margin-top: 12px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.list-inline .input {
-  flex: 1;
-  min-width: 180px;
 }
 
 @media (max-width: 768px) {
