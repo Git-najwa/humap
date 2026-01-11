@@ -144,7 +144,7 @@ onMounted(async () => {
 }
 
 .logo-image {
-  height: 80px;
+  height: 91px;
   width: auto;
   display: block;
 }
@@ -337,7 +337,7 @@ onMounted(async () => {
   }
 
   .logo-image {
-    height: 48px;
+    height: 90px;
   }
 
   /* Hide desktop nav on mobile */

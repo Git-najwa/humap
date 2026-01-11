@@ -1304,6 +1304,7 @@ const refreshMapMarkers = () => {
   display: flex;
   align-items: center;
   gap: 16px;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .filters-chips {
@@ -1430,6 +1431,11 @@ const refreshMapMarkers = () => {
   height: 100%;
   border: none;
   touch-action: none;
+}
+
+.map-pane .leaflet-container {
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .activity-card {
