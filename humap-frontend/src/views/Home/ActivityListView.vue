@@ -258,6 +258,7 @@ let mapMoveTimer = null
 let suppressMapMove = false
 const lastMapQuery = ref(null)
 const manualMapMove = ref(false)
+const pendingMapRefresh = ref(false)
 
 const hasMapData = computed(() => {
   return activityStore.activities.some(activity => {
@@ -335,6 +336,15 @@ const activeChipLabel = computed(() => {
   return chip?.label || 'Tout'
 })
 
+const hasServerFilters = computed(() => {
+  return Boolean(
+    q.value ||
+    mood.value ||
+    (price_max.value !== null && price_max.value !== '') ||
+    (nb_people.value !== null && nb_people.value !== '')
+  )
+})
+
 const isActivityInList = (activityId, listId) => {
   const baseEntry = listStore.lists.find(entry => entry._id === listId)
   if (!baseEntry) return false
@@ -399,10 +409,17 @@ onMounted(async () => {
           mapCenter.value = { lat: userCoords.value.lat, lon: userCoords.value.lon }
           await fetchWeather(userCoords.value.lat, userCoords.value.lon)
           await runAutoImport(userCoords.value)
-          if (!mood.value && !q.value && (price_max.value === null || price_max.value === '') && (nb_people.value === null || nb_people.value === '')) {
+          if (!hasServerFilters.value) {
             usingNearby.value = true
             await activityStore.fetchNearby(userCoords.value.lat, userCoords.value.lon, 15000, 50)
-            lastMapQuery.value = { lat: userCoords.value.lat, lng: userCoords.value.lon, zoom: 12 }
+          }
+          if (mapInstance.value) {
+            setMapView(userCoords.value.lat, userCoords.value.lon, 12)
+            if (!hasServerFilters.value) {
+              await loadMapActivities({ force: true })
+            }
+          } else if (!hasServerFilters.value) {
+            pendingMapRefresh.value = true
           }
         },
         () => {
@@ -824,6 +841,13 @@ const initMap = () => {
 
   markerLayer.value = L.layerGroup().addTo(mapInstance.value)
   mapInstance.value.on('moveend', handleMapMove)
+  if (userCoords.value) {
+    setMapView(userCoords.value.lat, userCoords.value.lon, 12)
+  }
+  if (!hasServerFilters.value || pendingMapRefresh.value) {
+    pendingMapRefresh.value = false
+    loadMapActivities({ force: true })
+  }
 }
 
 const handleMapMove = () => {
@@ -831,47 +855,57 @@ const handleMapMove = () => {
   clearTimeout(mapMoveTimer)
   mapMoveTimer = setTimeout(async () => {
     try {
-      if (!mapInstance.value) return
-      const center = mapInstance.value.getCenter()
-      const bounds = mapInstance.value.getBounds()
-      const zoom = mapInstance.value.getZoom()
-      if (lastMapQuery.value) {
-        const movedKm = haversineKm(
-          lastMapQuery.value.lat,
-          lastMapQuery.value.lng,
-          center.lat,
-          center.lng
-        )
-        if (movedKm < 0.2 && lastMapQuery.value.zoom === zoom) {
-          return
-        }
-      }
-      lastMapQuery.value = { lat: center.lat, lng: center.lng, zoom }
-      mapCenter.value = { lat: center.lat, lon: center.lng }
-      await fetchWeather(center.lat, center.lng)
-      manualMapMove.value = true
-      const token = localStorage.getItem('token')
-      if (token) {
-        await runAutoImport({ lat: center.lat, lon: center.lng }, { force: true })
-      }
-      usingNearby.value = true
-      const sw = bounds.getSouthWest()
-      const ne = bounds.getNorthEast()
-      const bbox = [sw.lng, sw.lat, ne.lng, ne.lat].join(',')
-      await activityStore.fetchWithinBounds(bbox, 50)
+      await loadMapActivities({ markManual: true })
     } catch (err) {
       console.error(err)
     }
   }, 400)
 }
 
-const setMapView = (lat, lon, zoom = 12) => {
+const setMapView = (lat, lon, zoom = 12, options = {}) => {
   if (!mapInstance.value) return
   suppressMapMove = true
   mapInstance.value.setView([lat, lon], zoom, { animate: false })
+  if (options.track !== false) {
+    lastMapQuery.value = { lat, lng: lon, zoom }
+    mapCenter.value = { lat, lon }
+  }
   setTimeout(() => {
     suppressMapMove = false
   }, 200)
+}
+
+const loadMapActivities = async (options = {}) => {
+  if (!mapInstance.value) return
+  const center = mapInstance.value.getCenter()
+  const bounds = mapInstance.value.getBounds()
+  const zoom = mapInstance.value.getZoom()
+  if (!options.force && lastMapQuery.value) {
+    const movedKm = haversineKm(
+      lastMapQuery.value.lat,
+      lastMapQuery.value.lng,
+      center.lat,
+      center.lng
+    )
+    if (movedKm < 0.2 && lastMapQuery.value.zoom === zoom) {
+      return
+    }
+  }
+  lastMapQuery.value = { lat: center.lat, lng: center.lng, zoom }
+  mapCenter.value = { lat: center.lat, lon: center.lng }
+  await fetchWeather(center.lat, center.lng)
+  if (options.markManual) {
+    manualMapMove.value = true
+  }
+  const token = localStorage.getItem('token')
+  if (token) {
+    await runAutoImport({ lat: center.lat, lon: center.lng }, { force: true })
+  }
+  usingNearby.value = true
+  const sw = bounds.getSouthWest()
+  const ne = bounds.getNorthEast()
+  const bbox = [sw.lng, sw.lat, ne.lng, ne.lat].join(',')
+  await activityStore.fetchWithinBounds(bbox, 50)
 }
 
 const refreshMapMarkers = () => {
