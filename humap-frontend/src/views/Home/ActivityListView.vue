@@ -214,7 +214,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, watch, nextTick } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import api from '../../services/api'
@@ -283,6 +283,7 @@ const selectedListByActivity = ref({})
 const userCoords = ref(null)
 const mapCenter = ref({ lat: 46.5197, lon: 6.6323 })
 const usingNearby = ref(false)
+const USER_ZOOM = 13
 
 const chipFilters = computed(() => {
   return [
@@ -413,14 +414,7 @@ onMounted(async () => {
             usingNearby.value = true
             await activityStore.fetchNearby(userCoords.value.lat, userCoords.value.lon, 15000, 50)
           }
-          if (mapInstance.value) {
-            setMapView(userCoords.value.lat, userCoords.value.lon, 12)
-            if (!hasServerFilters.value) {
-              await loadMapActivities({ force: true })
-            }
-          } else if (!hasServerFilters.value) {
-            pendingMapRefresh.value = true
-          }
+          await focusMapOnUser(userCoords.value)
         },
         () => {
           userCoords.value = null
@@ -829,7 +823,7 @@ const initMap = () => {
   if (!mapEl.value || mapInstance.value) return
   const { L } = window
   if (!L) return
-  const initialCenter = mapCenter.value || { lat: 46.5197, lon: 6.6323 }
+  const initialCenter = userCoords.value || mapCenter.value || { lat: 46.5197, lon: 6.6323 }
   mapInstance.value = L.map(mapEl.value, {
     zoomControl: true,
     scrollWheelZoom: false,
@@ -841,13 +835,17 @@ const initMap = () => {
 
   markerLayer.value = L.layerGroup().addTo(mapInstance.value)
   mapInstance.value.on('moveend', handleMapMove)
-  if (userCoords.value) {
-    setMapView(userCoords.value.lat, userCoords.value.lon, 12)
-  }
-  if (!hasServerFilters.value || pendingMapRefresh.value) {
-    pendingMapRefresh.value = false
-    loadMapActivities({ force: true })
-  }
+  mapInstance.value.whenReady(() => {
+    mapInstance.value.invalidateSize()
+    if (userCoords.value) {
+      void focusMapOnUser(userCoords.value)
+      return
+    }
+    if (!hasServerFilters.value || pendingMapRefresh.value) {
+      pendingMapRefresh.value = false
+      void loadMapActivities({ force: true })
+    }
+  })
 }
 
 const handleMapMove = () => {
@@ -873,6 +871,22 @@ const setMapView = (lat, lon, zoom = 12, options = {}) => {
   setTimeout(() => {
     suppressMapMove = false
   }, 200)
+}
+
+const focusMapOnUser = async (coords) => {
+  if (!coords) return
+  if (!mapInstance.value) {
+    if (!hasServerFilters.value) {
+      pendingMapRefresh.value = true
+    }
+    return
+  }
+  await nextTick()
+  mapInstance.value.invalidateSize()
+  setMapView(coords.lat, coords.lon, USER_ZOOM)
+  if (!hasServerFilters.value) {
+    await loadMapActivities({ force: true })
+  }
 }
 
 const loadMapActivities = async (options = {}) => {
@@ -923,7 +937,7 @@ const refreshMapMarkers = () => {
     }).addTo(markerLayer.value)
     userMarker.bindPopup('Vous êtes ici')
     if (!lastMapQuery.value && !manualMapMove.value) {
-      setMapView(userCoords.value.lat, userCoords.value.lon, 12)
+      setMapView(userCoords.value.lat, userCoords.value.lon, USER_ZOOM)
     }
   }
 
@@ -1361,7 +1375,7 @@ const refreshMapMarkers = () => {
   right: 0;
   width: 36px;
   height: 100%;
-  background: linear-gradient(270deg, rgba(246, 241, 234, 1), rgba(246, 241, 234, 0));
+  background: none;
   pointer-events: none;
 }
 

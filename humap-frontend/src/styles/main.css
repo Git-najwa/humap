@@ -12,11 +12,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--color-bg-alt);
-  background-image:
-    radial-gradient(1200px 600px at 10% -10%, rgba(190, 227, 221, 0.7) 0%, transparent 60%),
-    radial-gradient(1000px 700px at 90% 0%, rgba(252, 214, 179, 0.6) 0%, transparent 60%),
-    radial-gradient(900px 600px at 80% 100%, rgba(215, 233, 246, 0.5) 0%, transparent 55%),
-    linear-gradient(180deg, rgba(255, 252, 248, 0.85) 0%, rgba(239, 230, 219, 0.95) 100%);
+  background-image: none;
   color: var(--color-text);
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);

@@ -130,7 +130,7 @@ onMounted(async () => {
   z-index: 12;
   padding: 0 2rem;
   height: 96px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.3);
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(24px) saturate(140%);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
