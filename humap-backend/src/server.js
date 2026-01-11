@@ -1,24 +1,21 @@
-import dotenv from "dotenv";
-import path from "node:path";
+import "dotenv/config";
 import createDebugger from "debug";
 import http from "node:http";
 import { Server } from "socket.io";
 
-import app from "./app.js";
-import { connectDb } from "./config/db.js";
-import { setIO } from "./utils/socket.js";
-
 const debug = createDebugger("humap:server");
 let io;
-const port = normalizePort(process.env.PORT || 3000);
 
 async function start() {
-  const rootEnvPath = path.resolve(process.cwd(), "../.env");
-  dotenv.config({ path: rootEnvPath });
-  dotenv.config();
+  const port = normalizePort(process.env.PORT || 3000);
   // Use console log so it's visible even if DEBUG is not enabled.
   // eslint-disable-next-line no-console
   console.log(`Geoapify key loaded: ${process.env.GEOAPIFY_API_KEY ? "yes" : "no"}`);
+  const [{ default: app }, { connectDb }, { setIO }] = await Promise.all([
+    import("./app.js"),
+    import("./config/db.js"),
+    import("./utils/socket.js"),
+  ]);
   await connectDb();
 
   const server = http.createServer(app);
@@ -55,7 +52,7 @@ async function start() {
   });
 
   server.listen(port);
-  server.on("error", onError);
+  server.on("error", (error) => onError(error, port));
   server.on("listening", () => {
     const addr = server.address();
     const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
@@ -77,7 +74,7 @@ function normalizePort(val) {
   return false;
 }
 
-function onError(error) {
+function onError(error, port) {
   if (error.syscall !== "listen") throw error;
   const bind = typeof port === "string" ? `Pipe ${port}` : `Port ${port}`;
   switch (error.code) {
