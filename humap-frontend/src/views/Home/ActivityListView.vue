@@ -978,8 +978,8 @@ const refreshMapMarkers = () => {
   if (userCoords.value) {
     const userMarker = L.circleMarker([userCoords.value.lat, userCoords.value.lon], {
       radius: 6,
-      color: '#b89468',
-      fillColor: '#dcc9ac',
+      color: '#b99266',
+      fillColor: '#e6d4ba',
       fillOpacity: 0.9,
     }).addTo(markerLayer.value)
     userMarker.bindPopup('Vous êtes ici')

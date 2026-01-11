@@ -333,6 +333,10 @@ onMounted(async () => {
 /* Responsive */
 @media (max-width: 768px) {
   .app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     padding: 0 1rem;
     height: 64px;
   }
@@ -368,6 +372,10 @@ onMounted(async () => {
   /* Add padding to body for bottom nav */
   :global(body) {
     padding-bottom: 60px;
+  }
+
+  :global(main.with-header) {
+    padding-top: 64px;
   }
 }
 

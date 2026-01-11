@@ -46,14 +46,14 @@ defineEmits(['click'])
 }
 
 .modern-btn-primary {
-  background: linear-gradient(135deg, #d2b48c 0%, #b89468 100%);
+  background: linear-gradient(135deg, #ddc3a0 0%, #b99266 100%);
   color: #3a2a1a;
-  box-shadow: 0 12px 24px rgba(180, 150, 104, 0.28);
+  box-shadow: 0 12px 24px rgba(185, 146, 102, 0.28);
 }
 
 .modern-btn-primary:hover:not(:disabled) {
   background-color: var(--color-primary-dark);
-  box-shadow: 0 16px 30px rgba(167, 134, 96, 0.3);
+  box-shadow: 0 16px 30px rgba(143, 107, 69, 0.3);
   transform: translateY(-1px);
 }
 
