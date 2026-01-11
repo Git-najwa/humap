@@ -1079,7 +1079,7 @@ const refreshMapMarkers = () => {
   padding: 6px 24px 4px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: stretch;
 }
 
 .mobile-filters-button {
@@ -1118,8 +1118,9 @@ const refreshMapMarkers = () => {
   background: #fff;
   border: 1px solid rgba(15, 23, 42, 0.12);
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-  flex: 1 1 820px;
-  max-width: 980px;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
 }
 
 .pill-segment {
