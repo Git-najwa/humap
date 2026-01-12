@@ -617,7 +617,7 @@ const deleteReview = async (reviewId) => {
 }
 
 .favorite-button {
-  margin-top: 15px;
+  margin-top: 0;
 }
 
 .map-card {

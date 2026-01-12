@@ -89,11 +89,12 @@ defineEmits(['click'])
 
 /* Variants */
 .app-button--primary {
-  background: linear-gradient(135deg, #0E7490 0%, #0B4C5F 100%);
-  color: white;
+  background: linear-gradient(135deg, #e5dbcf 0%, #c2b1a1 100%);
+  color: #3a2a1a;
 }
 
 .app-button--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
