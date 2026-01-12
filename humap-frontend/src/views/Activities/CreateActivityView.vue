@@ -46,7 +46,7 @@
         <div class="coords-row" style="display:flex;gap:12px;align-items:center;margin-top:var(--spacing-md)">
           <AppInput v-model.number="lng" label="Longitude" placeholder="ex: 2.3522" />
           <AppInput v-model.number="lat" label="Latitude" placeholder="ex: 48.8566" />
-          <AppButton variant="secondary" @click="useMyLocation" type="button">Utiliser ma position</AppButton>
+          <AppButton class="geo-button" variant="secondary" @click="useMyLocation" type="button">Utiliser ma position</AppButton>
         </div>
 
         <div class="map-picker">
@@ -405,6 +405,10 @@ watch([lat, lng], ([nextLat, nextLng]) => {
   background: rgba(211, 201, 188, 0.6);
   color: #5b3a25;
   border-color: rgba(161, 142, 122, 0.35);
+}
+
+.geo-button {
+  margin-top: 22px;
 }
 
 .map-picker {
