@@ -53,14 +53,14 @@ Représente une activité géolocalisée.
 - `coordinates` (Object) - Coordonnées GPS
   - `type` (String) - "Point"
   - `coordinates` (Array) - [longitude, latitude]
-- `mood` (String) - Humeur ciblée (ex: "calm", "social", "energetic")
+- `mood` (Array[String]) - Humeurs ciblées (ex: ["calm", "social"])
 - `nb_people` (Number) - Nombre de personnes idéal
 - `price_range` (Number, 0-3) - 0 = gratuit, 3 = élevé
 - `age_range` (String) - Tranche d'âge recommandée
 - `hours` (Number) - Durée approximative (en minutes)
 - `day` (String) - Jours disponibles
 - `user_id` (ObjectId, nullable) - Référence au créateur
-- `source` (String) - "user" ou "google"
+- `source` (String) - "user", "geoapify", "opentripmap"
 - `created_at` (Date) - Date de création
 
 **Index:**
@@ -271,11 +271,11 @@ Lister les activités avec filtres et pagination.
 - `limit` (number, default: 10) - Nombre d'items par page
 - `q` (string) - Recherche textuelle
 - `mood` (string) - Filtrer par humeur (ex: "calm", "social")
-- `price_max` (number, 0-3) - Prix maximum
+- `price_range` (number, 0-3) - Prix maximum
 - `day` (string) - Jour de la semaine
 - `nb_people` (number) - Nombre de personnes
 - `age_range` (string) - Tranche d'âge
-- `source` (string) - "user" ou "google"
+- `source` (string) - "user", "geoapify", "opentripmap"
 
 **Réponse:** `200 OK`
 ```json
@@ -293,7 +293,7 @@ Lister les activités avec filtres et pagination.
         "type": "Point",
         "coordinates": [6.6323, 46.5197]
       },
-      "mood": "calm",
+      "mood": ["calm"],
       "price_range": 0,
       "hours": 60,
       "source": "user",
@@ -322,7 +322,7 @@ Récupérer les détails d'une activité.
     "type": "Point",
     "coordinates": [6.6323, 46.5197]
   },
-  "mood": "calm",
+  "mood": ["calm"],
   "nb_people": 2,
   "price_range": 0,
   "age_range": "all",
@@ -354,7 +354,7 @@ Créer une nouvelle activité (authentification requise).
     "type": "Point",
     "coordinates": [6.6323, 46.5197]
   },
-  "mood": "calm",
+  "mood": ["calm"],
   "nb_people": 10,
   "price_range": 2,
   "age_range": "adult",
@@ -470,7 +470,7 @@ Statistiques d'activités par humeur (agrégation).
 **Réponse:** `200 OK`
 ```json
 {
-  "stats": [
+  "data": [
     {
       "_id": "calm",
       "count": 45,
@@ -751,9 +751,54 @@ Récupérer les activités d'une liste personnalisée.
 
 ---
 
+### Lists (CRUD)
+
+#### GET /lists
+Lister toutes les entrées de liste de l'utilisateur.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Réponse:** `200 OK`
+```json
+[
+  {
+    "id": "507f1f77bcf86cd799439015",
+    "user_id": "507f1f77bcf86cd799439011",
+    "activity_id": "507f1f77bcf86cd799439012",
+    "list_type": "custom",
+    "custom_name": "Weekend activities",
+    "created_at": "2025-11-05T17:00:00Z"
+  }
+]
+```
+
+---
+
+#### PATCH /lists/:listId
+Renommer une liste personnalisée.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Requête:**
+```json
+{
+  "name": "Nouveau nom"
+}
+```
+
+**Réponse:** `200 OK`
+```json
+{
+  "id": "507f1f77bcf86cd799439015",
+  "custom_name": "Nouveau nom"
+}
+```
+
+---
+
 ### Recommendations
 
-#### GET /recommendations
+#### GET /activities/recommendations
 Obtenir des recommandations d'activités personnalisées.
 
 **Query Parameters:**
@@ -775,7 +820,7 @@ Obtenir des recommandations d'activités personnalisées.
       "title": "Balade au parc",
       "score": 95.5,
       "distance": 1250.5,
-      "mood": "calm",
+      "mood": ["calm"],
       "price_range": 0,
       "avg_ranking": 4.5,
       "nb_reviews": 12,
@@ -889,8 +934,7 @@ Toutes les listes utilisent le même format de pagination:
 
 **Geoapify Places API:**
 - Utilisée pour importer des activités (endpoint `/external-activities/geoapify`)
-- Quota: dépend de l'offre Geoapify
+
 
 **Open-Meteo API:**
 - Utilisée pour afficher la météo dans l'interface
-- Quota: dépend de l'offre Open-Meteo
