@@ -16,4 +16,4 @@ paths:
         "201":
           description: Created
 servers:
-  - url: https://api.humap.com/v1
+  - url: https://humap.onrender.com

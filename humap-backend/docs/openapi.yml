@@ -5,7 +5,7 @@ info:
   description: API de recommandation d'activités locales basée sur l'humeur et le contexte utilisateur.
 
 servers:
-  - url: https://api.humap.com/v1
+  - url: https://humap.onrender.com
 
 components:
   securitySchemes:

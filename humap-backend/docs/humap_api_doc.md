@@ -887,10 +887,10 @@ Toutes les listes utilisent le même format de pagination:
 
 ### APIs Tierces Utilisées
 
-**Google Places API:**
-- Utilisée pour importer des activités
-- Quota: ~11,000 requêtes/mois gratuit
+**Geoapify Places API:**
+- Utilisée pour importer des activités (endpoint `/external-activities/geoapify`)
+- Quota: dépend de l'offre Geoapify
 
-**OpenWeatherMap / WeatherAPI:**
-- Pour les recommandations basées sur la météo
-- Quota: 1000-1M requêtes/mois gratuit
+**Open-Meteo API:**
+- Utilisée pour afficher la météo dans l'interface
+- Quota: dépend de l'offre Open-Meteo
