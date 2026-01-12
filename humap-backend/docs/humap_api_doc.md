@@ -4,7 +4,7 @@
 
 HUMAP est une API RESTful qui recommande des activités locales en fonction de l'humeur, du contexte et de la position géographique de l'utilisateur.
 
-**Base URL:** `https://api.humap.com/v1` (à remplacer par votre URL Render)
+**Base URL:** `https://humap.onrender.com` 
 
 **Technologies:**
 - Node.js + Express
