@@ -117,7 +117,7 @@ describe("Activity routes", () => {
         .expect(200);
 
       expect(res.body.items).toHaveLength(1);
-      expect(res.body.items[0].mood).toBe("calm");
+      expect(res.body.items[0].mood).toEqual(["calm"]);
       expect(res.body.pagination.total).toBe(1);
     });
 
