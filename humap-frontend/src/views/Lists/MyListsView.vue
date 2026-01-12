@@ -61,13 +61,23 @@
       <div v-else-if="customLists.length === 0" class="no-lists card">Aucune liste personnalisée.</div>
       <div v-else class="lists-grid">
         <div v-for="list in customLists" :key="list.name" class="list-card card">
-          <h3 class="font-semibold">{{ list.name }}</h3>
-          <p class="count text-tertiary">{{ list.count }} activité(s)</p>
-          <div style="margin-top:12px;display:flex;gap:8px">
-            <AppButtonModern variant="secondary" @click="viewCustomList(list.name)">
-              {{ selectedListName === list.name ? 'Masquer' : 'Voir' }}
-            </AppButtonModern>
-            <AppButtonModern variant="danger" @click="deleteCustomList(list.name)">Supprimer</AppButtonModern>
+          <div v-if="editingListName === list.name" class="list-edit-row">
+            <AppInputModern v-model="editListNameInput" placeholder="Nom de la liste" />
+            <div class="list-edit-actions">
+              <AppButtonModern variant="primary" @click="saveListName(list)">Enregistrer</AppButtonModern>
+              <AppButtonModern variant="secondary" @click="cancelEditList">Annuler</AppButtonModern>
+            </div>
+          </div>
+          <div v-else>
+            <h3 class="font-semibold">{{ list.name }}</h3>
+            <p class="count text-tertiary">{{ list.count }} activité(s)</p>
+            <div class="list-actions-row">
+              <AppButtonModern variant="secondary" @click="viewCustomList(list.name)">
+                {{ selectedListName === list.name ? 'Masquer' : 'Voir' }}
+              </AppButtonModern>
+              <AppButtonModern variant="secondary" @click="startEditList(list.name)">Renommer</AppButtonModern>
+              <AppButtonModern variant="danger" @click="deleteCustomList(list.name)">Supprimer</AppButtonModern>
+            </div>
           </div>
         </div>
       </div>
@@ -132,6 +142,8 @@ const newListName = ref('')
 const selectedListName = ref('')
 const selectedListActivities = ref([])
 const listActivitiesLoading = ref(false)
+const editingListName = ref('')
+const editListNameInput = ref('')
 
 const { favorites } = storeToRefs(favoriteStore)
 const favoritesCount = computed(() => favorites.value.length)
@@ -302,6 +314,33 @@ const deleteCustomList = async (name) => {
   }
 }
 
+const startEditList = (name) => {
+  editingListName.value = name
+  editListNameInput.value = name
+}
+
+const cancelEditList = () => {
+  editingListName.value = ''
+  editListNameInput.value = ''
+}
+
+const saveListName = async (list) => {
+  const nextName = editListNameInput.value.trim()
+  if (!nextName || nextName === list.name) {
+    cancelEditList()
+    return
+  }
+  try {
+    await Promise.all(list.entries.map(entry => listStore.updateList(entry._id, { name: nextName })))
+    if (selectedListName.value === list.name) {
+      selectedListName.value = nextName
+    }
+    cancelEditList()
+  } catch (err) {
+    console.error(err)
+  }
+}
+
 const viewCustomList = async (name) => {
   if (selectedListName.value === name) {
     selectedListName.value = ''
@@ -388,5 +427,24 @@ const removeFromCustomList = async (activityId) => {
 .activities-grid {
   display: grid;
   gap: 20px;
+}
+
+.list-actions-row {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-edit-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 </style>
