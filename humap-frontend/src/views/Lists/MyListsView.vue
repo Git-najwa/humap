@@ -384,4 +384,9 @@ const removeFromCustomList = async (activityId) => {
   border: 1px solid var(--tag-border);
   backdrop-filter: blur(16px) saturate(140%);
 }
+
+.activities-grid {
+  display: grid;
+  gap: 20px;
+}
 </style>
