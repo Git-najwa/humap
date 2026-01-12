@@ -23,7 +23,7 @@ const activitySchema = new Schema(
         },
       },
     },
-    mood: { type: String, trim: true },
+    mood: [{ type: String, trim: true }],
     nb_people: { type: Number },
     nb_people_min: { type: Number, min: 1 },
     nb_people_max: { type: Number, min: 1 },

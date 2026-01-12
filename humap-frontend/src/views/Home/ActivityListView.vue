@@ -629,10 +629,23 @@ const deriveMoodFromCategories = (activity) => {
   return ''
 }
 
-const getMoodLabel = (activity) => {
-  const value = activity?.mood || deriveMoodFromCategories(activity)
+const getMoodValues = (activity) => {
+  const raw = activity?.mood
+  if (Array.isArray(raw)) return raw.filter(Boolean)
+  if (raw) return [raw]
+  const derived = deriveMoodFromCategories(activity)
+  return derived ? [derived] : []
+}
+
+const formatMoodLabel = (value) => {
   if (!value) return ''
   return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+const getMoodLabel = (activity) => {
+  const values = getMoodValues(activity)
+  if (!values.length) return ''
+  return values.map(formatMoodLabel).join(', ')
 }
 
 const handleImageError = (event, activity) => {
@@ -713,8 +726,8 @@ function matchesChip(activity) {
   const haystack = `${categories} ${title}`
   if (activeChip.value.startsWith('mood:')) {
     const moodValue = activeChip.value.split(':')[1]
-    const derived = (activity?.mood || deriveMoodFromCategories(activity) || '').toLowerCase()
-    return derived === moodValue
+    const moodValues = getMoodValues(activity).map((value) => String(value).toLowerCase())
+    return moodValues.includes(moodValue)
   }
   if (!activeChip.value.startsWith('cat:')) return true
   const catValue = activeChip.value.split(':')[1]
@@ -737,7 +750,7 @@ function matchesChip(activity) {
         haystack.includes('climb') ||
         haystack.includes('hiking') ||
         haystack.includes('trail') ||
-        (activity?.mood || deriveMoodFromCategories(activity)) === 'energetic'
+        getMoodValues(activity).includes('energetic')
       )
     case 'food':
       return haystack.includes('restaurant') || haystack.includes('cafe') || haystack.includes('bar') || haystack.includes('catering')

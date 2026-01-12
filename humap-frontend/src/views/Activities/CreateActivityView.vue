@@ -11,20 +11,20 @@
         <AppInput v-model="form.location" label="Lieu" placeholder="Lieu de l'activité" />
 
         <div class="input-wrapper">
-          <label class="input-label" for="activity-mood">Ambiance</label>
-          <input
-            id="activity-mood"
-            v-model="form.mood"
-            class="modern-input"
-            list="mood-options"
-            placeholder="Choisir une ambiance"
-            name="activity-mood"
-          />
-          <datalist id="mood-options">
-            <option v-for="choice in moodChoices" :key="choice.value" :value="choice.value">
+          <label class="input-label" for="activity-mood">Mood</label>
+          <div class="mood-chips" id="activity-mood">
+            <button
+              v-for="choice in moodChoices"
+              :key="choice.value"
+              type="button"
+              class="mood-chip"
+              :class="{ active: form.mood.includes(choice.value) }"
+              @click="toggleMood(choice.value)"
+            >
               {{ choice.label }}
-            </option>
-          </datalist>
+            </button>
+          </div>
+          <p class="input-hint">Sélection multiple possible.</p>
         </div>
 
         <div style="display:flex;gap:12px;align-items:center">
@@ -112,7 +112,7 @@ const form = ref({
   title: '',
   description: '',
   location: '',
-  mood: '',
+  mood: [],
   price_range: 0,
   nb_people: null,
   nb_people_min: 1,
@@ -144,6 +144,24 @@ const moodChoices = [
   { value: 'sport', label: 'Sport' },
 ]
 
+const normalizeMoodSelection = (value) => {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.filter(Boolean)))
+  }
+  if (value) return [value]
+  return []
+}
+
+const toggleMood = (value) => {
+  const next = new Set(form.value.mood)
+  if (next.has(value)) {
+    next.delete(value)
+  } else {
+    next.add(value)
+  }
+  form.value.mood = Array.from(next)
+}
+
 const handleCreate = async () => {
   try {
     // Client-side validation
@@ -172,6 +190,7 @@ const handleCreate = async () => {
     }
 
     form.value.coordinates = { type: 'Point', coordinates: [lngVal, latVal] }
+    form.value.mood = normalizeMoodSelection(form.value.mood)
 
     await activityStore.createActivity(form.value)
     router.push('/')
@@ -205,23 +224,54 @@ const removePhoto = (index) => {
   form.value.photos.splice(index, 1)
 }
 
-const useMyLocation = () => {
+const formatGeolocationError = (err) => {
+  if (!err) return 'Impossible de recuperer la position.'
+  switch (err.code) {
+    case 1:
+      return 'Autorise la localisation dans ton navigateur.'
+    case 2:
+      return 'Position indisponible. Verifie le GPS, le reseau ou Chrome > Sensors.'
+    case 3:
+      return 'Delai depasse. Reessaie.'
+    default:
+      return `Impossible de recuperer la position : ${err.message || 'Erreur inconnue'}`
+  }
+}
+
+const requestPosition = (options) =>
+  new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, options)
+  })
+
+const useMyLocation = async () => {
   activityStore.error = null
   if (!navigator.geolocation) {
-    activityStore.error = 'Géolocalisation non supportée par ce navigateur.'
+    activityStore.error = 'Geolocalisation non supportee par ce navigateur.'
     return
   }
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      lat.value = pos.coords.latitude
-      lng.value = pos.coords.longitude
-      setMapMarker(lat.value, lng.value, true)
-    },
-    (err) => {
-      activityStore.error = 'Impossible de récupérer la position : ' + err.message
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
-  )
+  try {
+    let pos = await requestPosition({ enableHighAccuracy: false, timeout: 20000, maximumAge: 600000 })
+    if (!pos || !pos.coords) {
+      throw new Error('Aucune coordonnee')
+    }
+    lat.value = pos.coords.latitude
+    lng.value = pos.coords.longitude
+    setMapMarker(lat.value, lng.value, true)
+  } catch (err) {
+    if (err?.code === 2) {
+      try {
+        const pos = await requestPosition({ enableHighAccuracy: true, timeout: 30000, maximumAge: 0 })
+        lat.value = pos.coords.latitude
+        lng.value = pos.coords.longitude
+        setMapMarker(lat.value, lng.value, true)
+        return
+      } catch (err2) {
+        activityStore.error = formatGeolocationError(err2)
+        return
+      }
+    }
+    activityStore.error = formatGeolocationError(err)
+  }
 }
 
 const goBack = () => {
@@ -304,6 +354,11 @@ watch([lat, lng], ([nextLat, nextLng]) => {
   color: var(--color-text);
 }
 
+.input-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
 .modern-input {
   width: 100%;
   padding: 0.625rem 0.875rem;
@@ -321,7 +376,35 @@ watch([lat, lng], ([nextLat, nextLng]) => {
 .modern-input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
+  box-shadow: 0 0 0 3px rgba(161, 142, 122, 0.25);
+}
+
+.mood-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mood-chip {
+  border-radius: 999px;
+  padding: 6px 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mood-chip:hover {
+  color: var(--color-text);
+  border-color: rgba(161, 142, 122, 0.35);
+}
+
+.mood-chip.active {
+  background: rgba(211, 201, 188, 0.6);
+  color: #5b3a25;
+  border-color: rgba(161, 142, 122, 0.35);
 }
 
 .map-picker {

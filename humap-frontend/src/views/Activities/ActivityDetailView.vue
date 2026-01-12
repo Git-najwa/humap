@@ -292,10 +292,23 @@ const deriveMoodFromCategories = (activity) => {
   return ''
 }
 
-const getMoodLabel = (activity) => {
-  const value = activity?.mood || deriveMoodFromCategories(activity)
+const getMoodValues = (activity) => {
+  const raw = activity?.mood
+  if (Array.isArray(raw)) return raw.filter(Boolean)
+  if (raw) return [raw]
+  const derived = deriveMoodFromCategories(activity)
+  return derived ? [derived] : []
+}
+
+const formatMoodLabel = (value) => {
   if (!value) return ''
   return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
+const getMoodLabel = (activity) => {
+  const values = getMoodValues(activity)
+  if (!values.length) return ''
+  return values.map(formatMoodLabel).join(', ')
 }
 
 const selectedPhotoIndex = ref(0)

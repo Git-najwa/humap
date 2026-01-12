@@ -9,7 +9,22 @@
         <AppInput v-model="form.title" label="Titre" required />
         <AppInput v-model="form.description" label="Description" :rows="4" required />
         <AppInput v-model="form.location" label="Lieu" required />
-        <AppInput v-model="form.mood" label="Ambiance" />
+        <div class="input-wrapper">
+          <label class="input-label" for="activity-mood">Mood</label>
+          <div class="mood-chips" id="activity-mood">
+            <button
+              v-for="choice in moodChoices"
+              :key="choice.value"
+              type="button"
+              class="mood-chip"
+              :class="{ active: form.mood?.includes(choice.value) }"
+              @click="toggleMood(choice.value)"
+            >
+              {{ choice.label }}
+            </button>
+          </div>
+          <p class="input-hint">Sélection multiple possible.</p>
+        </div>
         <AppInput v-model.number="form.price_range" type="number" label="Budget" />
         <AppInput v-model.number="form.nb_people" type="number" label="Nb personnes" />
 
@@ -72,6 +87,39 @@ const lat = ref(null)
 const isUploading = ref(false)
 const uploadError = ref('')
 
+const moodChoices = [
+  { value: 'calm', label: 'Calm' },
+  { value: 'social', label: 'Social' },
+  { value: 'energetic', label: 'Energetic' },
+  { value: 'outdoor', label: 'Outdoor' },
+  { value: 'indoor', label: 'Indoor' },
+  { value: 'culture', label: 'Culture' },
+  { value: 'family', label: 'Famille' },
+  { value: 'romantic', label: 'Romantique' },
+  { value: 'adventure', label: 'Aventure' },
+  { value: 'wellness', label: 'Bien-être' },
+  { value: 'food', label: 'Food' },
+  { value: 'sport', label: 'Sport' },
+]
+
+const normalizeMoodSelection = (value) => {
+  if (Array.isArray(value)) {
+    return Array.from(new Set(value.filter(Boolean)))
+  }
+  if (value) return [value]
+  return []
+}
+
+const toggleMood = (value) => {
+  const next = new Set(form.value.mood || [])
+  if (next.has(value)) {
+    next.delete(value)
+  } else {
+    next.add(value)
+  }
+  form.value.mood = Array.from(next)
+}
+
 onMounted(async () => {
   try {
     await activityStore.fetchActivityById(route.params.id)
@@ -80,7 +128,7 @@ onMounted(async () => {
       title: a.title || '',
       description: a.description || '',
       location: a.location || '',
-      mood: a.mood || '',
+      mood: normalizeMoodSelection(a.mood),
       price_range: a.price_range || 0,
       nb_people: a.nb_people || 1,
       photos: a.photos || [],
@@ -101,6 +149,7 @@ const handleUpdate = async () => {
     if (Number.isFinite(lngVal) && Number.isFinite(latVal)) {
       form.value.coordinates = { type: 'Point', coordinates: [lngVal, latVal] }
     }
+    form.value.mood = normalizeMoodSelection(form.value.mood)
     await activityStore.updateActivity(route.params.id, form.value)
     router.push(`/activities/${route.params.id}`)
   } catch (e) {
@@ -168,5 +217,51 @@ const goBack = () => router.back()
   font-size: 0.875rem;
   line-height: 1;
   color: #6b7280;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.input-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.input-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.mood-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mood-chip {
+  border-radius: 999px;
+  padding: 6px 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.mood-chip:hover {
+  color: var(--color-text);
+  border-color: rgba(161, 142, 122, 0.35);
+}
+
+.mood-chip.active {
+  background: rgba(211, 201, 188, 0.6);
+  color: #5b3a25;
+  border-color: rgba(161, 142, 122, 0.35);
 }
 </style>

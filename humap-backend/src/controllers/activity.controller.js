@@ -269,6 +269,24 @@ export async function statsByMood(req, res, next) {
     const stats = await Activity.aggregate([
       { $match: matchStage },
       {
+        $addFields: {
+          mood: {
+            $cond: [
+              { $isArray: "$mood" },
+              "$mood",
+              {
+                $cond: [
+                  { $ifNull: ["$mood", false] },
+                  ["$mood"],
+                  [],
+                ],
+              },
+            ],
+          },
+        },
+      },
+      { $unwind: { path: "$mood", preserveNullAndEmptyArrays: true } },
+      {
         $lookup: {
           from: "reviews",
           localField: "_id",
